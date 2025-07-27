@@ -40,6 +40,7 @@ The UI provides a live visual representation of object relationships and fields:
 > ![KubeForge UI](./public/git/screenshot-2.png)
 > ![KubeForge UI](./public/git/screenshot-3.png)
 > ![KubeForge UI](./public/git/screenshot-4.png)
+> ![KubeForge UI](./public/git/screenshot-5.png)
 
 ## 🛠️ Coming Soon
 
