@@ -1,4 +1,7 @@
-# ![KubeForge Screenshot](./public/icon.png) KubeForge
+<h1>
+  <img src="./public/icon.png" alt="KubeForge Icon" style="height: 1.5em; vertical-align: middle; margin-right: 0.5em;">
+  KubeForge
+</h1>
 
 **KubeForge** is a visual-first toolkit that simplifies the process of building, validating, and managing Kubernetes deployment configurations. Whether you're new to Kubernetes or maintaining large-scale systems, KubeForge streamlines the creation of valid deployment YAMLs using an intuitive interface backed by live schema references.
 
