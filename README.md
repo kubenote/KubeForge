@@ -33,6 +33,10 @@ Additionally, KubeForge enables **direct YAML hosting**, so you can reference bu
 The UI provides a live visual representation of object relationships and fields:
 
 > ![KubeForge UI](./public/git/screenshot.png)
+> ![KubeForge UI](./public/git/screenshot-1.png)
+> ![KubeForge UI](./public/git/screenshot-2.png)
+> ![KubeForge UI](./public/git/screenshot-3.png)
+> ![KubeForge UI](./public/git/screenshot-4.png)
 
 ## 🛠️ Coming Soon
 
