@@ -19,6 +19,15 @@
 - Help DevOps teams and developers prototype deployment setups visually
 - Support real-time collaboration and configuration sharing in the future
 
+## ⚙️ How It Works
+
+KubeForge keeps Kubernetes definitions up to date by integrating with [kubenote/kubernetes-schema](https://github.com/kubenote/kubernetes-schema), a companion repository that runs a scheduled job daily. This job fetches the latest official Kubernetes JSON schemas for all supported versions.
+
+These schemas are then automatically pulled into the KubeForge app, ensuring the editor always uses the most current, version-specific spec definitions. This guarantees that users are building against accurate Kubernetes configurations, with proper field validation and metadata.
+
+Additionally, KubeForge enables **direct YAML hosting**, so you can reference built configurations from a stable URL when deploying nodes via automation or GitOps pipelines.
+
+
 ## 📂 Screenshot
 
 The UI provides a live visual representation of object relationships and fields:
