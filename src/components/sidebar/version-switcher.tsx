@@ -78,7 +78,7 @@ export function VersionSwitcher({
                   key={version2}
                   onSelect={() => handleSelect(version2)}
                 >
-                  {version}
+                  {version2}
                   {version2 === version && <Check className="ml-auto" />}
                 </DropdownMenuItem>
               ))}
