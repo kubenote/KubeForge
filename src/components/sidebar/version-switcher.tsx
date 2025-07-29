@@ -32,6 +32,8 @@ export function VersionSwitcher({
     const savedVersion = localStorage.getItem("preferredK8sVersion");
     if (savedVersion) {
       setVersion(savedVersion);
+    } else {
+      setVersion(versions.filter((version) => !version.includes("main"))[0])
     }
   }, []);
 
