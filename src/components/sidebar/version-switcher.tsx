@@ -34,6 +34,7 @@ export function VersionSwitcher({
       setVersion(savedVersion);
     } else {
       setVersion(versions.filter((version) => !version.includes("main"))[0])
+      onSelect?.(version); // <- Invoke callback if defined
     }
   }, []);
 
