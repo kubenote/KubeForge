@@ -33,7 +33,6 @@ export function VersionSwitcher({
     if (savedVersion) {
       setVersion(savedVersion);
     } else {
-      setVersion("v1.33.3");
       onSelect?.("v1.33.3"); // <- Invoke callback if defined
     }
   }, []);
