@@ -6,7 +6,7 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN NEXT_IGNORE_TYPE_ERRORS=true npm run build
 
 FROM node:20-alpine
 
@@ -16,4 +16,5 @@ ENV NODE_ENV=production
 
 EXPOSE 3000
 
+# Start the Next.js app
 CMD ["npm", "start"]

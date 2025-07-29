@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Method not allowed' });
     }
 
-    if (process.env.DEMO_MODE === true) return NextResponse.json({ error: 'Demo Mode: No Uploads Allowed' });
+    if (process.env.DEMO_MODE === "true") return NextResponse.json({ error: 'Demo Mode: No Uploads Allowed' });
 
     const { yamlContent } = await req.json();
 

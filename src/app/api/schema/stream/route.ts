@@ -1,10 +1,10 @@
 import { NextRequest } from 'next/server';
-import { ReadableStream } from 'stream/web';
 import JSZip from 'jszip';
 import path from 'path';
 import fs from 'fs/promises';
 
 const CACHE_DIR = path.join(process.cwd(), '.next', 'schema-cache');
+let controller: ReadableStreamDefaultController;
 
 export async function GET(req: NextRequest) {
     const version = req.nextUrl.searchParams.get('version');
@@ -14,7 +14,6 @@ export async function GET(req: NextRequest) {
 
     const zipUrl = `https://github.com/kubenote/kubernetes-schema/archive/refs/heads/${version}.zip`;
 
-    let controller: ReadableStreamDefaultController;
     const stream = new ReadableStream({
         start(ctrl) {
             controller = ctrl;

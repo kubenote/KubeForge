@@ -4,7 +4,7 @@ import { readFile } from 'fs/promises';
 
 export async function GET(
   req: NextRequest,
-  context
+  context: any
 ) {
   const id = context.params.id.replace(/\.yml$/, ''); // strip .yml extension if included
 

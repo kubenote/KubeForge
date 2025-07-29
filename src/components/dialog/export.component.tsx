@@ -14,12 +14,18 @@ import { useReactFlow } from "@xyflow/react";
 import { Input } from "../ui/input";
 import { LinkIcon } from "lucide-react";
 
+type MonacoComponentHandle = {
+    downloadYaml: () => void;
+    uploadYamlToServer: () => Promise<string>;
+};
+
+
 export default function ExportDialog() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [exportData, setExportData] = useState({});
     const [generated, setGenerated] = useState("")
     const { getNodes } = useReactFlow();
-    const monacoRef = useRef(null);
+    const monacoRef = useRef<MonacoComponentHandle>(null);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
 
@@ -59,7 +65,7 @@ export default function ExportDialog() {
 
 
     const triggerDownload = () => {
-        monacoRef.current?.downloadYaml(); // 👈 call method exposed via ref
+        monacoRef.current?.downloadYaml();
     };
 
     const triggerGenerate = async () => {
