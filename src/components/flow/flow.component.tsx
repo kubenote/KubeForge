@@ -19,14 +19,15 @@ const nodeTypes = {
 
 export default function Flow() {
 
-  const { version, setSchemaData, setPreRefSchemaData } = useVersion(); 
+  const { version, setVersion, setSchemaData, setPreRefSchemaData } = useVersion();
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
   const [menu, setMenu] = useState(null);
   const ref = useRef(null);
 
   useEffect(() => {
-    if (version === '') return; 
+    if (version == null || version == "") return;
+    console.log(typeof version)
 
     fetch(`/api/schema/load?version=${version}`)
       .then((res) => res.json())
@@ -34,13 +35,15 @@ export default function Flow() {
         setSchemaData(data.ref);
         console.log(data.preRef)
         setPreRefSchemaData(data.preRef);
-      });
+      }).catch((e) => {
+        console.log(e)
+      })
   }, [version]);
 
 
   const onNodeContextMenu = useCallback(
     (event, node) => {
-      console.log(JSON.stringify({nodes: nodes, edges: edges}))
+      console.log(JSON.stringify({ nodes: nodes, edges: edges }))
       event.preventDefault();
 
       const pane = ref.current.getBoundingClientRect();
