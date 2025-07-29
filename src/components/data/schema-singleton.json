@@ -1,0 +1,22 @@
+{
+    "kind": [
+        "deployment",
+        "statefulset",
+        "daemonset",
+        "job",
+        "cronjob",
+        "service",
+        "ingress",
+        "persistentvolumeclaim",
+        "configmap",
+        "secret",
+        "horizontalpodautoscaler",
+        "serviceaccount",
+        "role",
+        "rolebinding",
+        "customresourcedefinition",
+        "namespace",
+        "resourcequota",
+        "limitrange"
+    ]
+}

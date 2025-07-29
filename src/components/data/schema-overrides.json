@@ -1,0 +1,72 @@
+{
+    "deployment.properties.spec.properties.template.properties.metadata": {
+        "description": "ObjectMeta is metadata that all persisted resources must have, including those inside pod templates.",
+        "type": "object",
+        "properties": {
+            "labels": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
+                },
+                "description": "Labels to identify the pod. Must match the selector in the Deployment spec."
+            },
+            "annotations": {
+                "type": "object",
+                "additionalProperties": {
+                    "type": "string"
+                },
+                "description": "Optional unstructured metadata used by tools and controllers."
+            },
+            "name": {
+                "type": "string",
+                "description": "Optional pod name. Usually omitted to let the Deployment assign names automatically."
+            },
+            "generateName": {
+                "type": "string",
+                "description": "Prefix for generating a unique name if `name` is not specified."
+            },
+            "namespace": {
+                "type": "string",
+                "description": "Namespace for the pod. Inherited from the Deployment."
+            },
+            "uid": {
+                "type": "string"
+            },
+            "resourceVersion": {
+                "type": "string"
+            },
+            "ownerReferences": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "required": [
+                        "apiVersion",
+                        "kind",
+                        "name",
+                        "uid"
+                    ],
+                    "properties": {
+                        "apiVersion": {
+                            "type": "string"
+                        },
+                        "kind": {
+                            "type": "string"
+                        },
+                        "name": {
+                            "type": "string"
+                        },
+                        "uid": {
+                            "type": "string"
+                        },
+                        "controller": {
+                            "type": "boolean"
+                        },
+                        "blockOwnerDeletion": {
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
