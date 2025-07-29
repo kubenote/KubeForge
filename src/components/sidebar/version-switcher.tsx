@@ -33,8 +33,8 @@ export function VersionSwitcher({
     if (savedVersion) {
       setVersion(savedVersion);
     } else {
-      setVersion(versions.filter((version) => !version.includes("main"))[0])
-      onSelect?.(version); // <- Invoke callback if defined
+      onSelect?.("v1.33.3"); // <- Invoke callback if defined
+      setVersion("v1.33.3");
     }
   }, []);
 
