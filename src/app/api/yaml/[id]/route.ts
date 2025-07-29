@@ -2,8 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { readFile } from 'fs/promises';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const id = params.id.replace(/\.yml$/, ''); // strip .yml extension if included
+export async function GET(
+  req: NextRequest,
+  context: { params: { id: string } }
+) {
+  const id = context.params.id.replace(/\.yml$/, ''); // strip .yml extension if included
 
   if (!id) {
     return new NextResponse('Missing id', { status: 400 });
