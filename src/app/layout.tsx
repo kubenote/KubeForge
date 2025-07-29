@@ -31,8 +31,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {process.env.DEMO_MODE === false && (<div className="absolute top-0 z-13 w-full flex justify-center text-white h-4 bg-blue-500 text-[10px]">Demo Mode</div>)}
-
         <WarningProvider>
           <VersionProvider>
             {children}
