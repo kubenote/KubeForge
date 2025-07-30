@@ -44,6 +44,7 @@ export function AppSidebarClient({
     versions: string[];
 } & React.ComponentProps<typeof Sidebar>) {
     const [isDownloading, setIsDownloading] = React.useState(false);
+    const [downloadingVersion, setDownloadingVersion] = React.useState<string | null>(null);
     const [searchQuery, setSearchQuery] = React.useState("");
     const [dialogOpen, setDialogOpen] = React.useState(false);
     const [loadObject, setLoadObject] = React.useState({});
@@ -56,6 +57,7 @@ export function AppSidebarClient({
 
     const handleSelect = (version: string) => {
         setIsDownloading(true);
+        setDownloadingVersion(version)
         setProgress(0);
 
         const events = new EventSource(`/api/schema/stream?version=${version}`);
@@ -92,7 +94,7 @@ export function AppSidebarClient({
                     <DialogHeader>
                         <DialogTitle>Downloading Kubernetes Schema</DialogTitle>
                         <DialogDescription>
-                            Fetching and extracting schemas for <strong>{version}</strong>.
+                            Fetching and extracting schemas for <strong>{downloadingVersion ?? "v1.33.3"}</strong>.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="pt-4">
