@@ -4,7 +4,11 @@ In Kubernetes, the folder structure of your YAML files is **not important to the
 
 ## How We Package Files
 
-For simplicity we deliver a zip folder with the YAML configuration files in a _flat structure_.
+For simplicity we deliver your YAML configuration in a single file.
+This enables us to easily generate a url to use with `kubectl apply -f` which you can directly use with the generated URL.
+```bash
+kubctl apply -f http://localhost:3000/api/yaml/KWocGujvCxz61M0VE_0h4.yml
+```
 
 ## How Kubernetes Reads Files
 
