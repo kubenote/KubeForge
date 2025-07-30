@@ -1,6 +1,6 @@
 <h1>
   <img src="./public/icon.png" alt="KubeForge Icon" style="height: 1.5em; vertical-align: middle; margin-right: 0.5em;">
-  KubeForge
+  <a href="https://kubefor.ge">KubeForge</a>
 </h1>
 
 To get started just run:
