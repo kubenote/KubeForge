@@ -3,6 +3,11 @@
   KubeForge
 </h1>
 
+To get started just run:
+```
+docker run -p 3000:3000 get.kubefor.ge/welcome
+```
+
 **KubeForge** is a visual-first toolkit that simplifies the process of building, validating, and managing Kubernetes deployment configurations. Whether you're new to Kubernetes or maintaining large-scale systems, KubeForge streamlines the creation of valid deployment YAMLs using an intuitive interface backed by live schema references.
 
 ![KubeForge Screenshot](./public/git/screenshot.png)
