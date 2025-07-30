@@ -1,4 +1,3 @@
-// ✅ app/api/schema-data/route.ts
 import { loadSchemas } from '@/lib/schema/loadSchemas';
 import { NextRequest, NextResponse } from 'next/server';
 

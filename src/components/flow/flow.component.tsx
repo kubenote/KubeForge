@@ -7,6 +7,7 @@ import { useVersion } from '../../providers/VersionProvider';
 import { ConfigNode } from './nodes/standard.node';
 import { ObjectRefNode } from './nodes/objectRef.node';
 import ContextMenu from './nodeContextMenu';
+import { TopProgressBar } from '../ui/progress-bar';
 
 const initialNodes = [];
 const initialEdges = [];
@@ -24,21 +25,25 @@ export default function Flow() {
   const [edges, setEdges] = useState(initialEdges);
   const [menu, setMenu] = useState(null);
   const ref = useRef(null);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (version == null || version == "") return;
-    console.log(typeof version)
+    if (!version) return;
 
+    setLoading(true)
     fetch(`/api/schema/load?version=${version}`)
       .then((res) => res.json())
       .then((data) => {
         setSchemaData(data.ref);
-        console.log(data.preRef)
         setPreRefSchemaData(data.preRef);
-      }).catch((e) => {
-        console.log(e)
       })
-  }, [version]);
+      .catch((e) => {
+        console.error(e);
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [version])
 
 
   const onNodeContextMenu = useCallback(
@@ -94,6 +99,8 @@ export default function Flow() {
         <Background variant={BackgroundVariant.Dots} />
         {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
       </ReactFlow>
+      <TopProgressBar loading={loading} />
+
     </div>
   );
 }
