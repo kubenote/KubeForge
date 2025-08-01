@@ -71,7 +71,7 @@ const overlappingNodeRule: RuleFunction = (() => {
                         warnings.push({
                             id: 8000 + warnings.length,
                             title: 'Overlapping Nodes',
-                            message: `Node "${a.data.type}" overlaps with "${b.data.type}".`,
+                            message: `Node "${a.data.type}" overlaps with "${b.data.type ?? "ObjectRef"}".`,
                             nodes: [a.id, b.id],
                             level: 'info',
                         })
@@ -94,8 +94,8 @@ export const nodeWarningRules: RuleFunction[] = [
             return {
                 id: index + 1,
                 nodes: [node.id],
-                title: `Missing config in ${node.id}`,
-                message: `Node ${node.id} has no values configured.`,
+                title: `Empty objectRef for "${node?.data?.kindRef}"`,
+                message: `Node "objectRef.${node?.data?.kindRef}" has no values configured.`,
                 level: 'danger'
             }
         }
