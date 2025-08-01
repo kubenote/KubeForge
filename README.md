@@ -7,6 +7,10 @@ To get started just run:
 ```
 docker run -p 3000:3000 get.kubefor.ge/latest
 ```
+or
+```
+docker run -p 3000:3000 ghcr.io/kubenote/kubeforge:latest
+```
 
 **KubeForge** is a visual-first toolkit that simplifies the process of building, validating, and managing Kubernetes deployment configurations. Whether you're new to Kubernetes or maintaining large-scale systems, KubeForge streamlines the creation of valid deployment YAMLs using an intuitive interface backed by live schema references.
 
