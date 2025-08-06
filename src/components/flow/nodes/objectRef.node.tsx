@@ -229,7 +229,7 @@ const ConfigField = ({ label, value, schema, path, onChange, nodeId, edges }: {
 
 export function ObjectRefNodeComponent({ id, data }: NodeProps) {
     const { schemaData } = useVersion();
-    const schema = schemaData[data?.kindRef]["properties"][data?.objectRef] || {};
+    const schema = schemaData[data?.kindRef.toLowerCase()]["properties"][data?.objectRef] || {};
     const [values, setValues] = useState(data?.values || {});
     const [visibleFields, setVisibleFields] = useState<string[]>([]);
     const { setNodes } = useReactFlow();
@@ -252,11 +252,6 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
             })
         );
     }, [values]);
-
-
-
-
-
         const edges = useStore(
             (s) => s.edges.filter(e => e.target === id),
             shallow

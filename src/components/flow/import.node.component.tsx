@@ -51,7 +51,7 @@ function importYamlToFlowNodes(
             y: 100 + offset * 50,
           },
           data: {
-            kindRef: kind.toLowerCase(),
+            kindRef: kind,
             objectRef: key,
             values: yamlData[key],
           },
@@ -79,8 +79,8 @@ function importYamlToFlowNodes(
         y: 100 + offset * 50,
       },
       data: {
-        type: kind.toLowerCase(),
-        kind: kind.toLowerCase(),
+        type: kind,
+        kind: kind,
         values: baseValues,
         inline: false,
       },

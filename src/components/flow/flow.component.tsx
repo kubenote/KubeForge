@@ -8,6 +8,7 @@ import { ConfigNode } from './nodes/standard.node';
 import { ObjectRefNode } from './nodes/objectRef.node';
 import ContextMenu from './nodeContextMenu';
 import { TopProgressBar } from '../ui/progress-bar';
+import { useSchema } from 'components/providers/SchemaProvider';
 
 const initialNodes = [];
 const initialEdges = [];
@@ -21,6 +22,7 @@ const nodeTypes = {
 export default function Flow() {
 
   const { version, setVersion, setSchemaData, setPreRefSchemaData } = useVersion();
+  const { setSchemaGvks } = useSchema();
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
   const [menu, setMenu] = useState(null);
@@ -34,6 +36,8 @@ export default function Flow() {
     fetch(`/api/schema/load?version=${version}`)
       .then((res) => res.json())
       .then((data) => {
+        console.log(data)
+        setSchemaGvks(data.gvks)
         setSchemaData(data.ref);
         setPreRefSchemaData(data.preRef);
       })

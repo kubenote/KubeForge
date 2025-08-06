@@ -176,7 +176,7 @@ function ConfigNodeComponent({ id, data }: NodeProps) {
     const [inline, setInline] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
     const { schemaData, preRefSchemaData } = useVersion();
-    const schema = !inline ? preRefSchemaData[data?.type] : schemaData[data?.type];
+    const schema = !inline ? preRefSchemaData[data?.type.toLowerCase()] : schemaData[data?.type.toLowerCase()];
     const [values, setValues] = useState(data?.values || {});
 
     const { setNodes } = useReactFlow();

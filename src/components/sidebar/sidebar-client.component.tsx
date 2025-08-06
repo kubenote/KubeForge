@@ -35,6 +35,7 @@ import MonacoComponent from "../dialog/monaco.component";
 import * as ApiVersion from "@/components/data/apiVersion.json"
 import { capitalize } from "components/helpers/textTransform";
 import { nanoid } from 'nanoid';
+import { useSchema } from "components/providers/SchemaProvider";
 
 
 export function AppSidebarClient({
@@ -52,6 +53,8 @@ export function AppSidebarClient({
     const [progress, setProgress] = React.useState(0);
 
     const { version, setVersion, schemaData, preRefSchemaData } = useVersion();
+    const { schemaGvks } = useSchema();
+
     const { addNodes } = useReactFlow();
 
 
@@ -125,47 +128,45 @@ export function AppSidebarClient({
                         <SidebarGroupLabel>Deployment Scripts</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu className="max-h-[calc(100vh-220px)] overflow-y-auto">
-                                {Object.keys(schemaData)
-                                    .filter((item) => item.toLowerCase().includes(searchQuery.toLowerCase()))
-                                    .map((item) => (
-                                        <SidebarMenuItem key={item}>
-                                            <SidebarMenuButton
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    const schema = item;
+                                {(schemaGvks).filter((item) => item.kind.toLowerCase().includes(searchQuery.toLowerCase()))
+                                    .map((item) => (<SidebarMenuItem key={item.group + item.kind}>
+                                        <SidebarMenuButton
+                                            onClick={(e) => {
+                                                e.preventDefault();
 
-                                                    addNodes({
-                                                        id: nanoid(),
-                                                        type: 'ConfigNode', // your custom node type
-                                                        position: {
-                                                            x: 100, // offset to avoid overlap
-                                                            y: 100,
-                                                        },
-                                                        data: { type: schema, kind: item, values: { kind: capitalize(item), apiVersion: ApiVersion[item] } },
-                                                    });
-                                                }}
-                                                asChild isActive={item}>
+                                                addNodes({
+                                                    id: nanoid(),
+                                                    type: 'ConfigNode', // your custom node type
+                                                    position: {
+                                                        x: 100, // offset to avoid overlap
+                                                        y: 100,
+                                                    },
+                                                    data: { type: item.kind, kind: item.kind, values: { kind: item.kind, apiVersion: ApiVersion[item.version] } },
+                                                });
+                                            }}
+                                            asChild isActive={item.kind}>
+                                            <span
+                                                className="group/item text-xs cursor-pointer inline-flex items-center relative overflow-hidden whitespace-nowrap text-ellipsis max-w-[220px]"
+                                                data-tooltip-id="sidebar-item-tooltip"
+                                                title={item.kind}
+                                            >
+                                                <BoxIcon className="mr-1 shrink-0" />
+                                                <span className="truncate">{item.kind}</span>
                                                 <span
-                                                    className="group/item text-xs cursor-pointer inline-flex items-center relative overflow-hidden whitespace-nowrap text-ellipsis max-w-[220px]"
-                                                    data-tooltip-id="sidebar-item-tooltip"
-                                                    title={item}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setLoadObject({ name: item, data: preRefSchemaData[item.kind] });
+                                                        setDialogOpen(true);
+                                                    }}
+                                                    className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-opacity"
                                                 >
-                                                    <BoxIcon className="mr-1 shrink-0" />
-                                                    <span className="truncate">{item}</span>
-                                                    <span
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setLoadObject({ name: item, data: preRefSchemaData[item] });
-                                                            setDialogOpen(true);
-                                                        }}
-                                                        className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-opacity"
-                                                    >
-                                                        <InfoIcon size={15} />
-                                                    </span>
+                                                    <InfoIcon size={15} />
                                                 </span>
-                                            </SidebarMenuButton>
-                                        </SidebarMenuItem>
-                                    ))}
+                                            </span>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                    )
+                                    )}
                             </SidebarMenu>
                             <SidebarMenuButton isActive={false} className="text-xs mt-2">
                                 {Object.keys(schemaData).length} schemas available
@@ -174,13 +175,38 @@ export function AppSidebarClient({
                     </SidebarGroup>
                 ) : (
                     Object.entries(k8sIcons).map(([groupLabel, items]) => {
-                        const matchedGroupItems = items.filter(({ name }) => {
-                            if (schemaData[name]) {
-                                matchedKeys.add(name);
-                                return name.toLowerCase().includes(searchQuery.toLowerCase());
-                            }
-                            return false;
-                        });
+                        type GVK = { group: string; version: string; kind: string };
+
+                        // Build a lookup: "deployment" => { group:"apps", version:"v1", kind:"Deployment" }
+                        const kindMap = new Map<string, GVK>(
+                            schemaGvks.map(gvk => [gvk.kind.toLowerCase(), gvk])
+                        );
+
+                        const lcQuery = (searchQuery ?? "").toLowerCase();
+
+                        const matchedGroupItems = items
+                            .map(({ name, ...rest }) => {
+                                const key = name.toLowerCase();
+                                const gvk = kindMap.get(key);
+                                if (!gvk) return null; // not a top-level kind
+
+                                // optional search filtering
+                                if (lcQuery && !gvk.kind.toLowerCase().includes(lcQuery) && !key.includes(lcQuery)) {
+                                    return null;
+                                }
+
+                                matchedKeys.add(key);
+
+                                // return with proper casing (from gvk.kind); also expose group/version if useful
+                                return {
+                                    ...rest,
+                                    kind: gvk.kind,          // (or use a separate field)
+                                    group: gvk.group,
+                                    version: gvk.version,
+                                };
+                            })
+                            .filter((x): x is NonNullable<typeof x> => Boolean(x));
+
 
                         if (matchedGroupItems.length === 0) return null;
 
@@ -189,12 +215,12 @@ export function AppSidebarClient({
                                 <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
                                 <SidebarGroupContent>
                                     <SidebarMenu className="max-h-[calc(100vh-210px)] overflow-y-auto">
-                                        {matchedGroupItems.map(({ name, icon, info }) => (
-                                            <SidebarMenuItem key={name}>
+                                        {matchedGroupItems.map(({ kind, icon, group, version, info }) => (
+                                            <SidebarMenuItem key={group+kind}>
                                                 <SidebarMenuButton
                                                     onClick={(e) => {
+                                                        console.log(kind)
                                                         e.preventDefault();
-                                                        const schema = name;
 
                                                         addNodes({
                                                             id: nanoid(),
@@ -203,21 +229,21 @@ export function AppSidebarClient({
                                                                 x: 100, // offset to avoid overlap
                                                                 y: 100,
                                                             },
-                                                            data: { type: schema, kind: name, values: { kind: capitalize(name), apiVersion: ApiVersion[name] } },
+                                                            data: { type: kind, kind: kind, values: { kind: kind, apiVersion: version } },
                                                         });
                                                     }}
-                                                    asChild isActive={name}>
+                                                    asChild isActive={kind}>
                                                     <span
                                                         className="group/item text-xs cursor-pointer inline-flex items-center relative overflow-hidden whitespace-nowrap text-ellipsis max-w-[220px]"
-                                                        title={name}
+                                                        title={kind}
                                                         data-tooltip-id="sidebar-item-tooltip"
                                                     >
                                                         {icon || <BoxIcon className="mr-1 shrink-0" />}
-                                                        <span className="truncate">{name}</span>
+                                                        <span className="truncate">{kind}</span>
                                                         <span
                                                             onClick={(e) => {
                                                                 e.preventDefault();
-                                                                setLoadObject({ name, data: preRefSchemaData[name] });
+                                                                setLoadObject({ name, data: preRefSchemaData[kind.toLocaleLowerCase()] });
                                                                 setDialogOpen(true);
                                                             }}
                                                             className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-opacity"
