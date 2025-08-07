@@ -159,11 +159,8 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
 
         setProgress(100);
         setTimeout(() => setIsLoading(false), 500); // smooth finish
-
         return true;
     };
-
-
 
     return (
         <NodeContext.Provider value={{

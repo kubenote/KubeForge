@@ -49,12 +49,8 @@ export default function Flow() {
 
   useEffect(() => {
     async function begin() {
-      const getTypes: string[] = DefaultFlow.nodes.map((item) => item.data.objectRef ? item.data.kind + "." + item.data.objectRef : item.data.kind)
-      const getres = await getSchema({ schemas: getTypes, v: "v1.33.3" })
-      if (getres) {
-        setNodes(DefaultFlow.nodes)
-        setEdges(DefaultFlow.edges)
-      }
+      setNodes(DefaultFlow.nodes)
+      setEdges(DefaultFlow.edges)
     }
     begin()
   }, [])
