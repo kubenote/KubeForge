@@ -38,8 +38,17 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
             setProgress(0); // Reset progress at start
             interval = setInterval(() => {
                 setProgress(prev => {
-                    const next = prev + 2;
-                    return next >= 80 ? 80 : next;
+                    let next = prev;
+                    if (prev < 80) {
+                        next = prev + 2;
+                    }
+                    else if (prev >= 80 && prev < 93) {
+                        next = prev + 0.5;
+                    }
+                    else if (prev >= 93) {
+                        next = 0;
+                    }
+                    return next;
                 });
             }, 200); // adjust speed here
         } else {
