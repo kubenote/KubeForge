@@ -1,10 +1,19 @@
 'use client';
 
 import { useReactFlow } from '@xyflow/react';
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useSchema } from './SchemaProvider';
 import { useVersion } from './VersionProvider';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Progress } from 'components/components/ui/progress';
 
 type NodeContextType = {
     addNode: (data: any) => void;
@@ -15,12 +24,38 @@ const NodeContext = createContext<NodeContextType | undefined>(undefined);
 
 export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
 
+    const [isLoading, setIsLoading] = useState(false)
+    const [progress, setProgress] = useState(0);
+
     const { addNodes, addEdges } = useReactFlow();
     const { schemaData, setSchemaData } = useSchema();
     const { version } = useVersion();
 
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+
+        if (isLoading) {
+            setProgress(0); // Reset progress at start
+            interval = setInterval(() => {
+                setProgress(prev => {
+                    const next = prev + 2;
+                    return next >= 80 ? 80 : next;
+                });
+            }, 100); // adjust speed here
+        } else {
+            // When loading finishes, ensure it fills to 100
+            setProgress(100);
+            setTimeout(() => setProgress(0), 500); // Optional: reset after complete
+        }
+
+        return () => clearInterval(interval);
+    }, [isLoading]);
+
 
     const addNode = async ({ data, id = null, targetNode = null, type = "ConfigNode" }: { apiVersion: string; id: string | null, kind: string; targetNode: string | null; type: string }) => {
+        setProgress(0)
+        setIsLoading(true)
+
         if (schemaData[data.kind]) {
             addNodes({
                 id: id || nanoid(),
@@ -57,9 +92,16 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 })
             }
         }
+
+        setProgress(100);
+        setTimeout(() => setIsLoading(false), 500); // smooth finish
+
     };
 
     const getSchema = async ({ schemas, v }: { schemas: string[], v: string | null }) => {
+        setProgress(0)
+        setIsLoading(true)
+
         const versionToUse = v || version;
 
         // Split schemas into base (no dot) and nested (has dot)
@@ -106,6 +148,9 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
 
+        setProgress(100);
+        setTimeout(() => setIsLoading(false), 500); // smooth finish
+
         return true;
     };
 
@@ -116,6 +161,20 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
             addNode,
             getSchema
         }}>
+            <Dialog open={isLoading}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Loading Schema</DialogTitle>
+                        <DialogDescription>
+                            Fetching and extracting schemas.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="pt-4">
+                        <Progress value={progress} className="animate-pulse" />
+                    </div>
+                </DialogContent>
+            </Dialog>
+
             {children}
         </NodeContext.Provider>
     );
