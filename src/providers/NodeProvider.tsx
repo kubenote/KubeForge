@@ -65,13 +65,24 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
         setProgress(0)
         setIsLoading(true)
 
-        if (schemaData[data.kind]) {
+        if (schemaData[data.kind.toLowerCase()] || schemaData[`${data.kind.toLowerCase()}.${data?.objectRef}`]) {
+            const generatedId = nanoid()
+
             addNodes({
-                id: id || nanoid(),
+                id: id || generatedId,
                 type,
-                position: { x: 100, y: 100 },
+                position: { x: type == "ObjectRefNode" ? -500 : 100, y: 100 },
                 data: data,
             });
+            if (type == "ObjectRefNode") {
+                addEdges({
+                    "source": generatedId,
+                    "sourceHandle": `source-${generatedId}`,
+                    "target": targetNode || "",
+                    "targetHandle": `target-${data.objectRef}`,
+                    "id": `xy-edge__${generatedId}source-${generatedId}-${targetNode}target-${data.objectRef}`
+                })
+            }
         } else {
             const generatedId = nanoid()
             const schema = await fetch(`/api/schema/load?version=${version}&schemas=${data.kind}&full=${type != "ConfigNode"}`)
