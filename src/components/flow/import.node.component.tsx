@@ -8,6 +8,7 @@ import { useVersion } from '../../providers/VersionProvider'
 import { useReactFlow } from '@xyflow/react'
 import { FolderArchive } from 'lucide-react'
 import { nanoid } from 'nanoid'
+import { useNodeProvider } from 'components/providers/NodeProvider'
 
 
 interface NodeData {
@@ -18,78 +19,46 @@ interface NodeData {
 
 
 function importYamlToFlowNodes(
+  addNode: ({ data }: Object) => {},
   yamlData: NodeData,
-  preRefSchemaData: Record<string, any>,
-  offset: number = 0
-): { nodes: any[]; edges: any[]; error?: string } {
+) {
   try {
     const kind = yamlData.kind
-    const schema = preRefSchemaData[kind.toLowerCase()]
 
-    if (!schema) {
-      const msg = `Schema not found for kind: ${kind}`
-      console.warn(msg)
-      return { nodes: [], edges: [], error: msg }
-    }
 
     const mainNodeId = nanoid()
     const baseValues: Record<string, any> = {}
-    const refNodes: any[] = []
-    const edges: any[] = []
 
-    for (const key in schema.properties) {
-      const fieldDef = schema.properties[key]
-
-      if ('$ref' in fieldDef && yamlData[key]) {
+    for (const key of Object.keys(yamlData)) {
+      const value = yamlData[key];
+      console.log(value)
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
         const refId = nanoid()
 
-        refNodes.push({
-          id: refId,
-          type: 'ObjectRefNode',
-          position: {
-            x: -500 + offset * 100,
-            y: 100 + offset * 50,
-          },
+        addNode({
+          type: "ObjectRefNode",
+          targetNode: mainNodeId,
           data: {
-            kindRef: kind,
+            kind: kind,
             objectRef: key,
             values: yamlData[key],
-          },
+          }
         })
-
-        baseValues[key] = `#ref-${refId}`
-
-        edges.push({
-          id: `xy-edge__${nanoid()}`,
-          source: refId,
-          sourceHandle: `source-${refId}`,
-          target: mainNodeId,
-          targetHandle: `target-${key}`,
-        })
-      } else {
-        baseValues[key] = yamlData[key]
       }
+
     }
 
-    const mainNode = {
+    addNode({
+      type: "ConfigNode",
       id: mainNodeId,
-      type: 'ConfigNode',
-      position: {
-        x: 220 + offset * 100,
-        y: 100 + offset * 50,
-      },
       data: {
         type: kind,
         kind: kind,
-        values: baseValues,
-        inline: false,
+        values: yamlData
       },
-    }
+    })
 
-    return {
-      nodes: [mainNode, ...refNodes],
-      edges,
-    }
+
   } catch (err) {
     console.error('Error importing YAML to flow nodes:', err)
     return {
@@ -142,7 +111,7 @@ export default function YamlImportButton() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [parsedYaml, setParsedYaml] = useState<any[]>([])
   const { preRefSchemaData } = useVersion()
-  const { setNodes, setEdges } = useReactFlow()
+  const { addNode } = useNodeProvider()
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
@@ -178,17 +147,11 @@ export default function YamlImportButton() {
 
 
   const handleConfirmImport = () => {
-    let allNodes: any[] = []
-    let allEdges: any[] = []
 
     parsedYaml.forEach((doc, i) => {
-      const { nodes, edges } = importYamlToFlowNodes(doc, preRefSchemaData, i)
-      allNodes.push(...nodes)
-      allEdges.push(...edges)
+      importYamlToFlowNodes(addNode, doc, preRefSchemaData, i)
     })
 
-    setNodes(allNodes)
-    setEdges(allEdges)
     setDialogOpen(false)
   }
 

@@ -17,6 +17,8 @@ import { shallow } from 'zustand/shallow';
 import { typeColors } from "./node.types"
 
 import { memo } from "react";
+import { useSchema } from "components/providers/SchemaProvider"
+import { useNodeProvider } from "components/providers/NodeProvider"
 
 
 
@@ -35,7 +37,7 @@ const ConfigField = ({ label, value, schema, path, kind, onChange, nodeId, edges
     const valueType = schema?.$ref ? 'objectRef' : typeArray[0] || "string";
     const isArray = Array.isArray(value) || valueType === "array";
     const isObject = valueType === "object" && value !== null && !isArray;
-    const { addNodes } = useReactFlow();
+    const { addNode } = useNodeProvider();
 
     const targetHandleId = `target-${label}`;
     const edge = edges.find((e) => e.target === nodeId && e.targetHandle === targetHandleId);
@@ -49,7 +51,7 @@ const ConfigField = ({ label, value, schema, path, kind, onChange, nodeId, edges
 
         if (valueType !== "objectRef") {
             const unsub = subscribe(sourceFieldId, (val) => {
-                onChange(path, val); 
+                onChange(path, val);
             });
 
             return unsub;
@@ -117,15 +119,7 @@ const ConfigField = ({ label, value, schema, path, kind, onChange, nodeId, edges
                                 disabled={isConnected}
                             />
                         ) : !isConnected && (<button onClick={() => {
-                            addNodes({
-                                id: nanoid(),
-                                type: 'ObjectRefNode', // your custom node type
-                                position: {
-                                    x: 100, // offset to avoid overlap
-                                    y: 100,
-                                },
-                                data: { nodeId: nodeId, kindRef: kind, objectRef: label },
-                            });
+                            addNode({ targetNode: nodeId, data: { nodeId: nodeId, kind: kind, objectRef: label }, type: 'ObjectRefNode' })
                         }} className="ml-2 h-6 px-2 py-0 text-xs rounded-sm border cursor-pointer ml-auto bg-gray-100 hover:bg-gray-200">
                             Create {label} node
                         </button>)}
@@ -173,10 +167,9 @@ const ConfigField = ({ label, value, schema, path, kind, onChange, nodeId, edges
 };
 
 function ConfigNodeComponent({ id, data }: NodeProps) {
-    const [inline, setInline] = useState(false);
     const [showWarning, setShowWarning] = useState(false);
-    const { schemaData, preRefSchemaData } = useVersion();
-    const schema = !inline ? preRefSchemaData[data?.type.toLowerCase()] : schemaData[data?.type.toLowerCase()];
+    const { schemaData } = useSchema()
+    const schema = schemaData[data?.type.toLowerCase()];
     const [values, setValues] = useState(data?.values || {});
 
     const { setNodes } = useReactFlow();
@@ -191,12 +184,11 @@ function ConfigNodeComponent({ id, data }: NodeProps) {
                     data: {
                         ...node.data,
                         values,
-                        inline,
                     },
                 };
             })
         );
-    }, [values, inline]);
+    }, [values]);
 
 
 
@@ -227,27 +219,8 @@ function ConfigNodeComponent({ id, data }: NodeProps) {
 
     return (
         <NodeContainer nodeId={id}>
-            <div className="text-sm font-semibold flex flex-row border-b-1 pb-2 mb-3">{data.kind}.yaml {"{"} <div className="flex-grow" />
-                <div className="flex items-center">
-                    <Label htmlFor="inline" className="text-[10px] mr-2">Inline</Label>
-                    <Switch checked={inline} onCheckedChange={() => { inline ? setInline(false) : setShowWarning(true) }} id="inline" />
-                </div>
-            </div>
+            <div className="text-sm font-semibold flex flex-row border-b-1 pb-2 mb-3">{data.kind}.yaml {"{"} </div>
 
-            <Dialog open={showWarning} onOpenChange={setShowWarning}>
-                <DialogContent>
-                    <DialogTitle>
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-lg font-semibold">Warning</h2>
-                        </div>
-                    </DialogTitle>
-                    <div className="p-4">
-                        <p className="text-sm text-muted-foreground">We recommend using <span className={`${typeColors.objectRef} font-bold`}>objectRef</span>'s for building your configuration.</p>
-                        <Button variant="secondary" className="mt-4" onClick={() => { setInline(true); setShowWarning(false); }}>Proceed</Button>
-                        <Button variant="destructive" className="mt-4 ml-2" onClick={() => setShowWarning(false)}>Cancel</Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
             <div className="space-y-1 pl-2">
                 {Object.entries(schema.properties ?? {}).map(([key, fieldSchema]) => (
                     <ConfigField
@@ -271,6 +244,6 @@ function ConfigNodeComponent({ id, data }: NodeProps) {
 
 // Only re-render if `data` changes, not position/drag
 export const ConfigNode = memo(
-  ConfigNodeComponent,
-  (prev, next) => JSON.stringify(prev.data) === JSON.stringify(next.data)
+    ConfigNodeComponent,
+    (prev, next) => JSON.stringify(prev.data) === JSON.stringify(next.data)
 );

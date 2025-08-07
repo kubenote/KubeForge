@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 import path from 'path';
 import fs from 'fs/promises';
 
-const CACHE_DIR = path.join(process.cwd(), '.next', 'schema-cache');
+const CACHE_DIR = path.join(process.cwd(), 'schema-cache');
 let controller: ReadableStreamDefaultController;
 
 export async function GET(req: NextRequest) {
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
     (async () => {
         try {
 
-            const targetPath = path.join(CACHE_DIR, version);
+            const targetPath = path.join(CACHE_DIR, version, "raw");
 
             try {
                 const stat = await fs.stat(targetPath);
@@ -53,24 +53,24 @@ export async function GET(req: NextRequest) {
                 await fs.mkdir(targetPath, { recursive: true });
 
                 for (const [relativePath, file] of entries) {
-                    if (!file.dir && relativePath.includes('/raw/') && relativePath.endsWith('.json')) {
+                    if (!file.dir) {
                         const content = await file.async('nodebuffer');
+
+                        // Remove the top-level folder (e.g., 'kubernetes-schema-1.29.1')
                         const parts = relativePath.split('/');
+                        const relativeWithinSchema = parts.slice(1).join('/');
 
-                        // Example: "kubernetes-schema-1.29.1/raw/core/v1/Pod.json"
-                        const rawIndex = parts.indexOf('raw');
-                        const relativeRawPath = parts.slice(rawIndex + 1).join('/');
+                        const fullPath = path.join(targetPath, relativeWithinSchema);
 
-                        const fullPath = path.join(targetPath, relativeRawPath);
                         await fs.mkdir(path.dirname(fullPath), { recursive: true });
                         await fs.writeFile(fullPath, content);
                     }
-
 
                     done++;
                     const percent = Math.floor((done / total) * 90 + 10); // 10–100%
                     send({ progress: percent });
                 }
+
 
                 send({ done: true });
                 controller.close();

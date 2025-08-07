@@ -5,15 +5,23 @@ import React, { createContext, useContext, useState } from 'react';
 type SchemaContextType = {
     schemaGvks: any;
     setSchemaGvks: (data: any) => void;
+    schemaData: any;
+    setSchemaData: (data: any) => void;
 };
 
 const SchemaContext = createContext<SchemaContextType | undefined>(undefined);
 
 export const SchemaProvider = ({ children }: { children: React.ReactNode }) => {
     const [schemaGvks, setSchemaGvks] = useState([])
+    const [schemaData, setSchemaData] = useState({})
 
     return (
-        <SchemaContext.Provider value={{ schemaGvks, setSchemaGvks }}>
+        <SchemaContext.Provider value={{
+            schemaGvks,
+            setSchemaGvks,
+            schemaData,
+            setSchemaData
+        }}>
             {children}
         </SchemaContext.Provider>
     );

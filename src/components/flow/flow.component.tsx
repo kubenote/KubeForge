@@ -21,7 +21,7 @@ const nodeTypes = {
 
 export default function Flow() {
 
-  const { version, setVersion, setSchemaData, setPreRefSchemaData } = useVersion();
+  const { version } = useVersion();
   const { setSchemaGvks } = useSchema();
   const [nodes, setNodes] = useState(initialNodes);
   const [edges, setEdges] = useState(initialEdges);
@@ -38,8 +38,6 @@ export default function Flow() {
       .then((data) => {
         console.log(data)
         setSchemaGvks(data.gvks)
-        setSchemaData(data.ref);
-        setPreRefSchemaData(data.preRef);
       })
       .catch((e) => {
         console.error(e);
@@ -71,7 +69,7 @@ export default function Flow() {
   // Close the context menu if it's open whenever the window is clicked.
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
-
+  useEffect(()=>{console.log(edges)},[edges])
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),

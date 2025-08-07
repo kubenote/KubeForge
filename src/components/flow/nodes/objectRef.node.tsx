@@ -16,6 +16,7 @@ import { Checkbox } from "components/components/ui/checkbox"
 import NodeContainer from "./node.container"
 import { memo } from "react";
 import { typeColors } from "./node.types"
+import { useSchema } from "components/providers/SchemaProvider"
 
 const ConfigField = ({ label, value, schema, path, onChange, nodeId, edges }: {
     label: string;
@@ -49,7 +50,7 @@ const ConfigField = ({ label, value, schema, path, onChange, nodeId, edges }: {
         const field = edge.sourceHandle.replace("source-", "");
         const sourceFieldId = `${edge.source}.${field}`;
         const unsub = subscribe(sourceFieldId, (val) => {
-            onChange(path, val); 
+            onChange(path, val);
         });
 
         return unsub;
@@ -228,8 +229,8 @@ const ConfigField = ({ label, value, schema, path, onChange, nodeId, edges }: {
 
 
 export function ObjectRefNodeComponent({ id, data }: NodeProps) {
-    const { schemaData } = useVersion();
-    const schema = schemaData[data?.kindRef.toLowerCase()]["properties"][data?.objectRef] || {};
+    const { schemaData } = useSchema();
+    const schema = schemaData[`${data?.kind.toLowerCase()}.${data?.objectRef}`] || {};
     const [values, setValues] = useState(data?.values || {});
     const [visibleFields, setVisibleFields] = useState<string[]>([]);
     const { setNodes } = useReactFlow();
@@ -252,16 +253,16 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
             })
         );
     }, [values]);
-        const edges = useStore(
-            (s) => s.edges.filter(e => e.target === id),
-            shallow
-        );
+    const edges = useStore(
+        (s) => s.edges.filter(e => e.target === id),
+        shallow
+    );
 
 
     const allFields = useMemo(() => Object.keys(schema.properties || {}), [schema]);
 
     const handleValueChange = useCallback((path: string, newVal: any) => {
-        console.log("we changin")
+
         setValues(prev => {
             const updated = structuredClone(prev);
             const parts = path.split(".");
@@ -287,7 +288,7 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
         <NodeContainer nodeId={id}>
             <div className="border-b-1 pb-2 mb-2">
                 <div className="flex relative items-center ">
-                    <div className="text-sm font-semibold flex flex-row">({data?.kindRef}){data?.objectRef}.ref {"{"}</div>
+                    <div className="text-sm font-semibold flex flex-row">({data?.kind}){data?.objectRef}.ref {"{"}</div>
                     <div className="flex-grow" />
                     <span className={`text-xs mr-2 ${typeColors["objectRef"]}`}>objectRef</span>
                     <Handle
@@ -360,6 +361,6 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
 
 // Only re-render if `data` changes, not position/drag
 export const ObjectRefNode = memo(
-  ObjectRefNodeComponent,
-  (prev, next) => JSON.stringify(prev.data) === JSON.stringify(next.data)
+    ObjectRefNodeComponent,
+    (prev, next) => JSON.stringify(prev.data) === JSON.stringify(next.data)
 );

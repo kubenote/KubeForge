@@ -36,6 +36,7 @@ import * as ApiVersion from "@/components/data/apiVersion.json"
 import { capitalize } from "components/helpers/textTransform";
 import { nanoid } from 'nanoid';
 import { useSchema } from "components/providers/SchemaProvider";
+import { useNodeProvider } from "components/providers/NodeProvider";
 
 
 export function AppSidebarClient({
@@ -55,7 +56,7 @@ export function AppSidebarClient({
     const { version, setVersion, schemaData, preRefSchemaData } = useVersion();
     const { schemaGvks } = useSchema();
 
-    const { addNodes } = useReactFlow();
+    const { addNode } = useNodeProvider()
 
 
     const handleSelect = (version: string) => {
@@ -82,13 +83,7 @@ export function AppSidebarClient({
         };
     };
 
-    React.useEffect(() => {
-        const dop = Object.keys(schemaData).join(", ");
-        console.log(`Schema data updated: ${dop}`);
-    }, [schemaData])
-
     const matchedKeys = new Set<string>();
-
 
     return (
         <Sidebar {...props}>
@@ -134,15 +129,8 @@ export function AppSidebarClient({
                                             onClick={(e) => {
                                                 e.preventDefault();
 
-                                                addNodes({
-                                                    id: nanoid(),
-                                                    type: 'ConfigNode', // your custom node type
-                                                    position: {
-                                                        x: 100, // offset to avoid overlap
-                                                        y: 100,
-                                                    },
-                                                    data: { type: item.kind, kind: item.kind, values: { kind: item.kind, apiVersion: ApiVersion[item.version] } },
-                                                });
+                                                addNode({ data: { type: item.kind, kind: item.kind, values: { kind: item.kind, apiVersion: item.version } } })
+
                                             }}
                                             asChild isActive={item.kind}>
                                             <span
@@ -216,21 +204,13 @@ export function AppSidebarClient({
                                 <SidebarGroupContent>
                                     <SidebarMenu className="max-h-[calc(100vh-210px)] overflow-y-auto">
                                         {matchedGroupItems.map(({ kind, icon, group, version, info }) => (
-                                            <SidebarMenuItem key={group+kind}>
+                                            <SidebarMenuItem key={group + kind}>
                                                 <SidebarMenuButton
                                                     onClick={(e) => {
                                                         console.log(kind)
                                                         e.preventDefault();
 
-                                                        addNodes({
-                                                            id: nanoid(),
-                                                            type: 'ConfigNode', // your custom node type
-                                                            position: {
-                                                                x: 100, // offset to avoid overlap
-                                                                y: 100,
-                                                            },
-                                                            data: { type: kind, kind: kind, values: { kind: kind, apiVersion: version } },
-                                                        });
+                                                        addNode({ data: { type: kind, kind, values: { kind, apiVersion: version } } })
                                                     }}
                                                     asChild isActive={kind}>
                                                     <span

@@ -4,6 +4,8 @@ import "./globals.css";
 import { VersionProvider } from "components/providers/VersionProvider";
 import { WarningProvider } from "components/providers/WarningsProvider";
 import { SchemaProvider } from "components/providers/SchemaProvider";
+import { NodeProvider } from "components/providers/NodeProvider";
+import { ReactFlowProvider } from "@xyflow/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,11 +35,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <WarningProvider>
-          <VersionProvider>
-            <SchemaProvider>
-              {children}
-            </SchemaProvider>
-          </VersionProvider>
+          <ReactFlowProvider>
+            <VersionProvider>
+              <SchemaProvider>
+                <NodeProvider>
+                  {children}
+                </NodeProvider>
+              </SchemaProvider>
+            </VersionProvider>
+          </ReactFlowProvider>
         </WarningProvider>
       </body>
     </html>

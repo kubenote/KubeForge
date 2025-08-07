@@ -94,14 +94,14 @@ export const nodeWarningRules: RuleFunction[] = [
             return {
                 id: index + 1,
                 nodes: [node.id],
-                title: `Empty objectRef for "${node?.data?.kindRef}"`,
-                message: `Node "objectRef.${node?.data?.kindRef}" has no values configured.`,
+                title: `Empty objectRef for "${node?.data?.kind}"`,
+                message: `Node "objectRef.${node?.data?.kind}" has no values configured.`,
                 level: 'danger'
             }
         }
         return null
     },
-    singletonKindRule,
+    //singletonKindRule,
     overlappingNodeRule
 ]
 

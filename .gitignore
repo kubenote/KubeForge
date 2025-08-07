@@ -16,7 +16,7 @@
 # next.js
 /.next/
 /out/
-
+/schema-cache/*
 # production
 /build
 

@@ -3,10 +3,10 @@ import path from 'path';
 
 //Group Version Kinds
 
-const CACHE_DIR = path.join(process.cwd(), '.next', 'schema-cache');
+const CACHE_DIR = path.join(process.cwd(), 'schema-cache');
 
 export async function loadSchemas(version: string, preRef = true): Promise<Record<string, any>> {
-  const basePath = path.join(CACHE_DIR, version);
+  const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
   const schemaMap: Record<string, any> = {};
 
@@ -62,7 +62,7 @@ function resolveRefs(obj: any, definitions: Record<string, any>, seen = new Set(
 }
 
 export async function loadGvks(version: string) {
-  const basePath = path.join(CACHE_DIR, version);
+  const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
 
   const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
@@ -109,12 +109,12 @@ function rankVersion(v: string): [major: number, maturity: number, betaAlphaNum:
 export function filterRealResources(gvks: GVK[]): GVK[] {
   const excludedKinds = new Set([
     // Meta / plumbing
-    'Status','APIGroup','APIGroupList','APIResourceList','APIVersions',
-    'WatchEvent','DeleteOptions','Scale','Eviction',
+    'Status', 'APIGroup', 'APIGroupList', 'APIResourceList', 'APIVersions',
+    'WatchEvent', 'DeleteOptions', 'Scale', 'Eviction',
     // Rarely hand-authored / system-generated
-    'Binding','ComponentStatus','SelfSubjectAccessReview','SelfSubjectRulesReview',
-    'SelfSubjectReview','SubjectAccessReview','LocalSubjectAccessReview',
-    'TokenRequest','TokenReview','StorageVersion','StorageVersionMigration',
+    'Binding', 'ComponentStatus', 'SelfSubjectAccessReview', 'SelfSubjectRulesReview',
+    'SelfSubjectReview', 'SubjectAccessReview', 'LocalSubjectAccessReview',
+    'TokenRequest', 'TokenReview', 'StorageVersion', 'StorageVersionMigration',
   ]);
 
   // 1) Remove lists & excluded kinds
@@ -149,4 +149,33 @@ export function filterRealResources(gvks: GVK[]): GVK[] {
     x.kind.localeCompare(y.kind) ||
     x.version.localeCompare(y.version)
   );
+}
+
+
+export async function loadSpecificSchemas(version: string, schemas = [], full = true): Promise<Record<string, any>> {
+  const basePath = path.join(CACHE_DIR, version, "raw");
+  const definitionsPath = path.join(basePath, '_definitions.json');
+  const schemaMap: Record<string, any> = {};
+
+  const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
+  const definitionsJson = JSON.parse(defsRaw);
+  const definitions = definitionsJson.definitions || {};
+
+  const walk = async (dir: string) => {
+    const files = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of files) {
+      const fullPath = path.join(dir, file.name);
+      if (file.isDirectory()) {
+        await walk(fullPath);
+      } else if (file.name.endsWith('.json') && file.name !== '_definitions.json') {
+        const raw = await fs.readFile(fullPath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        const name = path.basename(file.name, '.json');
+        if (schemas.includes(name.toLowerCase())) full ? schemaMap[name] = resolveRefs(parsed, definitions) : schemaMap[name] = parsed;
+      }
+    }
+  };
+
+  await walk(basePath);
+  return schemaMap; // fully expanded schemas keyed by filename (e.g., "deployment")
 }
