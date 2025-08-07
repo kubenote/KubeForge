@@ -9,9 +9,8 @@ import { ObjectRefNode } from './nodes/objectRef.node';
 import ContextMenu from './nodeContextMenu';
 import { TopProgressBar } from '../ui/progress-bar';
 import { useSchema } from 'components/providers/SchemaProvider';
-
-const initialNodes = [];
-const initialEdges = [];
+import * as DefaultFlow from '../data/defaultFlow.json'
+import { useNodeProvider } from 'components/providers/NodeProvider';
 
 const nodeTypes = {
   ConfigNode: ConfigNode,
@@ -23,8 +22,9 @@ export default function Flow() {
 
   const { version } = useVersion();
   const { setSchemaGvks } = useSchema();
-  const [nodes, setNodes] = useState(initialNodes);
-  const [edges, setEdges] = useState(initialEdges);
+  const { getSchema } = useNodeProvider()
+  const [nodes, setNodes] = useState();
+  const [edges, setEdges] = useState();
   const [menu, setMenu] = useState(null);
   const ref = useRef(null);
   const [loading, setLoading] = useState(false)
@@ -47,6 +47,19 @@ export default function Flow() {
       })
   }, [version])
 
+  useEffect(() => {
+    async function begin() {
+      const getTypes: string[] = DefaultFlow.nodes.map((item) => item.data.objectRef ? item.data.kind + "." + item.data.objectRef : item.data.kind)
+      const getres = await getSchema({ schemas: getTypes, v: "v1.33.3" })
+      if (getres) {
+        setNodes(DefaultFlow.nodes)
+        setEdges(DefaultFlow.edges)
+      }
+    }
+    begin()
+  }, [])
+
+
 
   const onNodeContextMenu = useCallback(
     (event, node) => {
@@ -68,8 +81,6 @@ export default function Flow() {
 
   // Close the context menu if it's open whenever the window is clicked.
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
-
-  useEffect(()=>{console.log(edges)},[edges])
 
   const onNodesChange = useCallback(
     (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),

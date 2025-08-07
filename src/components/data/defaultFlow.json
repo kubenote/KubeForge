@@ -1,0 +1,202 @@
+{
+    "nodes": [
+        {
+            "id": "FMpK1Wy_sG-teJPM5clpX",
+            "type": "ObjectRefNode",
+            "position": {
+                "x": -283.252530989013,
+                "y": 150.01864669484314
+            },
+            "data": {
+                "kind": "Deployment",
+                "objectRef": "metadata",
+                "values": {
+                    "name": "http-echo"
+                }
+            },
+            "measured": {
+                "width": 350,
+                "height": 181
+            },
+            "selected": false,
+            "dragging": false
+        },
+        {
+            "id": "-v0FJX9NbgOL-jImveh9N",
+            "type": "ObjectRefNode",
+            "position": {
+                "x": 179.04102179665847,
+                "y": 503.180606691766
+            },
+            "data": {
+                "kind": "Service",
+                "objectRef": "metadata",
+                "values": {
+                    "name": "http-echo"
+                }
+            },
+            "measured": {
+                "width": 350,
+                "height": 181
+            },
+            "selected": false,
+            "dragging": false
+        },
+        {
+            "id": "T7mjPFssUydMP3uWrfgcZ",
+            "type": "ObjectRefNode",
+            "position": {
+                "x": -395.41555691078247,
+                "y": 380.4075648044237
+            },
+            "data": {
+                "kind": "Deployment",
+                "objectRef": "spec",
+                "values": {
+                    "replicas": 1,
+                    "selector": {
+                        "matchLabels": {
+                            "app": "http-echo"
+                        }
+                    },
+                    "template": {
+                        "metadata": {
+                            "labels": {
+                                "app": "http-echo"
+                            }
+                        },
+                        "spec": {
+                            "containers": [
+                                {
+                                    "name": "http-echo",
+                                    "image": "hashicorp/http-echo",
+                                    "args": [
+                                        "-text=Hello from Kubernetes!"
+                                    ],
+                                    "ports": [
+                                        {
+                                            "containerPort": 5678
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "measured": {
+                "width": 464,
+                "height": 1349
+            },
+            "selected": true,
+            "dragging": false
+        },
+        {
+            "id": "pst8FTSEhuTxKftBNMzrP",
+            "type": "ConfigNode",
+            "position": {
+                "x": 180.33297802505115,
+                "y": 145.47149699531195
+            },
+            "data": {
+                "type": "Deployment",
+                "kind": "Deployment",
+                "values": {
+                    "apiVersion": "apps/v1",
+                    "kind": "Deployment",
+                    "metadata": "#ref-FMpK1Wy_sG-teJPM5clpX",
+                    "spec": "#ref-T7mjPFssUydMP3uWrfgcZ"
+                }
+            },
+            "measured": {
+                "width": 350,
+                "height": 276
+            },
+            "selected": false,
+            "dragging": false
+        },
+        {
+            "id": "CKdFtwBUgxh9LBInoMZuf",
+            "type": "ObjectRefNode",
+            "position": {
+                "x": 162.3681395650441,
+                "y": 719.928075702753
+            },
+            "data": {
+                "kind": "Service",
+                "objectRef": "spec",
+                "values": {
+                    "selector": {
+                        "app": "http-echo"
+                    },
+                    "ports": [
+                        {
+                            "port": 80,
+                            "targetPort": 5678
+                        }
+                    ]
+                }
+            },
+            "measured": {
+                "width": 378,
+                "height": 509
+            },
+            "selected": false,
+            "dragging": false
+        },
+        {
+            "id": "8F-2qecHjQhza-hpzUs3x",
+            "type": "ConfigNode",
+            "position": {
+                "x": 613.827916047025,
+                "y": 515.3063392238491
+            },
+            "data": {
+                "type": "Service",
+                "kind": "Service",
+                "values": {
+                    "apiVersion": "v1",
+                    "kind": "Service",
+                    "metadata": "#ref--v0FJX9NbgOL-jImveh9N",
+                    "spec": "#ref-CKdFtwBUgxh9LBInoMZuf"
+                }
+            },
+            "measured": {
+                "width": 350,
+                "height": 276
+            },
+            "selected": false,
+            "dragging": false
+        }
+    ],
+    "edges": [
+        {
+            "source": "FMpK1Wy_sG-teJPM5clpX",
+            "sourceHandle": "source-FMpK1Wy_sG-teJPM5clpX",
+            "target": "pst8FTSEhuTxKftBNMzrP",
+            "targetHandle": "target-metadata",
+            "id": "xy-edge__FMpK1Wy_sG-teJPM5clpXsource-FMpK1Wy_sG-teJPM5clpX-pst8FTSEhuTxKftBNMzrPtarget-metadata"
+        },
+        {
+            "source": "-v0FJX9NbgOL-jImveh9N",
+            "sourceHandle": "source--v0FJX9NbgOL-jImveh9N",
+            "target": "8F-2qecHjQhza-hpzUs3x",
+            "targetHandle": "target-metadata",
+            "id": "xy-edge__-v0FJX9NbgOL-jImveh9Nsource--v0FJX9NbgOL-jImveh9N-8F-2qecHjQhza-hpzUs3xtarget-metadata"
+        },
+        {
+            "source": "T7mjPFssUydMP3uWrfgcZ",
+            "sourceHandle": "source-T7mjPFssUydMP3uWrfgcZ",
+            "target": "pst8FTSEhuTxKftBNMzrP",
+            "targetHandle": "target-spec",
+            "id": "xy-edge__T7mjPFssUydMP3uWrfgcZsource-T7mjPFssUydMP3uWrfgcZ-pst8FTSEhuTxKftBNMzrPtarget-spec"
+        },
+        {
+            "source": "CKdFtwBUgxh9LBInoMZuf",
+            "sourceHandle": "source-CKdFtwBUgxh9LBInoMZuf",
+            "target": "8F-2qecHjQhza-hpzUs3x",
+            "targetHandle": "target-spec",
+            "id": "xy-edge__CKdFtwBUgxh9LBInoMZufsource-CKdFtwBUgxh9LBInoMZuf-8F-2qecHjQhza-hpzUs3xtarget-spec"
+        }
+    ]
+}
