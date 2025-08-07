@@ -17,6 +17,9 @@
 /.next/
 /out/
 /schema-cache/*
+!/schema-cache/**/
+!/schema-cache/**/.git
+
 # production
 /build
 
