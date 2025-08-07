@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Handle, NodeProps, Position, useReactFlow, useStore } from "@xyflow/react"
 import { useState, useCallback, useEffect } from "react"
-import { ChevronDown, ChevronRight } from "lucide-react"
+import { ChevronDown, ChevronRight, SquareMinus, SquarePlus } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "components/components/ui/tooltip"
 import { useVersion } from "@/providers/VersionProvider"
 import { publish, subscribe } from "components/lib/eventBus"
@@ -234,6 +234,8 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
     const [values, setValues] = useState(data?.values || {});
     const [visibleFields, setVisibleFields] = useState<string[]>([]);
     const { setNodes } = useReactFlow();
+    const [isMinimized, setIsMinimized] = useState(false);
+
 
     // Sync internal state back to the global node data
     useEffect(() => {
@@ -288,7 +290,21 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
         <NodeContainer nodeId={id}>
             <div className="border-b-1 pb-2 mb-2">
                 <div className="flex relative items-center ">
-                    <div className="text-sm font-semibold flex flex-row">({data?.kind}){data?.objectRef}.ref {"{"}</div>
+                    {/* Toggle button */}
+                    {isMinimized ? (
+                        <SquarePlus
+                            size={15}
+                            className="cursor-pointer mr-2 hover:text-[#888]"
+                            onClick={() => setIsMinimized(false)} // Unminimize on click
+                        />
+                    ) : (
+                        <SquareMinus
+                            size={15}
+                            className="cursor-pointer mr-2 hover:text-[#888]"
+                            onClick={() => setIsMinimized(true)} // Minimize on click
+                        />
+                    )}
+                    <div className="text-sm font-semibold flex flex-row">({data?.kind}) {data?.objectRef}.ref {"{"}</div>
                     <div className="flex-grow" />
                     <span className={`text-xs mr-2 ${typeColors["objectRef"]}`}>objectRef</span>
                     <Handle
@@ -300,7 +316,9 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
                 </div>
             </div>
 
-            <div className="space-y-1 ">
+            <div
+                className={`space-y-1 ${isMinimized ? 'max-h-0 overflow-hidden' : ''} transition-all duration-300 ease-in-out`}
+            >
                 {visibleFields.map((key) => (
                     <div key={key} className="flex relative items-start group">
                         <button
@@ -332,26 +350,27 @@ export function ObjectRefNodeComponent({ id, data }: NodeProps) {
                         </div>
                     </div>
                 ))}
+                <div className="pt-3 mt-2 border-t flex items-center gap-2">
+                    <Select value="" onValueChange={(field) => {
+                        handleAddField(field)
+                    }}>
+                        <SelectTrigger className="w-full h-6 cursor-pointer">
+                            <SelectValue placeholder="Select field to add" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {allFields
+                                .filter((f) => !visibleFields.includes(f))
+                                .map((field) => (
+                                    <SelectItem key={field} value={field}>
+                                        {field}
+                                    </SelectItem>
+                                ))}
+                        </SelectContent>
+                    </Select>
+                </div>
             </div>
 
-            <div className="pt-2 mt-2 border-t flex items-center gap-2">
-                <Select value="" onValueChange={(field) => {
-                    handleAddField(field)
-                }}>
-                    <SelectTrigger className="w-full h-6 cursor-pointer">
-                        <SelectValue placeholder="Select field to add" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {allFields
-                            .filter((f) => !visibleFields.includes(f))
-                            .map((field) => (
-                                <SelectItem key={field} value={field}>
-                                    {field}
-                                </SelectItem>
-                            ))}
-                    </SelectContent>
-                </Select>
-            </div>
+
 
             <div className="mt-1 text-sm border-t-1 pt-2 mt-3">{"}"}</div>
         </NodeContainer>

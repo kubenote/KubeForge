@@ -41,7 +41,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                     const next = prev + 2;
                     return next >= 80 ? 80 : next;
                 });
-            }, 100); // adjust speed here
+            }, 200); // adjust speed here
         } else {
             // When loading finishes, ensure it fills to 100
             setProgress(100);
