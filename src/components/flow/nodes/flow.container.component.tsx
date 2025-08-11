@@ -1,4 +1,4 @@
-import { NodeWarning } from "components/components/warnings/warnings.rulesets";
+import { NodeWarning } from "components/components/warnings/warnings.rules.types";
 import { useWarning } from "components/providers/WarningsProvider"
 
 export default function NodeContainer({ nodeId, children }) {

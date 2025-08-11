@@ -17,7 +17,7 @@ export default function ContextMenu({
     bottom,
     ...props
 }: ContextMenuProps) {
-    const { getNode, setNodes, addNodes, setEdges } = useReactFlow();
+    const { getNode, setNodes, setEdges } = useReactFlow();
 
 
 

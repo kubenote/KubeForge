@@ -10,7 +10,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useStore } from '@xyflow/react'
-import { NodeWarning, nodeWarningRules } from './warnings.rulesets'
+import { NodeWarning, nodeWarningRules } from './warnings.rules.types'
 import { Info, AlertTriangle, OctagonAlert, TriangleAlert } from 'lucide-react'
 import { useWarning } from '../../providers/WarningsProvider'
 

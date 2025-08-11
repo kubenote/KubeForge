@@ -11,14 +11,9 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from 'components/components/ui/progress';
-
-type NodeContextType = {
-    addNode: (data: any) => void;
-    getSchema: (data: any) => void;
-};
+import { NodeContextType, AddNodeParams, GetSchemaParams, SchemaData } from '@/types';
 
 const NodeContext = createContext<NodeContextType | undefined>(undefined);
 
@@ -61,11 +56,13 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
     }, [isLoading]);
 
 
-    const addNode = async ({ data, id = null, targetNode = null, type = "KindNode" }: { apiVersion: string; id: string | null, kind: string; targetNode: string | null; type: string }) => {
+    const addNode = async ({ data, id = null, targetNode = null, type = "KindNode" }: AddNodeParams): Promise<void> => {
         setProgress(0)
         setIsLoading(true)
 
-        if (schemaData[data.kind.toLowerCase()] || schemaData[`${data.kind.toLowerCase()}.${data?.objectRef}`]) {
+        const schemaKey = 'objectRef' in data ? `${data.kind.toLowerCase()}.${data.objectRef}` : data.kind.toLowerCase();
+        
+        if (schemaData[schemaKey]) {
             const generatedId = nanoid()
 
             addNodes({
@@ -74,11 +71,11 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 position: { x: type == "ObjectRefNode" ? -500 : 100, y: 100 },
                 data: data,
             });
-            if (type == "ObjectRefNode") {
+            if (type === "ObjectRefNode" && targetNode && 'objectRef' in data && typeof data.objectRef === 'string') {
                 addEdges({
                     "source": generatedId,
                     "sourceHandle": `source-${generatedId}`,
-                    "target": targetNode || "",
+                    "target": targetNode,
                     "targetHandle": `target-${data.objectRef}`,
                     "id": `xy-edge__${generatedId}source-${generatedId}-${targetNode}target-${data.objectRef}`
                 })
@@ -89,11 +86,21 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 .then(res => res.json())
                 .catch(console.error);
 
-            if (!schema) return;
+            if (!schema) {
+                setIsLoading(false);
+                return;
+            }
 
-            let parsedSchema = JSON.parse(schema)
-            if (type == "ObjectRefNode") parsedSchema = { [`${data.kind.toLowerCase()}.${data.objectRef}`]: parsedSchema[data.kind.toLowerCase()]["properties"][data.objectRef] }
-            setSchemaData(prev => ({ ...prev, ...parsedSchema }));
+            let parsedSchema: SchemaData = JSON.parse(schema);
+            if (type === "ObjectRefNode" && 'objectRef' in data && typeof data.objectRef === 'string') {
+                const kindSchema = parsedSchema[data.kind.toLowerCase()];
+                if (kindSchema?.properties?.[data.objectRef]) {
+                    parsedSchema = { 
+                        [`${data.kind.toLowerCase()}.${data.objectRef}`]: kindSchema.properties[data.objectRef] 
+                    };
+                }
+            }
+            setSchemaData((prev: SchemaData) => ({ ...prev, ...parsedSchema }));
 
             addNodes({
                 id: id || generatedId,
@@ -102,11 +109,11 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 data: data,
             });
 
-            if (type == "ObjectRefNode") {
+            if (type === "ObjectRefNode" && targetNode && 'objectRef' in data && typeof data.objectRef === 'string') {
                 addEdges({
                     "source": generatedId,
                     "sourceHandle": `source-${generatedId}`,
-                    "target": targetNode || "",
+                    "target": targetNode,
                     "targetHandle": `target-${data.objectRef}`,
                     "id": `xy-edge__${generatedId}source-${generatedId}-${targetNode}target-${data.objectRef}`
                 })
@@ -118,7 +125,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
 
     };
 
-    const getSchema = async ({ schemas, v }: { schemas: string[], v: string | null }) => {
+    const getSchema = async ({ schemas, v }: GetSchemaParams): Promise<boolean> => {
         setProgress(0)
         setIsLoading(true)
 
@@ -134,9 +141,12 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 const res = await fetch(
                     `/api/schema/load?version=${versionToUse}&schemas=${baseSchemas.join(",")}&full=false`
                 );
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
                 const raw = await res.json();
-                const parsed = JSON.parse(raw);
-                setSchemaData(prev => ({ ...prev, ...parsed }));
+                const parsed: SchemaData = JSON.parse(raw);
+                setSchemaData((prev: SchemaData) => ({ ...prev, ...parsed }));
             } catch (err) {
                 console.error("Base schema fetch failed:", err);
             }
@@ -150,15 +160,18 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 const res = await fetch(
                     `/api/schema/load?version=${versionToUse}&schemas=${kind}&full=true`
                 );
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
                 const raw = await res.json();
-                const parsed = JSON.parse(raw);
+                const parsed: SchemaData = JSON.parse(raw);
 
                 const key = `${kind.toLowerCase()}.${property}`;
-                const schemaSubset =
-                    parsed?.[kind.toLowerCase()]?.properties?.[property];
+                const kindSchema = parsed[kind.toLowerCase()];
+                const schemaSubset = kindSchema?.properties?.[property];
 
                 if (schemaSubset) {
-                    setSchemaData(prev => ({
+                    setSchemaData((prev: SchemaData) => ({
                         ...prev,
                         [key]: schemaSubset,
                     }));

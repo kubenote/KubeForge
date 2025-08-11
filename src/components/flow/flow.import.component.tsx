@@ -5,21 +5,19 @@ import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import yaml from 'js-yaml'
 import { useVersion } from '../../providers/VersionProvider'
-import { useReactFlow } from '@xyflow/react'
 import { FolderArchive } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useNodeProvider } from 'components/providers/NodeProvider'
-
+import { AddNodeParams } from '@/types'
 
 interface NodeData {
   kind: string
   apiVersion: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
-
 function importYamlToFlowNodes(
-  addNode: ({ data }: Object) => {},
+  addNode: (params: AddNodeParams) => void,
   yamlData: NodeData,
 ) {
   try {
@@ -41,7 +39,7 @@ function importYamlToFlowNodes(
           data: {
             kind: kind,
             objectRef: key,
-            values: yamlData[key],
+            values: yamlData[key] as Record<string, unknown>,
           }
         })
       }
@@ -54,7 +52,7 @@ function importYamlToFlowNodes(
       data: {
         type: kind,
         kind: kind,
-        values: yamlData
+        values: yamlData as Record<string, unknown>
       },
     })
 

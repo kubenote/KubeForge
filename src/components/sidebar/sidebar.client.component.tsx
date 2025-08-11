@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from "react";
-import { VersionSwitcher } from "./version-switcher";
-import { SearchForm } from "./search-form";
+import { VersionSwitcher } from "./sidebar.version.component";
+import { SearchForm } from "./sidebar.search.component";
 import {
     Sidebar,
     SidebarContent,
@@ -30,11 +30,7 @@ import { k8sIcons } from "../data/k8sIcons";
 import { Switch } from "../ui/switch";
 import { Label } from "../ui/label";
 
-import { useReactFlow } from '@xyflow/react';
-import MonacoComponent from "../dialog/monaco.component";
-import * as ApiVersion from "@/components/data/apiVersion.json"
-import { capitalize } from "components/helpers/textTransform";
-import { nanoid } from 'nanoid';
+import MonacoComponent from "../dialog/dialog.monaco.component";
 import { useSchema } from "components/providers/SchemaProvider";
 import { useNodeProvider } from "components/providers/NodeProvider";
 

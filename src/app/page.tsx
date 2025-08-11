@@ -1,5 +1,5 @@
-import Flow from "components/components/flow/flow.component";
-import MainSidebar from "components/components/sidebar/sidebar.component";
+import Flow from "components/components/flow/flow.main.component";
+import MainSidebar from "components/components/sidebar/sidebar.main.component";
 
 export default function Home() {
   return (

@@ -8,7 +8,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "../ui/button";
-import MonacoComponent from "./monaco.component";
+import MonacoComponent from "./dialog.monaco.component";
 import { useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { Input } from "../ui/input";

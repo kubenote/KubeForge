@@ -1,4 +1,4 @@
-import AppSidebar from "components/components/sidebar/app-sidebar"
+import AppSidebar from "components/components/sidebar/sidebar.app.component"
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -13,12 +13,12 @@ import {
     SidebarProvider,
     SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { HelperComponent } from "../dialog/helper.component"
+import { HelperComponent } from "../dialog/dialog.helper.component"
 import { getTopics } from "components/lib/getDocs"
-import ExportDialog from "../dialog/export.component"
+import ExportDialog from "../dialog/dialog.export.component"
 import { Badge } from "../ui/badge"
-import YamlImportButton from "../flow/import.node.component"
-import WarningsDrawer from "../warnings/warnings.component"
+import YamlImportButton from "../flow/flow.import.component"
+import WarningsDrawer from "../warnings/warnings.main.component"
 
 
 export default function MainSidebar({ children }: any) {

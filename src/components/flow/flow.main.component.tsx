@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useCallback, use, useEffect, useRef } from 'react';
-import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background, BackgroundVariant } from '@xyflow/react';
+import { useState, useCallback, useEffect, useRef } from 'react';
+import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background, BackgroundVariant, Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useVersion } from '../../providers/VersionProvider';
-import { KindNode } from './nodes/kind.node';
-import { ObjectRefNode } from './nodes/objectRef.node';
-import ContextMenu from './nodeContextMenu';
+import { KindNode } from './nodes/node.kind.component';
+import { ObjectRefNode } from './nodes/node.objectref.component';
+import ContextMenu from './flow.contextmenu.component';
 import { TopProgressBar } from '../ui/progress-bar';
 import { useSchema } from 'components/providers/SchemaProvider';
 import * as DefaultFlow from '../data/defaultFlow.json'
@@ -23,10 +23,16 @@ export default function Flow() {
   const { version } = useVersion();
   const { setSchemaGvks } = useSchema();
   const { getSchema } = useNodeProvider()
-  const [nodes, setNodes] = useState();
-  const [edges, setEdges] = useState();
-  const [menu, setMenu] = useState(null);
-  const ref = useRef(null);
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [edges, setEdges] = useState<Edge[]>([]);
+  const [menu, setMenu] = useState<{
+    id: string;
+    top: number;
+    left: number;
+    right?: number;
+    bottom?: number;
+  } | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -58,18 +64,19 @@ export default function Flow() {
 
 
   const onNodeContextMenu = useCallback(
-    (event, node) => {
+    (event: React.MouseEvent, node: Node) => {
       console.log(JSON.stringify({ nodes: nodes, edges: edges }))
       event.preventDefault();
 
+      if (!ref.current) return;
+      
       const pane = ref.current.getBoundingClientRect();
       setMenu({
         id: node.id,
-        top: event.clientY < pane.height - 200 && event.clientY - 100,
-        left: event.clientX < pane.width - 200 && event.clientX - 300,
-        right: event.clientX >= pane.width - 200 && pane.width - event.clientX,
-        bottom:
-          event.clientY >= pane.height - 200 && pane.height - event.clientY,
+        top: event.clientY < pane.height - 200 ? event.clientY - 100 : 0,
+        left: event.clientX < pane.width - 200 ? event.clientX - 300 : 0,
+        right: event.clientX >= pane.width - 200 ? pane.width - event.clientX : undefined,
+        bottom: event.clientY >= pane.height - 200 ? pane.height - event.clientY : undefined,
       });
     },
     [setMenu],
@@ -79,15 +86,15 @@ export default function Flow() {
   const onPaneClick = useCallback(() => setMenu(null), [setMenu]);
 
   const onNodesChange = useCallback(
-    (changes) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
+    (changes: any) => setNodes((nodesSnapshot) => applyNodeChanges(changes, nodesSnapshot)),
     [],
   );
   const onEdgesChange = useCallback(
-    (changes) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
+    (changes: any) => setEdges((edgesSnapshot) => applyEdgeChanges(changes, edgesSnapshot)),
     [],
   );
   const onConnect = useCallback(
-    (params) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
+    (params: any) => setEdges((edgesSnapshot) => addEdge(params, edgesSnapshot)),
     [],
   );
 
