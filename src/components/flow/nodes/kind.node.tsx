@@ -166,7 +166,7 @@ const ConfigField = ({ label, value, schema, path, kind, onChange, nodeId, edges
     );
 };
 
-function ConfigNodeComponent({ id, data }: NodeProps) {
+function KindNodeComponent({ id, data }: NodeProps) {
     const [showWarning, setShowWarning] = useState(false);
     const { schemaData } = useSchema()
     const schema = schemaData[data?.type.toLowerCase()];
@@ -243,7 +243,7 @@ function ConfigNodeComponent({ id, data }: NodeProps) {
 
 
 // Only re-render if `data` changes, not position/drag
-export const ConfigNode = memo(
-    ConfigNodeComponent,
+export const KindNode = memo(
+    KindNodeComponent,
     (prev, next) => JSON.stringify(prev.data) === JSON.stringify(next.data)
 );

@@ -61,7 +61,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
     }, [isLoading]);
 
 
-    const addNode = async ({ data, id = null, targetNode = null, type = "ConfigNode" }: { apiVersion: string; id: string | null, kind: string; targetNode: string | null; type: string }) => {
+    const addNode = async ({ data, id = null, targetNode = null, type = "KindNode" }: { apiVersion: string; id: string | null, kind: string; targetNode: string | null; type: string }) => {
         setProgress(0)
         setIsLoading(true)
 
@@ -85,7 +85,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
             }
         } else {
             const generatedId = nanoid()
-            const schema = await fetch(`/api/schema/load?version=${version}&schemas=${data.kind}&full=${type != "ConfigNode"}`)
+            const schema = await fetch(`/api/schema/load?version=${version}&schemas=${data.kind}&full=${type != "KindNode"}`)
                 .then(res => res.json())
                 .catch(console.error);
 

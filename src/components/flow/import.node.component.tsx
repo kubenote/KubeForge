@@ -49,7 +49,7 @@ function importYamlToFlowNodes(
     }
 
     addNode({
-      type: "ConfigNode",
+      type: "KindNode",
       id: mainNodeId,
       data: {
         type: kind,

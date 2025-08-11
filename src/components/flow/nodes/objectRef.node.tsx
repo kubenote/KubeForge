@@ -6,17 +6,17 @@ import { Handle, NodeProps, Position, useReactFlow, useStore } from "@xyflow/rea
 import { useState, useCallback, useEffect } from "react"
 import { ChevronDown, ChevronRight, SquareMinus, SquarePlus } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "components/components/ui/tooltip"
-import { useVersion } from "@/providers/VersionProvider"
 import { publish, subscribe } from "components/lib/eventBus"
-import { Trash } from "lucide-react";
-import { shallow } from 'zustand/shallow';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
-import { useMemo } from "react"
-import { Checkbox } from "components/components/ui/checkbox"
 import NodeContainer from "./node.container"
-import { memo } from "react";
+import { shallow } from 'zustand/shallow';
 import { typeColors } from "./node.types"
+import { memo } from "react";
 import { useSchema } from "components/providers/SchemaProvider"
+
+import { Trash } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Checkbox } from "components/components/ui/checkbox"
+import { useMemo } from "react"
 
 const ConfigField = ({ label, value, schema, path, onChange, nodeId, edges }: {
     label: string;

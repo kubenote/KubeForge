@@ -93,7 +93,7 @@
         },
         {
             "id": "pst8FTSEhuTxKftBNMzrP",
-            "type": "ConfigNode",
+            "type": "KindNode",
             "position": {
                 "x": 180.33297802505115,
                 "y": 145.47149699531195
@@ -146,7 +146,7 @@
         },
         {
             "id": "8F-2qecHjQhza-hpzUs3x",
-            "type": "ConfigNode",
+            "type": "KindNode",
             "position": {
                 "x": 613.827916047025,
                 "y": 515.3063392238491

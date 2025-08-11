@@ -4,7 +4,7 @@ import { useState, useCallback, use, useEffect, useRef } from 'react';
 import { ReactFlow, applyNodeChanges, applyEdgeChanges, addEdge, Background, BackgroundVariant } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useVersion } from '../../providers/VersionProvider';
-import { ConfigNode } from './nodes/standard.node';
+import { KindNode } from './nodes/kind.node';
 import { ObjectRefNode } from './nodes/objectRef.node';
 import ContextMenu from './nodeContextMenu';
 import { TopProgressBar } from '../ui/progress-bar';
@@ -13,7 +13,7 @@ import * as DefaultFlow from '../data/defaultFlow.json'
 import { useNodeProvider } from 'components/providers/NodeProvider';
 
 const nodeTypes = {
-  ConfigNode: ConfigNode,
+  KindNode: KindNode,
   ObjectRefNode: ObjectRefNode
 };
 
