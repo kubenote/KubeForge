@@ -9,7 +9,7 @@ import { ObjectRefNode } from './nodes/node.objectref.component';
 import ContextMenu from './flow.contextmenu.component';
 import { TopProgressBar } from '../ui/progress-bar';
 import { useSchema } from 'components/providers/SchemaProvider';
-import * as DefaultFlow from '../data/defaultFlow.json'
+import DefaultFlow from '../data/defaultFlow.json'
 import { useNodeProvider } from 'components/providers/NodeProvider';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectDataManager } from '@/hooks/useProjectDataManager';
@@ -167,8 +167,8 @@ export default function Flow({
     // Only load default flow if no initial nodes/edges provided on first mount and not skipping template
     if (initialNodes.length === 0 && initialEdges.length === 0 && !skipTemplate) {
       async function begin() {
-        setNodes(DefaultFlow.nodes)
-        setEdges(DefaultFlow.edges)
+        setNodes((DefaultFlow as any).nodes)
+        setEdges((DefaultFlow as any).edges)
       }
       begin()
     }

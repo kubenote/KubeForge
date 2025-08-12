@@ -24,7 +24,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 COPY --from=builder /app ./
-ENV NODE_ENV=production
+
+ENV DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL_DEMO="file:./demo.db"
 
 # Ensure database directory exists and run migrations
 RUN mkdir -p prisma && npx prisma migrate deploy

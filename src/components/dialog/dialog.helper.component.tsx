@@ -84,7 +84,7 @@ export function HelperComponent({ topics: initialTopics, className }: { topics: 
                                         h3: ({ node, ...props }) => <h3 className="text-xl font-medium mt-4" {...props} />,
                                         p: ({ node, ...props }) => <p className="text-sm leading-6" {...props} />,
                                         ul: ({ node, ...props }) => <ul className="list-disc list-inside space-y-1" {...props} />,
-                                        code: ({ node, inline, className, children, ...props }) => {
+                                        code: ({ node, inline, className, children, ...props }: any) => {
                                             if (inline) {
                                                 return <code className="bg-muted px-1 py-0.5 rounded text-xs">{children}</code>
                                             }

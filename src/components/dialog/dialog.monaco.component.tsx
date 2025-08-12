@@ -2,7 +2,12 @@ import React, { forwardRef, useImperativeHandle } from 'react';
 import yaml from 'js-yaml';
 import Editor from '@monaco-editor/react';
 
-const MonacoComponent = forwardRef(({ jsonData, isK8s = false }, ref) => {
+interface MonacoComponentProps {
+  jsonData: any;
+  isK8s?: boolean;
+}
+
+const MonacoComponent = forwardRef<any, MonacoComponentProps>(({ jsonData, isK8s = false }, ref) => {
   let yamlText = '';
 
   try {
@@ -17,7 +22,7 @@ const MonacoComponent = forwardRef(({ jsonData, isK8s = false }, ref) => {
       yamlText = yaml.dump(jsonData);
     }
   } catch (e) {
-    yamlText = '# Error converting JSON to YAML:\n' + e.message;
+    yamlText = '# Error converting JSON to YAML:\n' + (e instanceof Error ? e.message : String(e));
   }
 
   useImperativeHandle(ref, () => ({

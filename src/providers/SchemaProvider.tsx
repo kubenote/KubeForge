@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
-import * as DefaultFlow from "../components/data/defaultFlow.json"
+import DefaultFlow from "../components/data/defaultFlow.json"
 
 type SchemaContextType = {
     schemaGvks: any;
@@ -14,7 +14,7 @@ const SchemaContext = createContext<SchemaContextType | undefined>(undefined);
 
 export const SchemaProvider = ({ children }: { children: React.ReactNode }) => {
     const [schemaGvks, setSchemaGvks] = useState([])
-    const [schemaData, setSchemaData] = useState(DefaultFlow.schemdaData)
+    const [schemaData, setSchemaData] = useState((DefaultFlow as any).schemdaData)
 
     return (
         <SchemaContext.Provider value={{

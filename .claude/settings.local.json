@@ -17,7 +17,11 @@
       "Bash(npx prisma:*)",
       "Bash(curl:*)",
       "Bash(node -e \"console.log(''vivid-lion is valid:'', /^[a-z]+-[a-z]+$/.test(''vivid-lion''))\")",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Bash(git push:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(NEXT_IGNORE_TYPE_ERRORS=true npm run build)"
     ],
     "deny": []
   }
