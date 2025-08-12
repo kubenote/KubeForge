@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { VersionProvider } from "components/providers/VersionProvider";
-import { WarningProvider } from "components/providers/WarningsProvider";
-import { SchemaProvider } from "components/providers/SchemaProvider";
-import { NodeProvider } from "components/providers/NodeProvider";
+import { VersionProvider } from "@/providers/VersionProvider";
+import { WarningProvider } from "@/providers/WarningsProvider";
+import { SchemaProvider } from "@/providers/SchemaProvider";
+import { NodeProvider } from "@/providers/NodeProvider";
 import { ReactFlowProvider } from "@xyflow/react";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoModeIndicator } from "@/components/ui/demo-mode-indicator";

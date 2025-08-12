@@ -1,5 +1,5 @@
-import { NodeWarning } from "components/components/warnings/warnings.rules.types";
-import { useWarning } from "components/providers/WarningsProvider"
+import { NodeWarning } from "@/components/warnings/warnings.rules.types";
+import { useWarning } from "@/providers/WarningsProvider"
 
 export default function NodeContainer({ nodeId, children }) {
     const { notifications } = useWarning()

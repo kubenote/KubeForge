@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Flow from "components/components/flow/flow.main.component";
-import MainSidebar from "components/components/sidebar/sidebar.main.component";
+import Flow from "@/components/flow/flow.main.component";
+import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { Node, Edge } from '@xyflow/react';
 import { getVersionUrlId, findVersionByUrlId, isValidVersionId } from '@/lib/versionUtils';
 import { ProjectDataService } from '@/services/project.data.service';
@@ -35,8 +35,8 @@ export function ProjectPageClient({
   topics, 
   versions 
 }: ProjectPageClientProps) {
-  const [currentNodes, setCurrentNodes] = useState<Node[]>(initialNodes);
-  const [currentEdges, setCurrentEdges] = useState<Edge[]>(initialEdges);
+  const [versionNodes, setVersionNodes] = useState<Node[] | null>(null);
+  const [versionEdges, setVersionEdges] = useState<Edge[] | null>(null);
   const [loadingVersion, setLoadingVersion] = useState(false);
   const [currentVersionId, setCurrentVersionId] = useState<string | null>(null);
   const [currentVersionSlug, setCurrentVersionSlug] = useState<string | null>(null);
@@ -84,8 +84,8 @@ export function ProjectPageClient({
     setLoadingVersion(true);
     try {
       const versionData = await ProjectDataService.loadProjectVersion(project.id, versionId);
-      setCurrentNodes(versionData.nodes);
-      setCurrentEdges(versionData.edges);
+      setVersionNodes(versionData.nodes);
+      setVersionEdges(versionData.edges);
     } catch (error) {
       console.error('Error loading version from hash:', error);
       // Clear invalid hash
@@ -96,9 +96,6 @@ export function ProjectPageClient({
   };
 
   const handleVersionLoad = (nodes: Node[], edges: Edge[], versionId?: string | null, versionData?: { id: string; slug?: string | null }) => {
-    setCurrentNodes(nodes);
-    setCurrentEdges(edges);
-    
     // Update URL hash based on version ID
     if (versionId) {
       setCurrentVersionId(versionId);
@@ -110,55 +107,60 @@ export function ProjectPageClient({
         const newHash = `#${urlId}`;
         window.history.pushState(null, '', `${window.location.pathname}${newHash}`);
       }
+      // Set version data for Flow component remount
+      setVersionNodes(nodes);
+      setVersionEdges(edges);
     } else if (versionId === null) {
       // Explicitly requested to clear version (Load Latest button)
       setCurrentVersionId(null);
       setCurrentVersionSlug(null);
       window.history.pushState(null, '', window.location.pathname);
+      // Reset to initial data
+      setVersionNodes(null);
+      setVersionEdges(null);
     }
     // If versionId is undefined and currentVersionId exists, preserve the current URL
   };
 
   const handleLoadProject = (nodes: Node[], edges: Edge[], projectId: string, projectName: string) => {
-    setCurrentNodes(nodes);
-    setCurrentEdges(edges);
+    setVersionNodes(nodes);
+    setVersionEdges(edges);
     setCurrentVersionId(null);
     setCurrentVersionSlug(null);
   };
 
-  const handleGetFlowState = (callback: () => { nodes: Node[]; edges: Edge[] }) => {
+  const handleGetFlowState = useCallback((callback: () => { nodes: Node[]; edges: Edge[] }) => {
     setGetCurrentFlowState(() => callback);
-  };
+  }, []);
 
   // Function to get current nodes/edges from Flow component instead of stale props
-  const getCurrentNodesEdges = () => {
+  const getCurrentNodesEdges = useCallback(() => {
     if (getCurrentFlowState) {
       return getCurrentFlowState();
     }
-    // Fallback to props if callback not available
-    return { nodes: currentNodes, edges: currentEdges };
-  };
+    // Fallback to props if callback not available  
+    return { nodes: versionNodes || initialNodes, edges: versionEdges || initialEdges };
+  }, [getCurrentFlowState, versionNodes, versionEdges, initialNodes, initialEdges]);
 
   return (
     <MainSidebar 
       topics={topics} 
       versions={versions}
-      currentNodes={currentNodes}
-      currentEdges={currentEdges}
+      currentNodes={versionNodes || initialNodes}
+      currentEdges={versionEdges || initialEdges}
       currentVersionSlug={currentVersionSlug}
       onLoadProject={handleLoadProject}
       onLoadVersion={handleVersionLoad}
       getCurrentNodesEdges={getCurrentNodesEdges}
     >
       <Flow 
-        initialNodes={currentNodes}
-        initialEdges={currentEdges}
+        initialNodes={initialNodes}
+        initialEdges={initialEdges}
         initialProjectId={project.id}
         initialProjectName={project.name}
         initialProjectSlug={project.slug}
         onVersionLoad={handleVersionLoad}
         loadingVersion={loadingVersion}
-        onGetCurrentState={handleGetFlowState}
         currentVersionSlug={currentVersionSlug}
       />
     </MainSidebar>

@@ -3,11 +3,11 @@
 import { Handle, Position, useReactFlow, useStore } from "@xyflow/react"
 import { useState, useCallback, useEffect, memo, useMemo } from "react"
 import { SquareMinus, SquarePlus, Trash } from "lucide-react"
-import { publish } from "components/lib/eventBus"
+import { publish } from "@/lib/eventBus"
 import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
 import { getTypeColor } from "./flow.node.types"
-import { useSchema } from "components/providers/SchemaProvider"
+import { useSchema } from "@/providers/SchemaProvider"
 import { ConfigField } from "./flow.configfield.component"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { ObjectRefNodeData, FlowEdge, Schema } from "@/types"

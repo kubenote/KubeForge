@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Node, Edge } from '@xyflow/react';
-import Flow from "components/components/flow/flow.main.component";
-import MainSidebar from "components/components/sidebar/sidebar.main.component";
+import Flow from "@/components/flow/flow.main.component";
+import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Zap } from 'lucide-react';

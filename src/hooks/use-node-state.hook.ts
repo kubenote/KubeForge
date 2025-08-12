@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useReactFlow, useStore } from "@xyflow/react";
 import { shallow } from 'zustand/shallow';
-import { publish } from "components/lib/eventBus";
+import { publish } from "@/lib/eventBus";
 import { FlowEdge } from '@/types';
 
 interface UseNodeStateOptions {

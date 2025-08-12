@@ -21,7 +21,10 @@
       "Bash(git push:*)",
       "Bash(git branch:*)",
       "Bash(git fetch:*)",
-      "Bash(NEXT_IGNORE_TYPE_ERRORS=true npm run build)"
+      "Bash(NEXT_IGNORE_TYPE_ERRORS=true npm run build)",
+      "Bash(find:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }

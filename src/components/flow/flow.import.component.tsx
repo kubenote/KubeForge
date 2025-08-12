@@ -7,7 +7,7 @@ import yaml from 'js-yaml'
 import { useVersion } from '../../providers/VersionProvider'
 import { FolderArchive } from 'lucide-react'
 import { nanoid } from 'nanoid'
-import { useNodeProvider } from 'components/providers/NodeProvider'
+import { useNodeProvider } from '@/providers/NodeProvider'
 import { AddNodeParams } from '@/types'
 
 interface NodeData {

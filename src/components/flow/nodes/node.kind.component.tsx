@@ -2,10 +2,10 @@
 
 import { useReactFlow, useStore } from "@xyflow/react"
 import { useState, useCallback, useEffect, memo } from "react"
-import { publish } from "components/lib/eventBus"
+import { publish } from "@/lib/eventBus"
 import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
-import { useSchema } from "components/providers/SchemaProvider"
+import { useSchema } from "@/providers/SchemaProvider"
 import { ConfigField } from "./flow.configfield.component"
 import { KindNodeData, FlowEdge } from "@/types"
 import { useReadOnly } from "@/contexts/ReadOnlyContext"

@@ -26,7 +26,7 @@ export default function ExportDialog() {
     const [exportData, setExportData] = useState({});
     const [generated, setGenerated] = useState("")
     const [error, setError] = useState("")
-    const { getNodes } = useReactFlow();
+    const { getNodes, getEdges } = useReactFlow();
     const { isDemoMode } = useDemoMode();
     const monacoRef = useRef<MonacoComponentHandle>(null);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -35,10 +35,20 @@ export default function ExportDialog() {
 
     const prepDialog = () => {
         const nodes = getNodes();
+        const edges = getEdges();
 
         const nodeValuesMap = Object.fromEntries(
             nodes.map((n) => [n.id, n.data?.values || {}])
         );
+
+        // Create a map of connected ObjectRef nodes for validation
+        const connectedRefs = new Set<string>();
+        edges.forEach(edge => {
+            const sourceNode = nodes.find(n => n.id === edge.source);
+            if (sourceNode?.type === "ObjectRefNode") {
+                connectedRefs.add(edge.source);
+            }
+        });
 
         const resolveRefs = (value: any): any => {
             if (Array.isArray(value)) {
@@ -49,7 +59,12 @@ export default function ExportDialog() {
                 );
             } else if (typeof value === "string" && value.startsWith("#ref-")) {
                 const refNodeId = value.slice(5); // everything after "#ref-"
-                return nodeValuesMap[refNodeId] || {};
+                // Only resolve if the referenced node is actually connected
+                if (connectedRefs.has(refNodeId)) {
+                    return nodeValuesMap[refNodeId] || {};
+                }
+                // If not connected, return empty object or remove the reference
+                return {};
             }
             return value;
         };

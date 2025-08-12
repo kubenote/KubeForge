@@ -16,9 +16,9 @@
 # next.js
 /.next/
 /out/
-/schema-cache/*
-!/schema-cache/**/
-!/schema-cache/**/.git
+
+# schema cache (large generated files)
+/schema-cache/
 
 # production
 /build

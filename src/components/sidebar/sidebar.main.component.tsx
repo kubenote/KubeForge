@@ -1,6 +1,6 @@
 'use client';
 
-import { AppSidebarClient } from "components/components/sidebar/sidebar.client.component"
+import { AppSidebarClient } from "@/components/sidebar/sidebar.client.component"
 import {
     Breadcrumb,
     BreadcrumbItem,

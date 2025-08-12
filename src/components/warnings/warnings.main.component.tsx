@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import {
     Drawer,
     DrawerContent,
@@ -25,9 +25,10 @@ export default function WarningsDrawer() {
     const nodes = useStore((s) => s.nodes)
 
     const { notifications, setNotifications } = useWarning()
+    const prevWarningsRef = useRef<string>('')
 
-    useEffect(() => {
-        const warnings: NodeWarning[] = []
+    const warnings = useMemo(() => {
+        const warningsArray: NodeWarning[] = []
         const context = {
             seenKinds: {} as Record<string, string[]>,
             allNodes: nodes
@@ -36,17 +37,32 @@ export default function WarningsDrawer() {
         nodes.forEach((node, index) => {
             nodeWarningRules.forEach((rule) => {
                 const result = rule(node, index, context)
-                if (result) warnings.push(result)
+                if (result) warningsArray.push(result)
             })
         })
 
         // Collect any batch overlap warnings
         if (context.__overlapWarnings?.length) {
-            warnings.push(...context.__overlapWarnings)
+            warningsArray.push(...context.__overlapWarnings)
         }
 
-        setNotifications(warnings)
+        return warningsArray
     }, [nodes])
+
+    useEffect(() => {
+        // Create a stable string representation for comparison
+        const warningsStr = JSON.stringify(
+            warnings
+                .map(w => ({ id: w.id, title: w.title, message: w.message, level: w.level }))
+                .sort((a, b) => a.id - b.id)
+        )
+        
+        // Only update if warnings actually changed
+        if (prevWarningsRef.current !== warningsStr) {
+            prevWarningsRef.current = warningsStr
+            setNotifications(warnings)
+        }
+    }, [warnings, setNotifications])
 
 
     return (

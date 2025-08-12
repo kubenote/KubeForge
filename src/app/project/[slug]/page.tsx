@@ -1,7 +1,7 @@
-import Flow from "components/components/flow/flow.main.component";
-import MainSidebar from "components/components/sidebar/sidebar.main.component";
+import Flow from "@/components/flow/flow.main.component";
+import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { ProjectProvider } from "@/contexts/ProjectContext";
-import { getTopics } from "components/lib/getDocs";
+import { getTopics } from "@/lib/getDocs";
 import { getKubeSchemaBranches } from "@/lib/getBranches";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";

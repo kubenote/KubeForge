@@ -1,11 +1,11 @@
 import { Search } from "lucide-react"
 
-import { Label } from "components/components/ui/label"
+import { Label } from "@/components/ui/label"
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarInput,
-} from "components/components/ui/sidebar"
+} from "@/components/ui/sidebar"
 
 export function SearchForm({ onChange, ...props }: React.ComponentProps<"form"> & { onChange: (value: string) => void }) {
   return (

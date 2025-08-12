@@ -7,12 +7,12 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "components/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "components/components/ui/sidebar";
+} from "@/components/ui/sidebar";
 import { useVersion } from "@/providers/VersionProvider";
 import { Badge } from "../ui/badge";
 import { SiKubernetes } from "react-icons/si";

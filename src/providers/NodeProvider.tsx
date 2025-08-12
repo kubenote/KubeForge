@@ -12,7 +12,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
-import { Progress } from 'components/components/ui/progress';
+import { Progress } from '@/components/ui/progress';
 import { NodeContextType, AddNodeParams, GetSchemaParams, SchemaData } from '@/types';
 
 const NodeContext = createContext<NodeContextType | undefined>(undefined);
