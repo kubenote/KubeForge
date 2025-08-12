@@ -42,3 +42,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+prisma/.env
+!.env.example
+
+# Prisma generated client (only if you changed output path from node_modules)
+prisma/client/
+prisma/generated/
+
+# Local SQLite/dev databases
+prisma/*.db
+!prisma/demo.db
+prisma/*.sqlite
+prisma/*.db-journal
+prisma/*.sqlite-journal

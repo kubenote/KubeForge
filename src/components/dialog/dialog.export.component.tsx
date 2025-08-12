@@ -13,6 +13,7 @@ import { useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { Input } from "../ui/input";
 import { LinkIcon } from "lucide-react";
+import { useDemoMode } from "@/contexts/DemoModeContext";
 
 type MonacoComponentHandle = {
     downloadYaml: () => void;
@@ -24,7 +25,9 @@ export default function ExportDialog() {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [exportData, setExportData] = useState({});
     const [generated, setGenerated] = useState("")
+    const [error, setError] = useState("")
     const { getNodes } = useReactFlow();
+    const { isDemoMode } = useDemoMode();
     const monacoRef = useRef<MonacoComponentHandle>(null);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
@@ -69,13 +72,21 @@ export default function ExportDialog() {
     };
 
     const triggerGenerate = async () => {
+        // Block URL generation in demo mode
+        if (isDemoMode) {
+            setError("URL generation is disabled in demo mode");
+            return;
+        }
+
+        setError(""); // Clear any previous errors
         const generatedUrl = await monacoRef.current?.uploadYamlToServer();
-        setGenerated(generatedUrl);
+        setGenerated(generatedUrl || "");
     }
 
-    const resetState = (state) => {
+    const resetState = (state: boolean) => {
         if (!state) {
             setGenerated("")
+            setError("")
         }
         setDialogOpen(state)
     }
@@ -103,8 +114,15 @@ export default function ExportDialog() {
                     <Button
                         variant="outline"
                         onClick={triggerGenerate}
+                        disabled={isDemoMode}
+                        title={isDemoMode ? "URL generation is disabled in demo mode" : "Generate shareable URL"}
                     >Generate URL</Button>
                 </div>
+                {error && (
+                    <div className="p-3 rounded-md bg-red-50 border border-red-200">
+                        <p className="text-sm text-red-700">{error}</p>
+                    </div>
+                )}
                 {generated && (<div className="relative flex"><Input disabled value={origin + generated} /><LinkIcon onClick={() => { window.open(origin + generated, '_blank'); }} className="absolute right-3 top-3 text-blue-700 cursor-pointer" size={14} /></div>)}
             </DialogContent>
 

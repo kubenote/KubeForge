@@ -13,6 +13,9 @@ RUN git submodule update --init --recursive
 # Install Node deps
 RUN npm ci
 
+# Generate Prisma client
+RUN npx prisma generate
+
 # Build the app
 RUN NEXT_IGNORE_TYPE_ERRORS=true npm run build
 
@@ -22,6 +25,9 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app ./
 ENV NODE_ENV=production
+
+# Ensure database directory exists and run migrations
+RUN mkdir -p prisma && npx prisma migrate deploy
 
 EXPOSE 3000
 CMD ["npm", "start"]

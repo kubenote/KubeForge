@@ -2,6 +2,7 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import { nanoid } from 'nanoid';
 import { NextRequest, NextResponse } from 'next/server';
+import { checkDemoMode } from '@/lib/demoMode';
 
 export const config = {
     api: {
@@ -16,7 +17,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Method not allowed' });
     }
 
-    if (process.env.DEMO_MODE === "true") return NextResponse.json({ error: 'Demo Mode: No Uploads Allowed' });
+    try {
+        // Check if demo mode is enabled
+        checkDemoMode();
+    } catch (error) {
+        return NextResponse.json(
+            { error: error instanceof Error ? error.message : 'URL generation is disabled in demo mode' },
+            { status: 403 }
+        );
+    }
 
     const { yamlContent } = await req.json();
 

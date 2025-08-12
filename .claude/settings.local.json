@@ -4,7 +4,20 @@
       "Bash(npm run build:*)",
       "Bash(npx next:*)",
       "Bash(npx tsc:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm install:*)",
+      "Bash(npx prisma init:*)",
+      "Bash(npx prisma generate:*)",
+      "Bash(npx prisma migrate dev:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx prisma migrate reset:*)",
+      "Bash(taskkill:*)",
+      "Bash(rm:*)",
+      "Bash(npx prisma:*)",
+      "Bash(curl:*)",
+      "Bash(node -e \"console.log(''vivid-lion is valid:'', /^[a-z]+-[a-z]+$/.test(''vivid-lion''))\")",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": []
   }

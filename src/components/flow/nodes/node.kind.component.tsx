@@ -8,6 +8,7 @@ import { shallow } from 'zustand/shallow';
 import { useSchema } from "components/providers/SchemaProvider"
 import { ConfigField } from "./flow.configfield.component"
 import { KindNodeData, FlowEdge } from "@/types"
+import { useReadOnly } from "@/contexts/ReadOnlyContext"
 
 interface KindNodeProps {
     id: string;
@@ -18,24 +19,41 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
     const { schemaData } = useSchema()
     const schema = schemaData[data.type.toLowerCase()];
     const [values, setValues] = useState<Record<string, unknown>>(data.values || {});
+    const { isReadOnly } = useReadOnly();
+
+    // Debug logging (uncomment if needed for debugging)
+    // console.log('KindNode debug:', {
+    //     id,
+    //     dataType: data.type,
+    //     schemaKeys: Object.keys(schemaData),
+    //     hasSchema: !!schema,
+    //     schemaProperties: schema?.properties ? Object.keys(schema.properties) : 'no properties'
+    // });
 
     const { setNodes } = useReactFlow();
 
-    // Sync internal state back to the global node data
+    // Update local values when data.values changes (from version loading)
     useEffect(() => {
-        setNodes((prevNodes) =>
-            prevNodes.map((node) => {
-                if (node.id !== id) return node; // 👈 Keeps exact same reference
-                return {
-                    ...node,
-                    data: {
-                        ...node.data,
-                        values,
-                    },
-                };
-            })
-        );
-    }, [values]);
+        setValues(data.values || {});
+    }, [data.values]);
+
+    // Sync internal state back to the global node data (only when not read-only)
+    useEffect(() => {
+        if (!isReadOnly) {
+            setNodes((prevNodes) =>
+                prevNodes.map((node) => {
+                    if (node.id !== id) return node; // 👈 Keeps exact same reference
+                    return {
+                        ...node,
+                        data: {
+                            ...node.data,
+                            values,
+                        },
+                    };
+                })
+            );
+        }
+    }, [values, isReadOnly]);
 
 
 
@@ -69,7 +87,7 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
             <div className="text-sm font-semibold flex flex-row border-b-1 pb-2 mb-3">{data.kind}.yaml {"{"} </div>
 
             <div className="space-y-1 pl-2">
-                {Object.entries(schema.properties ?? {}).map(([key, fieldSchema]) => (
+                {Object.entries(schema?.properties ?? {}).map(([key, fieldSchema]) => (
                     <ConfigField
                         key={key}
                         label={key}
@@ -81,6 +99,7 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
                         nodeId={id}
                         edges={edges}
                         mode="kind"
+                        readOnly={isReadOnly}
                     />
                 ))}
             </div>

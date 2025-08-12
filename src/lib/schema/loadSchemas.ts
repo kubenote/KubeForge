@@ -152,7 +152,7 @@ export function filterRealResources(gvks: GVK[]): GVK[] {
 }
 
 
-export async function loadSpecificSchemas(version: string, schemas = [], full = true): Promise<Record<string, any>> {
+export async function loadSpecificSchemas(version: string, schemas: string[] = [], full = true): Promise<Record<string, any>> {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
   const schemaMap: Record<string, any> = {};

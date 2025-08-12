@@ -23,6 +23,7 @@ interface ConfigFieldProps {
     nodeId: string;
     edges: FlowEdge[];
     mode?: 'kind' | 'objectRef';
+    readOnly?: boolean;
 }
 
 export const ConfigField = ({ 
@@ -34,10 +35,22 @@ export const ConfigField = ({
     onChange, 
     nodeId, 
     edges,
-    mode = 'kind'
+    mode = 'kind',
+    readOnly = false
 }: ConfigFieldProps) => {
     const [collapsed, setCollapsed] = useState(mode === 'kind');
+    const [inputValue, setInputValue] = useState(String(value ?? ""));
     const { addNode } = useNodeProvider();
+
+    // Update input value when the value prop changes (from version loading)
+    useEffect(() => {
+        setInputValue(String(value ?? ""));
+    }, [value]);
+
+    // Force re-render when nodeId changes (version switching)
+    useEffect(() => {
+        setInputValue(String(value ?? ""));
+    }, [nodeId, value]);
 
     const typeArray = Array.isArray(schema?.type) ? schema?.type : [schema?.type || typeof value];
     const valueType = schema?.$ref ? 'objectRef' : typeArray[0] || "string";
@@ -69,8 +82,9 @@ export const ConfigField = ({
     }, [isConnected, edge?.source, edge?.sourceHandle]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const inputValue = e.target.value;
-        const parsedValue = valueType === "number" || valueType === "integer" ? Number(inputValue) : inputValue;
+        const newInputValue = e.target.value;
+        setInputValue(newInputValue); // Update local state immediately for responsiveness
+        const parsedValue = valueType === "number" || valueType === "integer" ? Number(newInputValue) : newInputValue;
         onChange(path, parsedValue);
 
         const selfId = `${nodeId}.${label}`;
@@ -145,14 +159,18 @@ export const ConfigField = ({
                             valueType === "boolean" && mode === 'objectRef' ? (
                                 <div className="flex w-full pr-8">
                                     <div className="flex-grow" />
-                                    <Checkbox onCheckedChange={handleBooleanChange} />
+                                    <Checkbox 
+                                        checked={Boolean(value)} 
+                                        onCheckedChange={readOnly ? undefined : handleBooleanChange}
+                                        disabled={readOnly}
+                                    />
                                 </div>
                             ) : (
                                 <Input
                                     className="ml-2 h-6 px-2 py-0 text-xs rounded-sm disabled:bg-[#e0e0e0] disabled:border-[#bdbdbd]"
-                                    value={String(value ?? "")}
-                                    onChange={!isConnected ? handleChange : undefined}
-                                    disabled={isConnected}
+                                    value={inputValue}
+                                    onChange={!isConnected && !readOnly ? handleChange : undefined}
+                                    disabled={isConnected || readOnly}
                                 />
                             )
                         ) : (
@@ -186,7 +204,7 @@ export const ConfigField = ({
                 <div className="space-y-1 ml-2">
                     {mode === 'kind' ? (
                         // Kind mode: show all properties from schema
-                        Object.entries(schema.properties ?? {}).map(([k, s]) => {
+                        Object.entries(schema?.properties ?? {}).map(([k, s]) => {
                             const valueAsRecord = value as Record<string, unknown>;
                             return (
                                 <ConfigField
@@ -232,10 +250,11 @@ export const ConfigField = ({
                         );
                         return availableFields.length > 0 ? (
                             <Select
-                                onValueChange={(field) => {
+                                onValueChange={readOnly ? undefined : (field) => {
                                     const newValue = { ...(value || {}), [field]: undefined };
                                     onChange(path, newValue);
                                 }}
+                                disabled={readOnly}
                             >
                                 <SelectTrigger className="h-6 w-full cursor-pointer">
                                     <SelectValue placeholder="Add field" />
@@ -266,7 +285,7 @@ export const ConfigField = ({
                 <div className="space-y-1">
                     <div className={mode === 'kind' ? "ml-2" : "ml-4"}>
                         {mode === 'kind' ? (
-                            Object.entries(schema.properties ?? {}).map(([k, s]) => {
+                            Object.entries(schema?.properties ?? {}).map(([k, s]) => {
                                 const valueAsRecord = value as Record<string, unknown>;
                                 return (
                                     <ConfigField

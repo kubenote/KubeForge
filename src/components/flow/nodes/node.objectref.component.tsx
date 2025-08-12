@@ -28,6 +28,14 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
     const { setNodes } = useReactFlow();
     const [isMinimized, setIsMinimized] = useState(false);
 
+    // Update local values when data.values changes (from version loading)
+    useEffect(() => {
+        setValues(data.values || {});
+        // Also update visible fields to match the new values
+        const keysWithValues = Object.keys(data.values || {});
+        setVisibleFields(prev => Array.from(new Set([...prev, ...keysWithValues])));
+    }, [data.values]);
+
 
     // Sync internal state back to the global node data
     useEffect(() => {
@@ -53,7 +61,7 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
         shallow
     ) as FlowEdge[];
 
-    const allFields = useMemo(() => Object.keys(schema.properties || {}), [schema]);
+    const allFields = useMemo(() => Object.keys(schema?.properties || {}), [schema]);
 
     const handleValueChange = useCallback((path: string, newVal: unknown) => {
         setValues(prev => {
@@ -132,7 +140,7 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
                             <ConfigField
                                 label={key}
                                 value={values[key]}
-                                schema={schema.properties?.[key] || {}}
+                                schema={schema?.properties?.[key] || {}}
                                 path={key}
                                 onChange={handleValueChange}
                                 nodeId={id}
