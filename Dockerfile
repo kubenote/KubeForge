@@ -17,7 +17,7 @@ RUN npm ci
 ENV DATABASE_URL="file:./dev.db"
 ENV DATABASE_URL_DEMO="file:./demo.db"
 ENV NODE_ENV=production
-ENV DEMO_MODE=true
+ENV DEMO_MODE=false
 
 # Generate Prisma client
 RUN npx prisma generate
