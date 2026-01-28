@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Node, Edge } from '@xyflow/react'
 import DefaultFlow from '../../data/defaultFlow.json'
+import { DefaultFlowData } from '@/types'
 
 interface UseFlowStateProps {
     initialNodes: Node[]
@@ -8,6 +9,8 @@ interface UseFlowStateProps {
     skipTemplate: boolean
     onGetCurrentState?: (callback: () => { nodes: Node[]; edges: Edge[] }) => void
 }
+
+const defaultFlowData = DefaultFlow as DefaultFlowData;
 
 export const useFlowState = ({
     initialNodes,
@@ -17,11 +20,11 @@ export const useFlowState = ({
 }: UseFlowStateProps) => {
     const [nodes, setNodes] = useState<Node[]>(initialNodes)
     const [edges, setEdges] = useState<Edge[]>(initialEdges)
-    
+
     // Use ref to provide stable callback that always returns current state
     const stateRef = useRef({ nodes, edges })
     stateRef.current = { nodes, edges }
-    
+
 
     // Create stable callback to get current state
     const getCurrentState = useCallback(() => stateRef.current, [])
@@ -37,8 +40,8 @@ export const useFlowState = ({
     // Load default flow if no initial data provided
     useEffect(() => {
         if (initialNodes.length === 0 && initialEdges.length === 0 && !skipTemplate) {
-            setNodes((DefaultFlow as any).nodes)
-            setEdges((DefaultFlow as any).edges)
+            setNodes(defaultFlowData.nodes as Node[])
+            setEdges(defaultFlowData.edges as Edge[])
         }
     }, []) // Empty dependency array - only run once on mount
 

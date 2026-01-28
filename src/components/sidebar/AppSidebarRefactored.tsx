@@ -14,6 +14,13 @@ import { AdvancedModeSidebar } from "./components/AdvancedModeSidebar";
 import { StandardModeSidebar } from "./components/StandardModeSidebar";
 import { DownloadDialog } from "./components/DownloadDialog";
 import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
+import { Schema, GVK } from "@/types";
+import { safeJsonParseWithResult } from "@/lib/safeJson";
+
+interface SchemaInfoObject {
+    name: string | GVK;
+    data: Schema | undefined;
+}
 
 export function AppSidebarRefactored({
     versions,
@@ -26,7 +33,7 @@ export function AppSidebarRefactored({
     const [downloadingVersion, setDownloadingVersion] = React.useState<string | null>(null);
     const [searchQuery, setSearchQuery] = React.useState("");
     const [dialogOpen, setDialogOpen] = React.useState(false);
-    const [loadObject, setLoadObject] = React.useState({});
+    const [loadObject, setLoadObject] = React.useState<SchemaInfoObject | Record<string, never>>({});
     const [advancedMode, setAdvancedMode] = React.useState(false);
     const [progress, setProgress] = React.useState(0);
 
@@ -63,8 +70,8 @@ export function AppSidebarRefactored({
         };
     };
 
-    const handleInfoClick = (loadObject: any) => {
-        setLoadObject(loadObject);
+    const handleInfoClick = (newLoadObject: SchemaInfoObject) => {
+        setLoadObject(newLoadObject);
         setDialogOpen(true);
     };
 
