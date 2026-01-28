@@ -11,12 +11,13 @@ datasource db {
 }
 
 model Project {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  versions  ProjectVersion[]
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  versions    ProjectVersion[]
+  hostedYamls HostedYaml[]
 
   @@map("projects")
 }
@@ -27,9 +28,22 @@ model ProjectVersion {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   nodes     String   // JSON string
-  edges     String   // JSON string  
+  edges     String   // JSON string
   createdAt DateTime @default(now())
   message   String?  // Optional commit message
 
   @@map("project_versions")
+}
+
+model HostedYaml {
+  id        String   @id @default(cuid())
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name      String?  // Optional friendly name
+  yamlHash  String   // Hash of content for deduplication
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  lastAccessedAt DateTime?
+
+  @@map("hosted_yamls")
 }

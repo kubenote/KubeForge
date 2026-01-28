@@ -4,6 +4,8 @@ import { nanoid } from 'nanoid';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkDemoMode } from '@/lib/demoMode';
 import { validateKubernetesYaml } from '@/lib/yamlValidation';
+import { prisma } from '@/lib/prisma';
+import crypto from 'crypto';
 
 export const config = {
     api: {
@@ -28,14 +30,14 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    let requestBody: { yamlContent?: unknown };
+    let requestBody: { yamlContent?: unknown; projectId?: string; name?: string };
     try {
         requestBody = await req.json();
     } catch {
         return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { yamlContent } = requestBody;
+    const { yamlContent, projectId, name } = requestBody;
 
     if (!yamlContent || typeof yamlContent !== 'string') {
         return NextResponse.json({ error: 'Missing or invalid yamlContent' }, { status: 400 });
@@ -53,11 +55,25 @@ export async function POST(req: NextRequest) {
     const id = nanoid();
     const cacheDir = path.join(process.cwd(), '.next/hosted-yaml');
     const filePath = path.join(cacheDir, `${id}.yml`);
+    const contentToSave = validation.sanitizedContent || yamlContent;
+
+    // Create hash for deduplication tracking
+    const yamlHash = crypto.createHash('sha256').update(contentToSave).digest('hex');
 
     try {
         await mkdir(cacheDir, { recursive: true });
-        // Write the sanitized content instead of raw input
-        await writeFile(filePath, validation.sanitizedContent || yamlContent, 'utf8');
+        await writeFile(filePath, contentToSave, 'utf8');
+
+        // Save to database for tracking
+        await prisma.hostedYaml.create({
+            data: {
+                id,
+                projectId: projectId || null,
+                name: name || null,
+                yamlHash,
+            },
+        });
+
         return NextResponse.json({ url: `/api/yaml/${id}.yml`, id });
     } catch (err) {
         console.error('Failed to save YAML file:', err);

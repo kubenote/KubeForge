@@ -21,6 +21,7 @@ export async function GET() {
         _count: {
           select: {
             versions: true,
+            hostedYamls: true,
           },
         },
       },
