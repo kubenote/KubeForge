@@ -7,7 +7,7 @@ import {
   SidebarInput,
 } from "@/components/ui/sidebar"
 
-export function SearchForm({ onChange, ...props }: React.ComponentProps<"form"> & { onChange: (value: string) => void }) {
+export function SearchForm({ onChange, ...props }: Omit<React.ComponentProps<"form">, 'onChange'> & { onChange: (value: string) => void }) {
   return (
     <form {...props}>
       <SidebarGroup className="py-0">

@@ -15,7 +15,6 @@ import { StandardModeSidebar } from "./components/StandardModeSidebar";
 import { DownloadDialog } from "./components/DownloadDialog";
 import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
 import { Schema, GVK } from "@/types";
-import { safeJsonParseWithResult } from "@/lib/safeJson";
 
 interface SchemaInfoObject {
     name: string | GVK;

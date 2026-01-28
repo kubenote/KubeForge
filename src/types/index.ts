@@ -60,7 +60,8 @@ export interface Notification {
   id: number;
   title: string;
   message: string;
-  level: 'info' | 'warn' | 'danger';
+  level?: 'info' | 'warn' | 'danger';
+  nodes?: string[];
 }
 
 export type WarningContextType = {

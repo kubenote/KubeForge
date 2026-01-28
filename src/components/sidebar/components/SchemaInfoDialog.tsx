@@ -31,9 +31,13 @@ export function SchemaInfoDialog({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-4xl">
                 <DialogHeader>
-                    <DialogTitle>{loadObject?.name}</DialogTitle>
+                    <DialogTitle>
+                        {typeof loadObject?.name === 'string'
+                            ? loadObject.name
+                            : loadObject?.name?.kind}
+                    </DialogTitle>
                     <DialogDescription>
-                        This is more info about <strong>{"item"}</strong>.
+                        Schema details
                     </DialogDescription>
                 </DialogHeader>
                 <MonacoComponent jsonData={loadObject?.data} />

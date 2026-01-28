@@ -1,7 +1,12 @@
 import { NodeWarning } from "@/components/warnings/warnings.rules.types";
 import { useWarning } from "@/providers/WarningsProvider"
 
-export default function NodeContainer({ nodeId, children }) {
+interface NodeContainerProps {
+    nodeId: string;
+    children: React.ReactNode;
+}
+
+export default function NodeContainer({ nodeId, children }: NodeContainerProps) {
     const { notifications } = useWarning()
 
     const severityPriority = {

@@ -29,7 +29,11 @@ export default function WarningsDrawer() {
 
     const warnings = useMemo(() => {
         const warningsArray: NodeWarning[] = []
-        const context = {
+        const context: {
+            seenKinds: Record<string, string[]>;
+            allNodes: typeof nodes;
+            __overlapWarnings?: NodeWarning[];
+        } = {
             seenKinds: {} as Record<string, string[]>,
             allNodes: nodes
         }
