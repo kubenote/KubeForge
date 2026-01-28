@@ -95,6 +95,22 @@ export function HelperComponent({ topics: initialTopics, className }: { topics: 
                                             )
                                         },
                                         strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
+                                        table: ({ node, ...props }) => (
+                                            <table className="w-full border-collapse my-4 text-sm" {...props} />
+                                        ),
+                                        thead: ({ node, ...props }) => (
+                                            <thead className="bg-muted" {...props} />
+                                        ),
+                                        tbody: ({ node, ...props }) => <tbody {...props} />,
+                                        tr: ({ node, ...props }) => (
+                                            <tr className="border-b border-border" {...props} />
+                                        ),
+                                        th: ({ node, ...props }) => (
+                                            <th className="text-left px-3 py-2 font-semibold" {...props} />
+                                        ),
+                                        td: ({ node, ...props }) => (
+                                            <td className="px-3 py-2" {...props} />
+                                        ),
                                     }}
                                 >
                                     {markdown}
