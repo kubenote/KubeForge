@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { apiLogger } from '@/lib/logger';
 
 async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
@@ -44,7 +45,7 @@ export async function GET() {
 
     return NextResponse.json(projects);
   } catch (error) {
-    console.error('Failed to fetch projects:', error);
+    apiLogger.error('Failed to fetch projects:', error);
     return NextResponse.json(
       { error: 'Failed to fetch projects' },
       { status: 500 }
@@ -100,7 +101,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(project);
   } catch (error) {
-    console.error('Failed to create project:', error);
+    apiLogger.error('Failed to create project:', error);
     if (error instanceof Error && (
         error.message.includes('Unique constraint') || 
         error.message.includes('unique constraint') ||

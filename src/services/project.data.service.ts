@@ -5,6 +5,7 @@
 
 import { Node, Edge } from '@xyflow/react';
 import { DEMO_MODE_MESSAGE } from '@/lib/demoMode';
+import { serviceLogger } from '@/lib/logger';
 
 export interface ProjectData {
   id: string;
@@ -46,7 +47,7 @@ export class ProjectDataService {
    * Create a new project with initial nodes and edges
    */
   static async createProject(request: CreateProjectRequest): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Creating project', {
+    serviceLogger.debug('ProjectDataService: Creating project', {
       name: request.name,
       nodeCount: request.nodes.length,
       edgeCount: request.edges.length,
@@ -77,7 +78,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project created', {
+    serviceLogger.debug('ProjectDataService: Project created', {
       id: result.id,
       slug: result.slug,
       versionCount: result.versions?.length || 0
@@ -98,7 +99,7 @@ export class ProjectDataService {
    * Update an existing project (creates a new version)
    */
   static async updateProject(projectId: string, request: UpdateProjectRequest): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Updating project', {
+    serviceLogger.debug('ProjectDataService: Updating project', {
       projectId,
       nodeCount: request.nodes.length,
       edgeCount: request.edges.length,
@@ -128,7 +129,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project updated', {
+    serviceLogger.debug('ProjectDataService: Project updated', {
       id: result.id,
       slug: result.slug,
       latestVersionSlug: result.versions?.[0]?.slug
@@ -149,7 +150,7 @@ export class ProjectDataService {
    * Load project data (latest version)
    */
   static async loadProject(projectId: string): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Loading project', { projectId });
+    serviceLogger.debug('ProjectDataService: Loading project', { projectId });
 
     const response = await fetch(`/api/projects/${projectId}`);
     
@@ -158,7 +159,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project loaded', {
+    serviceLogger.debug('ProjectDataService: Project loaded', {
       id: result.id,
       nodeCount: result.nodes?.length || 0,
       edgeCount: result.edges?.length || 0
@@ -179,7 +180,7 @@ export class ProjectDataService {
    * Load a specific version of a project
    */
   static async loadProjectVersion(projectId: string, versionId: string): Promise<ProjectVersion> {
-    console.log('🔄 ProjectDataService: Loading project version', { projectId, versionId });
+    serviceLogger.debug('ProjectDataService: Loading project version', { projectId, versionId });
 
     const response = await fetch(`/api/projects/${projectId}/versions/${versionId}`);
     
@@ -188,7 +189,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Version loaded', {
+    serviceLogger.debug('ProjectDataService: Version loaded', {
       id: result.id,
       slug: result.slug,
       nodeCount: result.nodes?.length || 0,
@@ -210,7 +211,7 @@ export class ProjectDataService {
    * Get all versions for a project
    */
   static async getProjectVersions(projectId: string, limit = 20): Promise<{ versions: ProjectVersion[], totalVersions: number }> {
-    console.log('🔄 ProjectDataService: Getting project versions', { projectId, limit });
+    serviceLogger.debug('ProjectDataService: Getting project versions', { projectId, limit });
 
     const response = await fetch(`/api/projects/${projectId}/versions?limit=${limit}`);
     
@@ -219,7 +220,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Versions loaded', {
+    serviceLogger.debug('ProjectDataService: Versions loaded', {
       count: result.versions?.length || 0,
       total: result.totalVersions
     });
@@ -242,7 +243,7 @@ export class ProjectDataService {
    * Delete a project
    */
   static async deleteProject(projectId: string): Promise<void> {
-    console.log('🗑️ ProjectDataService: Deleting project', { projectId });
+    serviceLogger.debug('ProjectDataService: Deleting project', { projectId });
 
     const response = await fetch(`/api/projects/${projectId}`, {
       method: 'DELETE',
@@ -260,14 +261,14 @@ export class ProjectDataService {
       throw new Error(errorMessage);
     }
 
-    console.log('✅ ProjectDataService: Project deleted successfully');
+    serviceLogger.debug('ProjectDataService: Project deleted successfully');
   }
 
   /**
    * Delete a project version
    */
   static async deleteVersion(projectId: string, versionId: string): Promise<{ newLatestVersion?: { id: string; slug?: string | null; createdAt: string } | null }> {
-    console.log('🗑️ ProjectDataService: Deleting version', { projectId, versionId });
+    serviceLogger.debug('ProjectDataService: Deleting version', { projectId, versionId });
 
     const response = await fetch(`/api/projects/${projectId}/versions/${versionId}`, {
       method: 'DELETE',
@@ -286,7 +287,7 @@ export class ProjectDataService {
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Version deleted successfully', {
+    serviceLogger.debug('ProjectDataService: Version deleted successfully', {
       deletedVersionId: result.deletedVersionId,
       newLatestVersion: result.newLatestVersion
     });

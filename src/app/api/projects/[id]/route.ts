@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { apiLogger } from '@/lib/logger';
 
 async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
@@ -61,7 +62,7 @@ export async function GET(
 
     return NextResponse.json(project);
   } catch (error) {
-    console.error('Failed to fetch project:', error);
+    apiLogger.error('Failed to fetch project:', error);
     return NextResponse.json(
       { error: 'Failed to fetch project' },
       { status: 500 }
@@ -133,7 +134,7 @@ export async function PUT(
 
     return NextResponse.json(updatedProject);
   } catch (error) {
-    console.error('Failed to update project:', error);
+    apiLogger.error('Failed to update project:', error);
     if (error instanceof Error && (
         error.message.includes('Unique constraint') || 
         error.message.includes('unique constraint') ||
@@ -168,7 +169,7 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, deletedProject });
   } catch (error) {
-    console.error('Failed to delete project:', error);
+    apiLogger.error('Failed to delete project:', error);
     return NextResponse.json(
       { error: 'Failed to delete project' },
       { status: 500 }
