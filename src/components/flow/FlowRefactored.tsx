@@ -14,6 +14,7 @@ import { useFlowState } from './hooks/useFlowState';
 import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
 import { useFlowHistory } from './hooks/useFlowHistory';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -32,9 +33,10 @@ interface FlowProps {
   skipTemplate?: boolean;
   currentVersionSlug?: string | null;
   readOnly?: boolean;
+  onSave?: () => void;
 }
 
-export default function FlowRefactored({ 
+export default function FlowRefactored({
   initialNodes = [],
   initialEdges = [],
   initialProjectId = '',
@@ -45,7 +47,8 @@ export default function FlowRefactored({
   onGetCurrentState,
   skipTemplate = false,
   currentVersionSlug = null,
-  readOnly = false
+  readOnly = false,
+  onSave
 }: FlowProps) {
   const { version } = useVersion();
 
@@ -187,6 +190,14 @@ export default function FlowRefactored({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isReadOnly, handleUndo, handleRedo]);
 
+  // Keyboard shortcuts for delete, duplicate, save, escape
+  useKeyboardShortcuts({
+    isReadOnly,
+    onSave,
+    setNodes,
+    setEdges,
+  });
+
   return (
     <div className='flex flex-grow relative'>
       <ReadOnlyProvider isReadOnly={isReadOnly}>
@@ -209,16 +220,16 @@ export default function FlowRefactored({
           {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
         </ReactFlow>
       </ReadOnlyProvider>
-      
+
       {/* Read-only indicator */}
       {isReadOnly && (
         <div className="absolute top-4 right-4 z-40">
           <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-3 py-2 rounded-md text-sm font-medium shadow-lg border border-amber-300 dark:border-amber-700">
-            🔒 Read-only mode
+            Read-only mode
           </div>
         </div>
       )}
-      
+
       <TopProgressBar loading={schemaLoading || loadingVersion} />
       {loadingVersion && (
         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
