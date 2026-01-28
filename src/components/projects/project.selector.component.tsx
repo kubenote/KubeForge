@@ -56,6 +56,7 @@ interface Project {
   id: string;
   name: string;
   slug: string;
+  kubernetesVersion: string | null;
   createdAt: string;
   updatedAt: string;
   versions: Array<{
@@ -229,6 +230,7 @@ export function ProjectSelector() {
 
   const totalViews = hostedYamls.reduce((sum, y) => sum + y.viewCount, 0);
   const totalVersions = projects.reduce((sum, p) => sum + p._count.versions, 0);
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -292,7 +294,7 @@ export function ProjectSelector() {
       <main className="flex-1 flex flex-col">
         {/* Header */}
         <header className="h-14 border-b flex items-center justify-between px-6">
-          <h1 className="font-semibold">
+          <h1 className="text-sm font-medium text-muted-foreground">
             {activeView === 'projects' ? 'Projects' : 'Hosted URLs'}
           </h1>
           <div className="flex items-center gap-2">
@@ -358,7 +360,8 @@ export function ProjectSelector() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[40%]">Name</TableHead>
+                        <TableHead className="w-[30%]">Name</TableHead>
+                        <TableHead>K8s Version</TableHead>
                         <TableHead>Versions</TableHead>
                         <TableHead>URLs</TableHead>
                         <TableHead>Updated</TableHead>
@@ -384,6 +387,15 @@ export function ProjectSelector() {
                                 <div className="text-xs text-muted-foreground">/{project.slug}</div>
                               </div>
                             </div>
+                          </TableCell>
+                          <TableCell>
+                            {project.kubernetesVersion ? (
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {project.kubernetesVersion}
+                              </Badge>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">—</span>
+                            )}
                           </TableCell>
                           <TableCell>
                             <span className="text-sm">{project._count.versions}</span>
@@ -463,7 +475,7 @@ export function ProjectSelector() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-transparent">
-                        <TableHead className="w-[40%]">URL</TableHead>
+                        <TableHead className="w-[45%]">URL</TableHead>
                         <TableHead>Project</TableHead>
                         <TableHead>Views</TableHead>
                         <TableHead>Last Accessed</TableHead>
@@ -474,8 +486,8 @@ export function ProjectSelector() {
                       {hostedYamls.map((yaml) => (
                         <TableRow key={yaml.id}>
                           <TableCell>
-                            <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
-                              /api/yaml/{yaml.id}.yml
+                            <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
+                              {origin}/api/yaml/{yaml.id}.yml
                             </code>
                           </TableCell>
                           <TableCell>
