@@ -32,6 +32,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'deployment',
                     kind: 'Deployment',
                     apiVersion: 'apps/v1',
                     values: {
@@ -123,6 +124,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'deployment',
                     kind: 'Deployment',
                     apiVersion: 'apps/v1',
                     values: {
@@ -187,6 +189,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 400 },
                 data: {
+                    type: 'service',
                     kind: 'Service',
                     apiVersion: 'v1',
                     values: {
@@ -273,6 +276,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'cronjob',
                     kind: 'CronJob',
                     apiVersion: 'batch/v1',
                     values: {
@@ -353,6 +357,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'configmap',
                     kind: 'ConfigMap',
                     apiVersion: 'v1',
                     values: {
@@ -416,6 +421,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'secret',
                     kind: 'Secret',
                     apiVersion: 'v1',
                     values: {
@@ -482,6 +488,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'ingress',
                     kind: 'Ingress',
                     apiVersion: 'networking.k8s.io/v1',
                     values: {
@@ -566,6 +573,7 @@ export const templates: Template[] = [
                 type: 'KindNode',
                 position: { x: 0, y: 0 },
                 data: {
+                    type: 'persistentvolumeclaim',
                     kind: 'PersistentVolumeClaim',
                     apiVersion: 'v1',
                     values: {
