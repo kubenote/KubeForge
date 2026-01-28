@@ -1,20 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-
-type WarningContextType = {
-    notifications: any;
-    setNotifications: (data: any) => void;
-};
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { Notification, WarningContextType } from '@/types';
 
 const WarningContext = createContext<WarningContextType | undefined>(undefined);
 
 export const WarningProvider = ({ children }: { children: React.ReactNode }) => {
-    const [notifications, setNotificationsState] = useState<
-        { id: number; title: string; message: string; level: string; }[]
-    >([])
+    const [notifications, setNotificationsState] = useState<Notification[]>([])
 
-    const setNotifications = useCallback((data: any) => {
+    const setNotifications = useCallback((data: Notification[]) => {
         setNotificationsState(data);
     }, []);
 

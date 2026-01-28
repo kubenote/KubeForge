@@ -11,13 +11,19 @@ import {
 } from "@/components/ui/sidebar"
 import { BoxIcon, InfoIcon } from "lucide-react";
 import { useNodeProvider } from "@/providers/NodeProvider";
+import { GVK, SchemaData, Schema } from "@/types";
+
+interface SchemaInfoObject {
+    name: GVK;
+    data: Schema | undefined;
+}
 
 interface AdvancedModeSidebarProps {
-    schemaGvks: Array<{ kind: string; group: string; version: string }>;
+    schemaGvks: GVK[];
     searchQuery: string;
-    schemaData: any;
-    preRefSchemaData: any;
-    onInfoClick: (loadObject: any) => void;
+    schemaData: SchemaData;
+    preRefSchemaData: SchemaData;
+    onInfoClick: (loadObject: SchemaInfoObject) => void;
 }
 
 export function AdvancedModeSidebar({

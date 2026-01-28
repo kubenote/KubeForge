@@ -3,22 +3,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as Overrides from "@/components/data/schema-overrides.json"
 import { get, set, has, merge } from "lodash";
-
-type VersionContextType = {
-  version: string;
-  setVersion: (v: string) => void;
-  schemaData: any; // Adjust type as needed
-  setSchemaData: (data: any) => void;
-  preRefSchemaData: any; // Adjust type as needed
-  setPreRefSchemaData: (data: any) => void;
-};
+import { SchemaData, VersionContextType } from '@/types';
 
 const VersionContext = createContext<VersionContextType | undefined>(undefined);
 
 export const VersionProvider = ({ children }: { children: React.ReactNode }) => {
   const [version, setVersionState] = useState(''); // default empty
-  const [schemaData, setSchemaDataState] = useState({}); // default empty
-  const [preRefSchemaData, setPreRefSchemaData] = useState({}); // default empty
+  const [schemaData, setSchemaDataState] = useState<SchemaData>({}); // default empty
+  const [preRefSchemaData, setPreRefSchemaData] = useState<SchemaData>({}); // default empty
 
   const setVersion = (v: string) => {
     localStorage.setItem('preferredK8sVersion', v);
@@ -27,7 +19,7 @@ export const VersionProvider = ({ children }: { children: React.ReactNode }) => 
 
 
 
-  const setSchemaData = (data: any) => {
+  const setSchemaData = (data: SchemaData) => {
     const newData = structuredClone(data);
 
     Object.entries(Overrides).forEach(([flatPath, overrideValue]) => {

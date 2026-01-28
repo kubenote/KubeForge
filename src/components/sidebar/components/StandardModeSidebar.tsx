@@ -12,12 +12,18 @@ import {
 import { BoxIcon, InfoIcon } from "lucide-react";
 import { k8sIcons } from "../../data/k8sIcons";
 import { useNodeProvider } from "@/providers/NodeProvider";
+import { GVK, SchemaData, Schema } from "@/types";
+
+interface SchemaInfoObject {
+    name: string;
+    data: Schema | undefined;
+}
 
 interface StandardModeSidebarProps {
-    schemaGvks: Array<{ kind: string; group: string; version: string }>;
+    schemaGvks: GVK[];
     searchQuery: string;
-    preRefSchemaData: any;
-    onInfoClick: (loadObject: any) => void;
+    preRefSchemaData: SchemaData;
+    onInfoClick: (loadObject: SchemaInfoObject) => void;
 }
 
 export function StandardModeSidebar({
@@ -47,13 +53,18 @@ export function StandardModeSidebar({
         });
     };
 
-    const buildKindMap = (gvks: Array<{ kind: string; group: string; version: string }>) => {
+    const buildKindMap = (gvks: GVK[]) => {
         return new Map(gvks.map(gvk => [gvk.kind.toLowerCase(), gvk]));
     };
 
+    interface K8sIconItem {
+        name: string;
+        icon?: React.ReactNode;
+    }
+
     const filterGroupItems = (
-        items: Array<{ name: string; [key: string]: any }>,
-        kindMap: Map<string, any>,
+        items: K8sIconItem[],
+        kindMap: Map<string, GVK>,
         searchQuery: string
     ) => {
         const lcQuery = (searchQuery ?? "").toLowerCase();

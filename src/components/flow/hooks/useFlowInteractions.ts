@@ -1,5 +1,14 @@
 import { useState, useCallback, useRef } from 'react'
-import { Node, applyNodeChanges, applyEdgeChanges, addEdge } from '@xyflow/react'
+import {
+    Node,
+    Edge,
+    Connection,
+    NodeChange,
+    EdgeChange,
+    applyNodeChanges,
+    applyEdgeChanges,
+    addEdge
+} from '@xyflow/react'
 
 export const useFlowInteractions = () => {
     const [menu, setMenu] = useState<{
@@ -9,7 +18,7 @@ export const useFlowInteractions = () => {
         right?: number
         bottom?: number
     } | null>(null)
-    
+
     const ref = useRef<HTMLDivElement>(null)
 
     const onNodeContextMenu = useCallback(
@@ -17,7 +26,7 @@ export const useFlowInteractions = () => {
             event.preventDefault()
 
             if (!ref.current) return
-            
+
             const pane = ref.current.getBoundingClientRect()
             setMenu({
                 id: node.id,
@@ -34,17 +43,17 @@ export const useFlowInteractions = () => {
     const onPaneClick = useCallback(() => setMenu(null), [])
 
     const onNodesChange = useCallback(
-        (changes: any) => (nodesSnapshot: Node[]) => applyNodeChanges(changes, nodesSnapshot),
+        (changes: NodeChange[]) => (nodesSnapshot: Node[]) => applyNodeChanges(changes, nodesSnapshot),
         []
     )
 
     const onEdgesChange = useCallback(
-        (changes: any) => (edgesSnapshot: any) => applyEdgeChanges(changes, edgesSnapshot),
+        (changes: EdgeChange[]) => (edgesSnapshot: Edge[]) => applyEdgeChanges(changes, edgesSnapshot),
         []
     )
 
     const onConnect = useCallback(
-        (params: any) => (edgesSnapshot: any) => addEdge(params, edgesSnapshot),
+        (params: Connection) => (edgesSnapshot: Edge[]) => addEdge(params, edgesSnapshot),
         []
     )
 

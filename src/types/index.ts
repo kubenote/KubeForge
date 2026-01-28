@@ -56,6 +56,25 @@ export interface NodeWarning {
   nodes?: string[];
 }
 
+export interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  level: 'info' | 'warn' | 'danger';
+}
+
+export type WarningContextType = {
+  notifications: Notification[];
+  setNotifications: (data: Notification[]) => void;
+};
+
+// Default flow data structure (from defaultFlow.json)
+export interface DefaultFlowData {
+  nodes: unknown[];
+  edges: unknown[];
+  schemdaData?: SchemaData; // Note: typo in original JSON file
+}
+
 // Node Provider types
 export interface AddNodeParams {
   data: BaseNodeData;
