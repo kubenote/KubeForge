@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
-import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
-
-async function generateUniqueVersionSlug(): Promise<string> {
-  let attempts = 0;
-  const maxAttempts = 10;
-  
-  while (attempts < maxAttempts) {
-    const slug = generateFriendlySlug();
-    const existing = await prisma.projectVersion.findUnique({
-      where: { slug }
-    });
-    
-    if (!existing) {
-      return slug;
-    }
-    
-    attempts++;
-  }
-  
-  // Fallback: add timestamp if we can't generate a unique slug
-  return `${generateFriendlySlug()}-${Date.now().toString(36)}`;
-}
+import {
+  generateUniqueVersionSlug,
+  isUniqueConstraintError,
+  uniqueConstraintErrorResponse,
+  internalErrorResponse,
+  badRequestResponse
+} from '@/lib/projectUtils';
 
 export async function GET() {
   try {
@@ -101,20 +86,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(project);
   } catch (error) {
     console.error('Failed to create project:', error);
-    if (error instanceof Error && (
-        error.message.includes('Unique constraint') || 
-        error.message.includes('unique constraint') ||
-        error.message.includes('projects_name_key') ||
-        error.message.includes('projects_slug_key')
-      )) {
-      return NextResponse.json(
-        { error: 'A project with this name already exists' },
-        { status: 409 }
-      );
+    if (isUniqueConstraintError(error)) {
+      return uniqueConstraintErrorResponse();
     }
-    return NextResponse.json(
-      { error: 'Failed to create project' },
-      { status: 500 }
-    );
+    return internalErrorResponse('Failed to create project');
   }
 }

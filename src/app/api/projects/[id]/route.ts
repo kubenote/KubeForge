@@ -1,30 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
-import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
 import { safeJsonParse } from '@/lib/safeJson';
-
-async function generateUniqueVersionSlug(): Promise<string> {
-  let attempts = 0;
-  const maxAttempts = 10;
-  
-  while (attempts < maxAttempts) {
-    const slug = generateFriendlySlug();
-    const existing = await prisma.projectVersion.findUnique({
-      where: { slug }
-    });
-    
-    if (!existing) {
-      return slug;
-    }
-    
-    attempts++;
-  }
-  
-  // Fallback: add timestamp if we can't generate a unique slug
-  return `${generateFriendlySlug()}-${Date.now().toString(36)}`;
-}
+import {
+  generateUniqueVersionSlug,
+  isUniqueConstraintError,
+  uniqueConstraintErrorResponse,
+  internalErrorResponse,
+  notFoundResponse,
+  badRequestResponse
+} from '@/lib/projectUtils';
 
 export async function GET(
   req: NextRequest,
@@ -43,10 +29,7 @@ export async function GET(
     });
 
     if (!project) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return notFoundResponse('Project');
     }
 
     // Parse the latest version's nodes and edges
@@ -63,10 +46,7 @@ export async function GET(
     return NextResponse.json(project);
   } catch (error) {
     console.error('Failed to fetch project:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch project' },
-      { status: 500 }
-    );
+    return internalErrorResponse('Failed to fetch project');
   }
 }
 
@@ -87,10 +67,7 @@ export async function PUT(
     });
 
     if (!existingProject) {
-      return NextResponse.json(
-        { error: 'Project not found' },
-        { status: 404 }
-      );
+      return notFoundResponse('Project');
     }
 
     // Validate and create slug if name is provided
@@ -102,10 +79,7 @@ export async function PUT(
       slug = slugify(validatedName);
       
       if (!slug) {
-        return NextResponse.json(
-          { error: 'Project name must contain at least one alphanumeric character' },
-          { status: 400 }
-        );
+        return badRequestResponse('Project name must contain at least one alphanumeric character');
       }
     }
 
@@ -135,21 +109,10 @@ export async function PUT(
     return NextResponse.json(updatedProject);
   } catch (error) {
     console.error('Failed to update project:', error);
-    if (error instanceof Error && (
-        error.message.includes('Unique constraint') || 
-        error.message.includes('unique constraint') ||
-        error.message.includes('projects_name_key') ||
-        error.message.includes('projects_slug_key')
-      )) {
-      return NextResponse.json(
-        { error: 'A project with this name already exists' },
-        { status: 409 }
-      );
+    if (isUniqueConstraintError(error)) {
+      return uniqueConstraintErrorResponse();
     }
-    return NextResponse.json(
-      { error: 'Failed to update project' },
-      { status: 500 }
-    );
+    return internalErrorResponse('Failed to update project');
   }
 }
 
@@ -170,9 +133,6 @@ export async function DELETE(
     return NextResponse.json({ success: true, deletedProject });
   } catch (error) {
     console.error('Failed to delete project:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete project' },
-      { status: 500 }
-    );
+    return internalErrorResponse('Failed to delete project');
   }
 }
