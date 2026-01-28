@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useVersion } from '../../providers/VersionProvider';
@@ -12,6 +13,7 @@ import { useSchemaLoader } from './hooks/useSchemaLoader';
 import { useFlowState } from './hooks/useFlowState';
 import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
+import { useClipboard } from './hooks/useClipboard';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -76,6 +78,54 @@ export default function FlowRefactored({
 
   // Determine if we're in read-only mode
   const isReadOnly = readOnly || !!currentVersionSlug;
+
+  // Clipboard operations
+  const { copySelected, pasteFromClipboard, cutSelected } = useClipboard({
+    isReadOnly,
+    setNodes,
+    setEdges,
+  });
+
+  // Keyboard shortcuts for copy/paste/cut
+  useEffect(() => {
+    if (isReadOnly) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if target is an input field
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Ctrl+C / Cmd+C - Copy
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+
+      // Ctrl+V / Cmd+V - Paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        pasteFromClipboard();
+        return;
+      }
+
+      // Ctrl+X / Cmd+X - Cut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+        e.preventDefault();
+        cutSelected();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isReadOnly, copySelected, pasteFromClipboard, cutSelected]);
 
   return (
     <div className='flex flex-grow relative'>
