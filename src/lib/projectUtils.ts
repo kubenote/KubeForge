@@ -2,7 +2,7 @@
  * Shared utilities for project operations
  */
 
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { NextResponse } from 'next/server';
 
@@ -14,13 +14,13 @@ export async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
   const maxAttempts = 10;
 
+  const repo = getProjectRepository();
+
   while (attempts < maxAttempts) {
     const slug = generateFriendlySlug();
-    const existing = await prisma.projectVersion.findUnique({
-      where: { slug }
-    });
+    const isUnique = await repo.isVersionSlugUnique(slug);
 
-    if (!existing) {
+    if (isUnique) {
       return slug;
     }
 

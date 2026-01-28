@@ -1,12 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { safeJsonParseOrThrow } from '@/lib/safeJson';
-
-//Group Version Kinds
+import { getSchemaRepository } from '@/repositories/registry';
 
 const CACHE_DIR = path.join(process.cwd(), 'schema-cache');
 
-export async function loadSchemas(version: string, preRef = true): Promise<Record<string, unknown>> {
+// --- Filesystem functions (used by ingestion script and as dev fallback) ---
+
+export async function loadSchemasFromFilesystem(version: string, preRef = true): Promise<Record<string, unknown>> {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
   const schemaMap: Record<string, unknown> = {};
@@ -31,39 +32,10 @@ export async function loadSchemas(version: string, preRef = true): Promise<Recor
   };
 
   await walk(basePath);
-  return schemaMap; // fully expanded schemas keyed by filename (e.g., "deployment")
+  return schemaMap;
 }
 
-function resolveRefs(obj: unknown, definitions: Record<string, unknown>, seen = new Set()): unknown {
-  if (Array.isArray(obj)) {
-    return obj.map((item) => resolveRefs(item, definitions, seen));
-  }
-
-  if (obj && typeof obj === 'object') {
-    const record = obj as Record<string, unknown>;
-    if (record.$ref && typeof record.$ref === 'string') {
-      const match = record.$ref.match(/#\/definitions\/(.+)/);
-      if (match) {
-        const key = match[1];
-        if (seen.has(key)) return {}; // prevent circular refs
-        seen.add(key);
-        const ref = definitions[key];
-        if (!ref) return {}; // or throw error if strict
-        return resolveRefs(ref, definitions, seen);
-      }
-    }
-
-    const resolved: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(record)) {
-      resolved[k] = resolveRefs(v, definitions, seen);
-    }
-    return resolved;
-  }
-
-  return obj;
-}
-
-export async function loadGvks(version: string) {
+export async function loadGvksFromFilesystem(version: string) {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
 
@@ -82,7 +54,6 @@ export async function loadGvks(version: string) {
     }
   }
 
-  // Deduplicate (some kinds appear multiple times for different versions)
   const seen = new Set<string>();
   const uniqueGvks = gvkList.filter(gvk => {
     const key = `${gvk.group}|${gvk.version}|${gvk.kind}`;
@@ -94,68 +65,7 @@ export async function loadGvks(version: string) {
   return filterRealResources(uniqueGvks);
 }
 
-type GVK = { group: string; version: string; kind: string };
-
-function rankVersion(v: string): [major: number, maturity: number, betaAlphaNum: number] {
-  // Parses v1, v1beta1, v2alpha2, etc.
-  const m = v.match(/^v(\d+)(alpha|beta)?(\d+)?$/);
-  if (!m) return [-1, -1, -1]; // unknown => lowest
-  const major = parseInt(m[1], 10);
-  const stage = m[2] ?? "";               // "", "beta", "alpha"
-  const stageNum = parseInt(m[3] ?? "0"); // e.g., beta1 -> 1
-  // Higher is better: GA(3) > beta(2) > alpha(1)
-  const maturity = stage === "" ? 3 : (stage === "beta" ? 2 : 1);
-  // For beta/alpha, prefer higher numbered series (beta2 > beta1).
-  return [major, maturity, stageNum];
-}
-
-export function filterRealResources(gvks: GVK[]): GVK[] {
-  const excludedKinds = new Set([
-    // Meta / plumbing
-    'Status', 'APIGroup', 'APIGroupList', 'APIResourceList', 'APIVersions',
-    'WatchEvent', 'DeleteOptions', 'Scale', 'Eviction',
-    // Rarely hand-authored / system-generated
-    'Binding', 'ComponentStatus', 'SelfSubjectAccessReview', 'SelfSubjectRulesReview',
-    'SelfSubjectReview', 'SubjectAccessReview', 'LocalSubjectAccessReview',
-    'TokenRequest', 'TokenReview', 'StorageVersion', 'StorageVersionMigration',
-  ]);
-
-  // 1) Remove lists & excluded kinds
-  const filtered = gvks.filter(
-    gvk => !gvk.kind.endsWith('List') && !excludedKinds.has(gvk.kind)
-  );
-
-  // 2) Dedup by (group, kind) keeping best version per rank
-  const best = new Map<string, GVK>();
-  for (const gvk of filtered) {
-    const key = `${gvk.group}|${gvk.kind}`; // group can be ""
-    const curr = best.get(key);
-    if (!curr) {
-      best.set(key, gvk);
-      continue;
-    }
-    const a = rankVersion(gvk.version);
-    const b = rankVersion(curr.version);
-    // Compare: major, then maturity (GA>beta>alpha), then series number
-    if (
-      a[0] > b[0] ||
-      (a[0] === b[0] && a[1] > b[1]) ||
-      (a[0] === b[0] && a[1] === b[1] && a[2] > b[2])
-    ) {
-      best.set(key, gvk);
-    }
-  }
-
-  // 3) Stable sort for display
-  return Array.from(best.values()).sort((x, y) =>
-    (x.group || '').localeCompare(y.group || '') ||
-    x.kind.localeCompare(y.kind) ||
-    x.version.localeCompare(y.version)
-  );
-}
-
-
-export async function loadSpecificSchemas(version: string, schemas: string[] = [], full = true): Promise<Record<string, unknown>> {
+export async function loadSpecificSchemasFromFilesystem(version: string, schemas: string[] = [], full = true): Promise<Record<string, unknown>> {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
   const schemaMap: Record<string, unknown> = {};
@@ -180,5 +90,130 @@ export async function loadSpecificSchemas(version: string, schemas: string[] = [
   };
 
   await walk(basePath);
-  return schemaMap; // fully expanded schemas keyed by filename (e.g., "deployment")
+  return schemaMap;
+}
+
+// --- DB-backed functions (primary), with filesystem fallback ---
+
+export async function loadGvks(version: string) {
+  const repo = getSchemaRepository();
+  const hasVersion = await repo.hasVersion(version);
+
+  if (hasVersion) {
+    const gvkRecords = await repo.getGvks(version);
+    return filterRealResources(
+      gvkRecords.map(r => ({ group: r.group, version: r.gvkVersion, kind: r.kind }))
+    );
+  }
+
+  // Fallback to filesystem only if files exist
+  return loadGvksFromFilesystem(version);
+}
+
+export async function loadSpecificSchemas(version: string, schemas: string[] = [], full = true): Promise<Record<string, unknown>> {
+  const repo = getSchemaRepository();
+  const hasVersion = await repo.hasVersion(version);
+
+  if (hasVersion) {
+    const records = await repo.getSchemas(version, schemas, full);
+    if (records.length > 0) {
+      const schemaMap: Record<string, unknown> = {};
+      for (const record of records) {
+        try {
+          schemaMap[record.schemaKey] = JSON.parse(record.schemaData);
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+      if (Object.keys(schemaMap).length > 0) return schemaMap;
+    }
+  }
+
+  // Fallback to filesystem only if files exist
+  return loadSpecificSchemasFromFilesystem(version, schemas, full);
+}
+
+// Keep old name as alias
+export const loadSchemas = loadSchemasFromFilesystem;
+
+// --- Shared helpers ---
+
+export function resolveRefs(obj: unknown, definitions: Record<string, unknown>, seen = new Set()): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => resolveRefs(item, definitions, seen));
+  }
+
+  if (obj && typeof obj === 'object') {
+    const record = obj as Record<string, unknown>;
+    if (record.$ref && typeof record.$ref === 'string') {
+      const match = record.$ref.match(/#\/definitions\/(.+)/);
+      if (match) {
+        const key = match[1];
+        if (seen.has(key)) return {};
+        seen.add(key);
+        const ref = definitions[key];
+        if (!ref) return {};
+        return resolveRefs(ref, definitions, seen);
+      }
+    }
+
+    const resolved: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(record)) {
+      resolved[k] = resolveRefs(v, definitions, seen);
+    }
+    return resolved;
+  }
+
+  return obj;
+}
+
+type GVK = { group: string; version: string; kind: string };
+
+function rankVersion(v: string): [major: number, maturity: number, betaAlphaNum: number] {
+  const m = v.match(/^v(\d+)(alpha|beta)?(\d+)?$/);
+  if (!m) return [-1, -1, -1];
+  const major = parseInt(m[1], 10);
+  const stage = m[2] ?? "";
+  const stageNum = parseInt(m[3] ?? "0");
+  const maturity = stage === "" ? 3 : (stage === "beta" ? 2 : 1);
+  return [major, maturity, stageNum];
+}
+
+export function filterRealResources(gvks: GVK[]): GVK[] {
+  const excludedKinds = new Set([
+    'Status', 'APIGroup', 'APIGroupList', 'APIResourceList', 'APIVersions',
+    'WatchEvent', 'DeleteOptions', 'Scale', 'Eviction',
+    'Binding', 'ComponentStatus', 'SelfSubjectAccessReview', 'SelfSubjectRulesReview',
+    'SelfSubjectReview', 'SubjectAccessReview', 'LocalSubjectAccessReview',
+    'TokenRequest', 'TokenReview', 'StorageVersion', 'StorageVersionMigration',
+  ]);
+
+  const filtered = gvks.filter(
+    gvk => !gvk.kind.endsWith('List') && !excludedKinds.has(gvk.kind)
+  );
+
+  const best = new Map<string, GVK>();
+  for (const gvk of filtered) {
+    const key = `${gvk.group}|${gvk.kind}`;
+    const curr = best.get(key);
+    if (!curr) {
+      best.set(key, gvk);
+      continue;
+    }
+    const a = rankVersion(gvk.version);
+    const b = rankVersion(curr.version);
+    if (
+      a[0] > b[0] ||
+      (a[0] === b[0] && a[1] > b[1]) ||
+      (a[0] === b[0] && a[1] === b[1] && a[2] > b[2])
+    ) {
+      best.set(key, gvk);
+    }
+  }
+
+  return Array.from(best.values()).sort((x, y) =>
+    (x.group || '').localeCompare(y.group || '') ||
+    x.kind.localeCompare(y.kind) ||
+    x.version.localeCompare(y.version)
+  );
 }

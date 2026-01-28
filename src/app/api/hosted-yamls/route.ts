@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getHostedYamlRepository } from '@/repositories/registry';
 
 // GET all hosted YAMLs (optionally filtered by projectId)
 export async function GET(req: NextRequest) {
@@ -7,19 +7,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get('projectId');
 
-    const hostedYamls = await prisma.hostedYaml.findMany({
-      where: projectId ? { projectId } : undefined,
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-            slug: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const repo = getHostedYamlRepository();
+    const hostedYamls = await repo.findAll(projectId);
 
     return NextResponse.json(hostedYamls);
   } catch (error) {

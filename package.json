@@ -1,15 +1,49 @@
 {
-  "name": "KubeForge",
-  "version": "0.1.0",
-  "private": true,
+  "name": "kubeforge",
+  "version": "0.2.0",
+  "private": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./repositories": {
+      "import": "./dist/repositories/index.mjs",
+      "require": "./dist/repositories/index.js",
+      "types": "./dist/repositories/index.d.ts"
+    },
+    "./storage": {
+      "import": "./dist/storage/index.mjs",
+      "require": "./dist/storage/index.js",
+      "types": "./dist/storage/index.d.ts"
+    },
+    "./providers": {
+      "import": "./dist/providers/index.mjs",
+      "require": "./dist/providers/index.js",
+      "types": "./dist/providers/index.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types/index.mjs",
+      "require": "./dist/types/index.js",
+      "types": "./dist/types/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "prisma"
+  ],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "build:lib": "tsup",
     "start": "next start",
     "lint": "next lint",
     "db:setup": "npx prisma generate && npx prisma migrate dev",
     "db:reset": "npx prisma migrate reset",
-    "db:studio": "npx prisma studio"
+    "db:studio": "npx prisma studio",
+    "db:ingest-schemas": "tsx scripts/ingest-schemas.ts"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -56,6 +90,8 @@
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4",
+    "tsup": "^8.0.0",
+    "tsx": "^4.0.0",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"
   }

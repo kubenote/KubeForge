@@ -30,12 +30,13 @@ export function VersionSwitcher({
 
   React.useEffect(() => {
     const savedVersion = localStorage.getItem("preferredK8sVersion");
-    if (savedVersion) {
+    if (savedVersion && versions.includes(savedVersion)) {
       setVersion(savedVersion);
-    } else {
-      onSelect?.("v1.33.3"); // <- Invoke callback if defined
+    } else if (versions.length > 0) {
+      const latest = [...versions].filter(v => !v.includes("main")).sort().reverse()[0];
+      if (latest) onSelect?.(latest);
     }
-  }, []);
+  }, [versions]);
 
   const handleSelect = (version: string) => {
     localStorage.setItem("preferredK8sVersion", version); // Cache in localStorage

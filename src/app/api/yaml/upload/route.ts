@@ -1,10 +1,9 @@
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { nanoid } from 'nanoid';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkDemoMode } from '@/lib/demoMode';
 import { validateKubernetesYaml } from '@/lib/yamlValidation';
-import { prisma } from '@/lib/prisma';
+import { getHostedYamlRepository } from '@/repositories/registry';
+import { getStorageProvider } from '@/storage/registry';
 import crypto from 'crypto';
 
 export const config = {
@@ -53,25 +52,21 @@ export async function POST(req: NextRequest) {
     }
 
     const id = nanoid();
-    const cacheDir = path.join(process.cwd(), '.next/hosted-yaml');
-    const filePath = path.join(cacheDir, `${id}.yml`);
     const contentToSave = validation.sanitizedContent || yamlContent;
 
     // Create hash for deduplication tracking
     const yamlHash = crypto.createHash('sha256').update(contentToSave).digest('hex');
 
     try {
-        await mkdir(cacheDir, { recursive: true });
-        await writeFile(filePath, contentToSave, 'utf8');
+        const storage = getStorageProvider();
+        await storage.save(id, contentToSave);
 
-        // Save to database for tracking
-        await prisma.hostedYaml.create({
-            data: {
-                id,
-                projectId: projectId || null,
-                name: name || null,
-                yamlHash,
-            },
+        const repo = getHostedYamlRepository();
+        await repo.create({
+            id,
+            projectId: projectId || null,
+            name: name || null,
+            yamlHash,
         });
 
         return NextResponse.json({ url: `/api/yaml/${id}.yml`, id });

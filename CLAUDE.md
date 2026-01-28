@@ -8,7 +8,7 @@ KubeForge is a visual-first toolkit for building, validating, and managing Kuber
 
 - **Framework:** Next.js 15 with React 19 (App Router)
 - **Language:** TypeScript 5
-- **Database:** SQLite with Prisma ORM
+- **Database:** PostgreSQL with Prisma ORM
 - **Styling:** Tailwind CSS 4 with shadcn/ui components
 - **Flow Visualization:** @xyflow/react
 - **State Management:** Zustand + React Context
@@ -27,23 +27,31 @@ src/
 ├── providers/        # React context providers
 ├── contexts/         # Additional contexts
 ├── hooks/            # Custom React hooks
+├── repositories/     # Data access layer (repository pattern)
+│   ├── interfaces/   # Repository interfaces
+│   └── implementations/ # Prisma implementations
+├── storage/          # File storage abstraction
 ├── services/         # API service layer
 ├── lib/              # Utility libraries
 └── types/            # TypeScript type definitions
 
 prisma/               # Database schema & migrations
+scripts/              # CLI scripts (schema ingestion, setup)
 schema-cache/         # Kubernetes JSON schemas (git submodule)
 ```
 
 ## Key Commands
 
 ```bash
-npm run dev          # Start development server (Turbopack)
-npm run build        # Build for production
-npm run lint         # Run ESLint
-npm run db:setup     # Generate Prisma client & run migrations
-npm run db:reset     # Reset database
-npm run db:studio    # Open Prisma Studio
+npm run dev                         # Start development server (Turbopack)
+npm run build                       # Build for production
+npm run build:lib                   # Build library output (tsup)
+npm run lint                        # Run ESLint
+npm run db:setup                    # Generate Prisma client & run migrations
+npm run db:reset                    # Reset database
+npm run db:studio                   # Open Prisma Studio
+npm run db:ingest-schemas -- v1.33.3  # Ingest K8s schemas into DB
+./scripts/setup.sh                  # One-command setup (docker + migrations)
 ```
 
 ## Claude Code Settings

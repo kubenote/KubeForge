@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { checkDemoMode } from '@/lib/demoMode';
 import {
@@ -7,27 +7,12 @@ import {
   isUniqueConstraintError,
   uniqueConstraintErrorResponse,
   internalErrorResponse,
-  badRequestResponse
 } from '@/lib/projectUtils';
 
 export async function GET() {
   try {
-    const projects = await prisma.project.findMany({
-      include: {
-        versions: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-        _count: {
-          select: {
-            versions: true,
-            hostedYamls: true,
-          },
-        },
-      },
-      orderBy: { updatedAt: 'desc' },
-    });
-
+    const repo = getProjectRepository();
+    const projects = await repo.findAll();
     return NextResponse.json(projects);
   } catch (error) {
     console.error('Failed to fetch projects:', error);
@@ -42,7 +27,7 @@ export async function POST(req: NextRequest) {
   try {
     // Check if demo mode is enabled
     checkDemoMode();
-    
+
     const { name, nodes, edges, message } = await req.json();
 
     if (!name || !nodes || !edges) {
@@ -55,7 +40,7 @@ export async function POST(req: NextRequest) {
     // Validate and create slug from project name
     const validatedName = validateProjectName(name);
     const slug = slugify(validatedName);
-    
+
     if (!slug) {
       return NextResponse.json(
         { error: 'Project name must contain at least one alphanumeric character' },
@@ -63,24 +48,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const project = await prisma.project.create({
-      data: {
-        name: validatedName,
-        slug: slug,
-        versions: {
-          create: {
-            slug: await generateUniqueVersionSlug(),
-            nodes: JSON.stringify(nodes),
-            edges: JSON.stringify(edges),
-            message: message || 'Initial version',
-          },
-        },
-      },
-      include: {
-        versions: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
+    const repo = getProjectRepository();
+    const project = await repo.create({
+      name: validatedName,
+      slug,
+      initialVersion: {
+        slug: await generateUniqueVersionSlug(),
+        nodes: JSON.stringify(nodes),
+        edges: JSON.stringify(edges),
+        message: message || 'Initial version',
       },
     });
 
