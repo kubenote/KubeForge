@@ -9,6 +9,7 @@ import { FolderArchive } from 'lucide-react'
 import { nanoid } from 'nanoid'
 import { useNodeProvider } from '@/providers/NodeProvider'
 import { AddNodeParams } from '@/types'
+import { removeNullFields } from '@/lib/objectUtils'
 
 interface NodeData {
   kind: string
@@ -67,25 +68,6 @@ function importYamlToFlowNodes(
   }
 }
 
-
-function removeNullFields(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(removeNullFields);
-  } else if (obj && typeof obj === 'object') {
-    const cleaned: any = {};
-    for (const key in obj) {
-      const value = obj[key];
-      if (value !== null) {
-        const cleanedValue = removeNullFields(value);
-        if (cleanedValue !== null && cleanedValue !== undefined) {
-          cleaned[key] = cleanedValue;
-        }
-      }
-    }
-    return cleaned;
-  }
-  return obj;
-}
 
 function basicSanitizeYamlTemplates(yaml: string): string {
   return yaml

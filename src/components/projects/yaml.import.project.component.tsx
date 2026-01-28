@@ -12,6 +12,7 @@ import { Node, Edge } from '@xyflow/react';
 import { useRouter } from 'next/navigation';
 import { validateProjectName, slugify } from '@/lib/slugify';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { removeNullFields } from '@/lib/objectUtils';
 
 interface NodeData {
   kind: string;
@@ -80,25 +81,6 @@ function importYamlToNodes(yamlDocs: NodeData[]): { nodes: Node[]; edges: Edge[]
   });
 
   return { nodes, edges };
-}
-
-function removeNullFields(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(removeNullFields);
-  } else if (obj && typeof obj === 'object') {
-    const cleaned: any = {};
-    for (const key in obj) {
-      const value = obj[key];
-      if (value !== null) {
-        const cleanedValue = removeNullFields(value);
-        if (cleanedValue !== null && cleanedValue !== undefined) {
-          cleaned[key] = cleanedValue;
-        }
-      }
-    }
-    return cleaned;
-  }
-  return obj;
 }
 
 function basicSanitizeYamlTemplates(yaml: string): string {
