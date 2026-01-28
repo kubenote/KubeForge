@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { VersionProvider } from "@/providers/VersionProvider";
-import { WarningProvider } from "@/providers/WarningsProvider";
-import { SchemaProvider } from "@/providers/SchemaProvider";
-import { NodeProvider } from "@/providers/NodeProvider";
-import { ReactFlowProvider } from "@xyflow/react";
-import { DemoModeProvider } from "@/contexts/DemoModeContext";
+import { KubeForgeProviders } from "@/providers/KubeForgeProviders";
 import { DemoModeIndicator } from "@/components/ui/demo-mode-indicator";
 import { isDemoModeEnabled } from "@/lib/demoMode";
-import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -42,22 +36,10 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
-        <ThemeProvider>
-          <DemoModeProvider isDemoMode={demoMode}>
-            <WarningProvider>
-              <ReactFlowProvider>
-                <VersionProvider>
-                  <SchemaProvider>
-                    <NodeProvider>
-                      {children}
-                      <DemoModeIndicator />
-                    </NodeProvider>
-                  </SchemaProvider>
-                </VersionProvider>
-              </ReactFlowProvider>
-            </WarningProvider>
-          </DemoModeProvider>
-        </ThemeProvider>
+        <KubeForgeProviders isDemoMode={demoMode}>
+          {children}
+          <DemoModeIndicator />
+        </KubeForgeProviders>
       </body>
     </html>
   );

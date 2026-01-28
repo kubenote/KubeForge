@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 
 export async function GET(
   req: NextRequest,
@@ -11,22 +11,10 @@ export async function GET(
     const limit = parseInt(searchParams.get('limit') || '10', 10);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
-    const versions = await prisma.projectVersion.findMany({
-      where: { projectId },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-    });
+    const repo = getProjectRepository();
+    const result = await repo.findVersionsByProjectId(projectId, limit, offset);
 
-    const totalVersions = await prisma.projectVersion.count({
-      where: { projectId },
-    });
-
-    return NextResponse.json({
-      versions,
-      totalVersions,
-      hasMore: offset + versions.length < totalVersions,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Failed to fetch project versions:', error);
     return NextResponse.json(

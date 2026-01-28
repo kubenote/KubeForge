@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { unlink } from 'fs/promises';
-import path from 'path';
+import { getHostedYamlRepository } from '@/repositories/registry';
+import { getStorageProvider } from '@/storage/registry';
 
 // DELETE a hosted YAML
 export async function DELETE(
@@ -11,15 +10,13 @@ export async function DELETE(
   try {
     const { id } = await context.params;
 
-    // Delete from database
-    await prisma.hostedYaml.delete({
-      where: { id },
-    });
+    const repo = getHostedYamlRepository();
+    await repo.delete(id);
 
-    // Try to delete the file (ignore errors if file doesn't exist)
+    // Try to delete the file
     try {
-      const filePath = path.join(process.cwd(), '.next/hosted-yaml', `${id}.yml`);
-      await unlink(filePath);
+      const storage = getStorageProvider();
+      await storage.delete(id);
     } catch {
       // File might not exist, ignore
     }
@@ -41,12 +38,10 @@ export async function PATCH(
     const body = await req.json();
     const { name, projectId } = body;
 
-    const updated = await prisma.hostedYaml.update({
-      where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(projectId !== undefined && { projectId }),
-      },
+    const repo = getHostedYamlRepository();
+    const updated = await repo.update(id, {
+      ...(name !== undefined && { name }),
+      ...(projectId !== undefined && { projectId }),
     });
 
     return NextResponse.json(updated);

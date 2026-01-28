@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 import { isValidFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
 import { safeJsonParse } from '@/lib/safeJson';
@@ -10,19 +10,10 @@ export async function GET(
 ) {
   try {
     const { id: projectId, versionId } = await context.params;
-
-    // Try to find by slug first (if it looks like a friendly slug), then fall back to ID
     const isSlug = isValidFriendlySlug(versionId);
-    
-    const version = await prisma.projectVersion.findFirst({
-      where: {
-        projectId,
-        ...(isSlug ? { slug: versionId } : { id: versionId }),
-      },
-      include: {
-        project: true,
-      },
-    });
+
+    const repo = getProjectRepository();
+    const version = await repo.findVersion(projectId, versionId, isSlug);
 
     if (!version) {
       return NextResponse.json(
@@ -56,19 +47,10 @@ export async function DELETE(
     checkDemoMode();
 
     const { id: projectId, versionId } = await context.params;
-
-    // Try to find by slug first (if it looks like a friendly slug), then fall back to ID
     const isSlug = isValidFriendlySlug(versionId);
-    
-    const version = await prisma.projectVersion.findFirst({
-      where: {
-        projectId,
-        ...(isSlug ? { slug: versionId } : { id: versionId }),
-      },
-      include: {
-        project: true,
-      },
-    });
+
+    const repo = getProjectRepository();
+    const version = await repo.findVersion(projectId, versionId, isSlug);
 
     if (!version) {
       return NextResponse.json(
@@ -77,25 +59,9 @@ export async function DELETE(
       );
     }
 
-    // Delete the version
-    await prisma.projectVersion.delete({
-      where: {
-        id: version.id,
-      },
-    });
+    await repo.deleteVersion(version.id);
 
-    // Get the remaining versions to return the new latest
-    const remainingVersions = await prisma.projectVersion.findMany({
-      where: {
-        projectId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      take: 1,
-    });
-
-    const newLatest = remainingVersions.length > 0 ? remainingVersions[0] : null;
+    const newLatest = await repo.findLatestVersion(projectId);
 
     return NextResponse.json({
       success: true,

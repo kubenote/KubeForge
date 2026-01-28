@@ -51,6 +51,22 @@ The UI provides a live visual representation of object relationships and fields:
 > ![KubeForge UI](./public/git/screenshot-4.png)
 > ![KubeForge UI](./public/git/screenshot-6.png)
 
+## 📦 Using as a Library
+
+KubeForge can be installed as a dependency for building SaaS products on top of it:
+
+```bash
+npm install github:kubenote/kubeforge#v0.2.0
+```
+
+This provides:
+- **Repository interfaces** for custom database implementations (e.g., tenant-scoped queries)
+- **Storage provider interface** for custom file storage (e.g., S3)
+- **Composable React providers** for embedding KubeForge UI
+- **TypeScript types** for all data models
+
+See [SaaS Integration Guide](docs/claude-generated/saas-integration.md) for details.
+
 ## 🛠️ Coming Soon
 
 - Real-time validation against cluster versions

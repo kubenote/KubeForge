@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -47,4 +47,31 @@ model HostedYaml {
   lastAccessedAt DateTime?
 
   @@map("hosted_yamls")
+}
+
+model KubernetesSchema {
+  id              String   @id @default(cuid())
+  version         String   // "v1.33.3"
+  schemaKey       String   // e.g. "io.k8s.api.apps.v1.Deployment"
+  schemaData      String   // JSON blob
+  isFullyResolved Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([version, schemaKey, isFullyResolved])
+  @@index([version])
+  @@map("kubernetes_schemas")
+}
+
+model SchemaGvk {
+  id         String   @id @default(cuid())
+  version    String   // "v1.33.3"
+  group      String
+  gvkVersion String
+  kind       String
+  createdAt  DateTime @default(now())
+
+  @@unique([version, group, gvkVersion, kind])
+  @@index([version])
+  @@map("schema_gvks")
 }

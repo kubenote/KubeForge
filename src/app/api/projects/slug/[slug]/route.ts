@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 import { safeJsonParse } from '@/lib/safeJson';
 
 export async function GET(
@@ -8,15 +8,8 @@ export async function GET(
 ) {
   try {
     const { slug } = await context.params;
-
-    const project = await prisma.project.findUnique({
-      where: { slug },
-      include: {
-        versions: {
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
+    const repo = getProjectRepository();
+    const project = await repo.findBySlug(slug);
 
     if (!project) {
       return NextResponse.json(

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import { readFile } from 'fs/promises';
-import { prisma } from '@/lib/prisma';
+import { getHostedYamlRepository } from '@/repositories/registry';
+import { getStorageProvider } from '@/storage/registry';
 
 export async function GET(
   req: NextRequest,
@@ -14,19 +13,13 @@ export async function GET(
     return new NextResponse('Missing id', { status: 400 });
   }
 
-  const filePath = path.join(process.cwd(), '.next/hosted-yaml', `${id}.yml`);
-
   try {
-    const file = await readFile(filePath, 'utf8');
+    const storage = getStorageProvider();
+    const file = await storage.read(id);
 
     // Increment view count in database (fire and forget)
-    prisma.hostedYaml.update({
-      where: { id },
-      data: {
-        viewCount: { increment: 1 },
-        lastAccessedAt: new Date(),
-      },
-    }).catch(() => {
+    const repo = getHostedYamlRepository();
+    repo.incrementViewCount(id).catch(() => {
       // Ignore errors (e.g., if record doesn't exist in DB yet)
     });
 
@@ -36,7 +29,7 @@ export async function GET(
         'Content-Type': 'text/yaml; charset=utf-8',
       },
     });
-  } catch (err) {
+  } catch {
     return new NextResponse('File not found', { status: 404 });
   }
 }

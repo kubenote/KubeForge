@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { getProjectRepository } from '@/repositories/registry';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { checkDemoMode } from '@/lib/demoMode';
 import { safeJsonParse } from '@/lib/safeJson';
@@ -18,15 +18,8 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-
-    const project = await prisma.project.findUnique({
-      where: { id },
-      include: {
-        versions: {
-          orderBy: { createdAt: 'desc' },
-        },
-      },
-    });
+    const repo = getProjectRepository();
+    const project = await repo.findById(id);
 
     if (!project) {
       return notFoundResponse('Project');
@@ -57,14 +50,12 @@ export async function PUT(
   try {
     // Check if demo mode is enabled
     checkDemoMode();
-    
+
     const { id } = await context.params;
     const { name, nodes, edges, message } = await req.json();
 
-    // Check if project exists
-    const existingProject = await prisma.project.findUnique({
-      where: { id },
-    });
+    const repo = getProjectRepository();
+    const existingProject = await repo.findById(id);
 
     if (!existingProject) {
       return notFoundResponse('Project');
@@ -73,37 +64,25 @@ export async function PUT(
     // Validate and create slug if name is provided
     let validatedName = existingProject.name;
     let slug = existingProject.slug;
-    
+
     if (name && name !== existingProject.name) {
       validatedName = validateProjectName(name);
       slug = slugify(validatedName);
-      
+
       if (!slug) {
         return badRequestResponse('Project name must contain at least one alphanumeric character');
       }
     }
 
-    // Update project and create new version
-    const updatedProject = await prisma.project.update({
-      where: { id },
-      data: {
-        name: validatedName,
-        slug: slug,
-        versions: nodes && edges ? {
-          create: {
-            slug: await generateUniqueVersionSlug(),
-            nodes: JSON.stringify(nodes),
-            edges: JSON.stringify(edges),
-            message: message || 'Updated version',
-          },
-        } : undefined,
-      },
-      include: {
-        versions: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
-      },
+    const updatedProject = await repo.update(id, {
+      name: validatedName,
+      slug,
+      newVersion: nodes && edges ? {
+        slug: await generateUniqueVersionSlug(),
+        nodes: JSON.stringify(nodes),
+        edges: JSON.stringify(edges),
+        message: message || 'Updated version',
+      } : undefined,
     });
 
     return NextResponse.json(updatedProject);
@@ -123,12 +102,10 @@ export async function DELETE(
   try {
     // Check if demo mode is enabled
     checkDemoMode();
-    
-    const { id } = await context.params;
 
-    const deletedProject = await prisma.project.delete({
-      where: { id },
-    });
+    const { id } = await context.params;
+    const repo = getProjectRepository();
+    const deletedProject = await repo.delete(id);
 
     return NextResponse.json({ success: true, deletedProject });
   } catch (error) {

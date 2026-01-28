@@ -1,7 +1,7 @@
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { getTopics } from "@/lib/getDocs";
 import { getKubeSchemaBranches } from "@/lib/getBranches";
-import { prisma } from "@/lib/prisma";
+import { getProjectRepository } from "@/repositories/registry";
 import { notFound } from "next/navigation";
 import { ProjectPageClient } from "./page-client";
 import { safeJsonParse } from "@/lib/safeJson";
@@ -14,24 +14,9 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const { slug } = await params;
   const topics = getTopics();
   const versions = await getKubeSchemaBranches();
-  
-  // Find project by slug
-  const project = await prisma.project.findUnique({
-    where: { slug },
-    include: {
-      versions: {
-        orderBy: { createdAt: 'desc' },
-        select: {
-          id: true,
-          slug: true,
-          createdAt: true,
-          message: true,
-          nodes: true,
-          edges: true,
-        },
-      },
-    },
-  });
+
+  const repo = getProjectRepository();
+  const project = await repo.findBySlug(slug);
 
   if (!project) {
     notFound();
@@ -45,7 +30,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   return (
     <div className="flex flex-col min-h-screen">
       <ProjectProvider>
-        <ProjectPageClient 
+        <ProjectPageClient
           project={{
             ...project,
             versions: project.versions.map(v => ({
