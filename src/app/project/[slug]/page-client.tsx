@@ -153,7 +153,7 @@ export function ProjectPageClient({
       onLoadVersion={handleVersionLoad}
       getCurrentNodesEdges={getCurrentNodesEdges}
     >
-      <Flow 
+      <Flow
         initialNodes={initialNodes}
         initialEdges={initialEdges}
         initialProjectId={project.id}
@@ -162,6 +162,7 @@ export function ProjectPageClient({
         onVersionLoad={handleVersionLoad}
         loadingVersion={loadingVersion}
         currentVersionSlug={currentVersionSlug}
+        onGetCurrentState={handleGetFlowState}
       />
     </MainSidebar>
   );
