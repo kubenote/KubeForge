@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from '@/components/ui/dialog';
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import {
     Select,
@@ -141,7 +141,7 @@ export function VersionDiffDialog({
         }
     }, [rightVersionId]);
 
-    // Reset state when dialog opens
+    // Reset state when drawer opens
     useEffect(() => {
         if (open && versions.length >= 2) {
             // Pre-select the two most recent versions
@@ -156,8 +156,8 @@ export function VersionDiffDialog({
     }, [open, versions]);
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+        <Sheet open={open} onOpenChange={setOpen}>
+            <SheetTrigger asChild>
                 <Button
                     variant="outline"
                     size="sm"
@@ -167,114 +167,121 @@ export function VersionDiffDialog({
                     <GitCompare className="w-4 h-4 mr-1" />
                     Compare
                 </Button>
-            </DialogTrigger>
-            <DialogContent className="w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none flex flex-col">
-                <DialogHeader>
-                    <DialogTitle>Compare Versions - {projectName}</DialogTitle>
-                </DialogHeader>
+            </SheetTrigger>
+            <SheetContent
+                side="right"
+                className="w-[90vw] max-w-[90vw] sm:max-w-[90vw] flex flex-col p-0"
+            >
+                <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+                    <SheetTitle>Compare Versions - {projectName}</SheetTitle>
+                </SheetHeader>
 
-                <div className="flex gap-4 mb-4">
-                    <div className="flex-1">
-                        <label className="text-sm font-medium mb-2 block">Left Version (Older)</label>
-                        <Select value={leftVersionId} onValueChange={setLeftVersionId}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select version" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {versions.map((version, index) => (
-                                    <SelectItem
-                                        key={version.id}
-                                        value={version.id}
-                                        disabled={version.id === rightVersionId}
-                                    >
-                                        {formatVersionName(version, index)}
-                                        {index === 0 && ' (Latest)'}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                <div className="flex-1 flex flex-col min-h-0 px-6 py-4">
+                    {/* Version selectors */}
+                    <div className="flex gap-4 mb-4 shrink-0">
+                        <div className="flex-1">
+                            <label className="text-sm font-medium mb-2 block">Left Version (Older)</label>
+                            <Select value={leftVersionId} onValueChange={setLeftVersionId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select version" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {versions.map((version, index) => (
+                                        <SelectItem
+                                            key={version.id}
+                                            value={version.id}
+                                            disabled={version.id === rightVersionId}
+                                        >
+                                            {formatVersionName(version, index)}
+                                            {index === 0 && ' (Latest)'}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex-1">
+                            <label className="text-sm font-medium mb-2 block">Right Version (Newer)</label>
+                            <Select value={rightVersionId} onValueChange={setRightVersionId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select version" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {versions.map((version, index) => (
+                                        <SelectItem
+                                            key={version.id}
+                                            value={version.id}
+                                            disabled={version.id === leftVersionId}
+                                        >
+                                            {formatVersionName(version, index)}
+                                            {index === 0 && ' (Latest)'}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <div className="flex-1">
-                        <label className="text-sm font-medium mb-2 block">Right Version (Newer)</label>
-                        <Select value={rightVersionId} onValueChange={setRightVersionId}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select version" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {versions.map((version, index) => (
-                                    <SelectItem
-                                        key={version.id}
-                                        value={version.id}
-                                        disabled={version.id === leftVersionId}
-                                    >
-                                        {formatVersionName(version, index)}
-                                        {index === 0 && ' (Latest)'}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+
+                    {loading && (
+                        <div className="text-center py-4 text-muted-foreground shrink-0">
+                            Loading versions...
+                        </div>
+                    )}
+
+                    {/* Side-by-side editors */}
+                    <div className="flex gap-4 flex-1 min-h-0">
+                        <div className="flex-1 border rounded overflow-hidden flex flex-col">
+                            <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
+                                {leftVersionId
+                                    ? formatVersionName(
+                                        versions.find((v) => v.id === leftVersionId)!,
+                                        versions.findIndex((v) => v.id === leftVersionId)
+                                    )
+                                    : 'Select a version'}
+                            </div>
+                            <div className="flex-1 min-h-0">
+                                <Editor
+                                    height="100%"
+                                    defaultLanguage="yaml"
+                                    value={leftYaml || '# Select a version to view'}
+                                    options={{
+                                        readOnly: true,
+                                        wordWrap: 'on',
+                                        minimap: { enabled: false },
+                                        scrollBeyondLastLine: false,
+                                        lineNumbers: 'on',
+                                    }}
+                                    theme="vs-dark"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex-1 border rounded overflow-hidden flex flex-col">
+                            <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
+                                {rightVersionId
+                                    ? formatVersionName(
+                                        versions.find((v) => v.id === rightVersionId)!,
+                                        versions.findIndex((v) => v.id === rightVersionId)
+                                    )
+                                    : 'Select a version'}
+                            </div>
+                            <div className="flex-1 min-h-0">
+                                <Editor
+                                    height="100%"
+                                    defaultLanguage="yaml"
+                                    value={rightYaml || '# Select a version to view'}
+                                    options={{
+                                        readOnly: true,
+                                        wordWrap: 'on',
+                                        minimap: { enabled: false },
+                                        scrollBeyondLastLine: false,
+                                        lineNumbers: 'on',
+                                    }}
+                                    theme="vs-dark"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                {loading && (
-                    <div className="text-center py-4 text-muted-foreground">
-                        Loading versions...
-                    </div>
-                )}
-
-                <div className="flex gap-4 flex-1 min-h-0">
-                    <div className="flex-1 border rounded overflow-hidden flex flex-col">
-                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
-                            {leftVersionId
-                                ? formatVersionName(
-                                    versions.find((v) => v.id === leftVersionId)!,
-                                    versions.findIndex((v) => v.id === leftVersionId)
-                                )
-                                : 'Select a version'}
-                        </div>
-                        <div className="flex-1 min-h-0">
-                            <Editor
-                                height="100%"
-                                defaultLanguage="yaml"
-                                value={leftYaml || '# Select a version to view'}
-                                options={{
-                                    readOnly: true,
-                                    wordWrap: 'on',
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    lineNumbers: 'on',
-                                }}
-                                theme="vs-dark"
-                            />
-                        </div>
-                    </div>
-                    <div className="flex-1 border rounded overflow-hidden flex flex-col">
-                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
-                            {rightVersionId
-                                ? formatVersionName(
-                                    versions.find((v) => v.id === rightVersionId)!,
-                                    versions.findIndex((v) => v.id === rightVersionId)
-                                )
-                                : 'Select a version'}
-                        </div>
-                        <div className="flex-1 min-h-0">
-                            <Editor
-                                height="100%"
-                                defaultLanguage="yaml"
-                                value={rightYaml || '# Select a version to view'}
-                                options={{
-                                    readOnly: true,
-                                    wordWrap: 'on',
-                                    minimap: { enabled: false },
-                                    scrollBeyondLastLine: false,
-                                    lineNumbers: 'on',
-                                }}
-                                theme="vs-dark"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
+            </SheetContent>
+        </Sheet>
     );
 }
