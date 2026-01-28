@@ -1,5 +1,13 @@
 'use client'
 
+// Extend HTMLInputElement to support directory selection attributes
+declare module 'react' {
+  interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+    webkitdirectory?: string;
+    directory?: string;
+  }
+}
+
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -122,7 +130,9 @@ export default function YamlImportButton() {
       const reader = new FileReader()
       reader.onload = () => {
         try {
-          yaml.loadAll(basicSanitizeYamlTemplates(reader.result), (doc) => {
+          const content = reader.result
+          if (typeof content !== 'string') return
+          yaml.loadAll(basicSanitizeYamlTemplates(content), (doc) => {
             if (doc) {
               const cleaned = removeNullFields(doc)
               docs.push(cleaned)
@@ -146,8 +156,8 @@ export default function YamlImportButton() {
 
   const handleConfirmImport = () => {
 
-    parsedYaml.forEach((doc, i) => {
-      importYamlToFlowNodes(addNode, doc, preRefSchemaData, i)
+    parsedYaml.forEach((doc) => {
+      importYamlToFlowNodes(addNode, doc as NodeData)
     })
 
     setDialogOpen(false)

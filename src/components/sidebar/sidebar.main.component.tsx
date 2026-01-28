@@ -234,7 +234,7 @@ export default function MainSidebar({
                                     onLoadVersion={onLoadVersion}
                                     externalOpen={versionHistoryOpen}
                                     onExternalOpenChange={setVersionHistoryOpen}
-                                    currentVersionId={currentVersionId}
+                                    currentVersionId={currentVersionId ?? undefined}
                                 />
                             )}
                         </>

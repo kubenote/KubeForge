@@ -154,8 +154,8 @@ export function ProjectPageClient({
       getCurrentNodesEdges={getCurrentNodesEdges}
     >
       <Flow
-        initialNodes={initialNodes}
-        initialEdges={initialEdges}
+        initialNodes={versionNodes || initialNodes}
+        initialEdges={versionEdges || initialEdges}
         initialProjectId={project.id}
         initialProjectName={project.name}
         initialProjectSlug={project.slug}

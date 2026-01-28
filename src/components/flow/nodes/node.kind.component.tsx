@@ -7,7 +7,7 @@ import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
 import { useSchema } from "@/providers/SchemaProvider"
 import { ConfigField } from "./flow.configfield.component"
-import { KindNodeData, FlowEdge } from "@/types"
+import { KindNodeData, FlowEdge, Schema } from "@/types"
 import { useReadOnly } from "@/contexts/ReadOnlyContext"
 
 interface KindNodeProps {
