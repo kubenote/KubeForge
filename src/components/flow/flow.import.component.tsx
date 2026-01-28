@@ -1,5 +1,13 @@
 'use client'
 
+// Extend HTMLInputElement to support directory selection attributes
+declare module 'react' {
+  interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
+    webkitdirectory?: string;
+    directory?: string;
+  }
+}
+
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -29,7 +37,6 @@ function importYamlToFlowNodes(
 
     for (const key of Object.keys(yamlData)) {
       const value = yamlData[key];
-      console.log(value)
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         const refId = nanoid()
 
@@ -67,14 +74,13 @@ function importYamlToFlowNodes(
   }
 }
 
-
-function removeNullFields(obj: any): any {
+function removeNullFields(obj: unknown): unknown {
   if (Array.isArray(obj)) {
     return obj.map(removeNullFields);
   } else if (obj && typeof obj === 'object') {
-    const cleaned: any = {};
-    for (const key in obj) {
-      const value = obj[key];
+    const cleaned: Record<string, unknown> = {};
+    for (const key in obj as Record<string, unknown>) {
+      const value = (obj as Record<string, unknown>)[key];
       if (value !== null) {
         const cleanedValue = removeNullFields(value);
         if (cleanedValue !== null && cleanedValue !== undefined) {
@@ -122,7 +128,9 @@ export default function YamlImportButton() {
       const reader = new FileReader()
       reader.onload = () => {
         try {
-          yaml.loadAll(basicSanitizeYamlTemplates(reader.result), (doc) => {
+          const content = reader.result
+          if (typeof content !== 'string') return
+          yaml.loadAll(basicSanitizeYamlTemplates(content), (doc) => {
             if (doc) {
               const cleaned = removeNullFields(doc)
               docs.push(cleaned)
@@ -146,8 +154,8 @@ export default function YamlImportButton() {
 
   const handleConfirmImport = () => {
 
-    parsedYaml.forEach((doc, i) => {
-      importYamlToFlowNodes(addNode, doc, preRefSchemaData, i)
+    parsedYaml.forEach((doc) => {
+      importYamlToFlowNodes(addNode, doc as NodeData)
     })
 
     setDialogOpen(false)

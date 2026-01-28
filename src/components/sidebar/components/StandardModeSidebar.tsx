@@ -52,10 +52,10 @@ export function StandardModeSidebar({
     };
 
     const filterGroupItems = (
-        items: Array<{ name: string; [key: string]: any }>,
-        kindMap: Map<string, any>,
+        items: Array<{ name: string; icon?: React.ReactNode; [key: string]: unknown }>,
+        kindMap: Map<string, { kind: string; group: string; version: string }>,
         searchQuery: string
-    ) => {
+    ): Array<{ kind: string; group: string; version: string; icon?: React.ReactNode }> => {
         const lcQuery = (searchQuery ?? "").toLowerCase();
 
         return items

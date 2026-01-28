@@ -33,7 +33,7 @@ export function AppSidebarHeader({
                 defaultVersion={version ?? "latest"}
                 onSelect={onVersionSelect}
             />
-            <SearchForm onChange={(e) => onSearchChange(e)} />
+            <SearchForm onChange={onSearchChange} />
             <div className="flex items-center space-x-2 px-2">
                 <Label htmlFor="airplane-mode">Advanced</Label>
                 <Switch 

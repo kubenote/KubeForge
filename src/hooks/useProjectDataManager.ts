@@ -187,7 +187,7 @@ export function useProjectDataManager(): UseProjectDataManagerReturn {
       setCurrentNodes(version.nodes);
       setCurrentEdges(version.edges);
       setCurrentVersionId(version.id);
-      setCurrentVersionSlug(version.slug);
+      setCurrentVersionSlug(version.slug ?? null);
       
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load project version';
