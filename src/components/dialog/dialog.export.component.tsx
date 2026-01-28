@@ -31,7 +31,11 @@ import {
 } from "@/lib/export";
 import { useTheme } from "@/contexts/ThemeContext";
 
-export default function ExportDialog() {
+interface ExportDialogProps {
+    projectId?: string | null;
+}
+
+export default function ExportDialog({ projectId }: ExportDialogProps) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [exportFormat, setExportFormat] = useState<ExportFormat>("yaml");
     const [previewContent, setPreviewContent] = useState("");
@@ -127,7 +131,10 @@ ${data.map((r) => {
             const res = await fetch("/api/yaml/upload", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ yamlContent }),
+                body: JSON.stringify({
+                    yamlContent,
+                    projectId: projectId || undefined,
+                }),
             });
 
             const result = await res.json();

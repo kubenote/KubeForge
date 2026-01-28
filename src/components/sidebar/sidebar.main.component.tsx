@@ -243,7 +243,7 @@ export default function MainSidebar({
                     <div className="flex-grow" />
                     <ThemeToggle />
                     <WarningsDrawer />
-                    <ExportDialog />
+                    <ExportDialog projectId={currentProjectId} />
                     <HelperComponent className="mr-2" topics={initialTopics} />
                 </header>
                 <div className="flex flex-1 flex-col gap-4 p-4">
