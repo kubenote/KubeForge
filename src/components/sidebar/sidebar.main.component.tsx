@@ -105,7 +105,7 @@ export default function MainSidebar({
     };
     return (
         <SidebarProvider>
-            <AppSidebarClient versions={versions} />
+            <AppSidebarClient versions={versions} isReadOnly={!!currentVersionSlug} />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4">
                     <SidebarTrigger />

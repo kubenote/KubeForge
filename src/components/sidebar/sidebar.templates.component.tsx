@@ -16,9 +16,10 @@ import { Node, Edge } from '@xyflow/react';
 
 interface TemplatesSidebarProps {
     className?: string;
+    isReadOnly?: boolean;
 }
 
-export function TemplatesSidebar({ className = '' }: TemplatesSidebarProps) {
+export function TemplatesSidebar({ className = '', isReadOnly = false }: TemplatesSidebarProps) {
     const categories = getTemplatesByCategory();
     const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({
         workloads: true,
@@ -159,8 +160,13 @@ export function TemplatesSidebar({ className = '' }: TemplatesSidebarProps) {
                                 {category.templates.map((template) => (
                                     <div
                                         key={template.id}
-                                        className="group flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer"
-                                        onClick={() => applyTemplate(template)}
+                                        className={`group flex items-center gap-2 p-2 rounded-md ${
+                                            isReadOnly
+                                                ? 'opacity-50 cursor-not-allowed'
+                                                : 'hover:bg-muted cursor-pointer'
+                                        }`}
+                                        onClick={() => !isReadOnly && applyTemplate(template)}
+                                        title={isReadOnly ? 'Cannot add templates in read-only mode' : undefined}
                                     >
                                         <div className="flex-1 min-w-0">
                                             <div className="text-sm font-medium truncate">
@@ -170,17 +176,19 @@ export function TemplatesSidebar({ className = '' }: TemplatesSidebarProps) {
                                                 {template.description}
                                             </div>
                                         </div>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                applyTemplate(template);
-                                            }}
-                                        >
-                                            <Plus className="w-4 h-4" />
-                                        </Button>
+                                        {!isReadOnly && (
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    applyTemplate(template);
+                                                }}
+                                            >
+                                                <Plus className="w-4 h-4" />
+                                            </Button>
+                                        )}
                                     </div>
                                 ))}
                             </CollapsibleContent>
