@@ -11,6 +11,7 @@ import { Node, Edge } from '@xyflow/react';
 import { getVersionUrlId } from '@/lib/versionUtils';
 import { ProjectDataService } from '@/services/project.data.service';
 import { DeleteVersionDialog } from './delete-version-dialog';
+import { VersionDiffDialog } from '@/components/dialog/dialog.version-diff.component';
 
 interface ProjectVersion {
   id: string;
@@ -123,15 +124,25 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
           </p>
         </DialogHeader>
         
-        <div className="mb-4">
+        <div className="mb-4 flex gap-2">
           <Button
             onClick={loadLatestVersion}
             disabled={loading}
-            className="w-full"
+            className="flex-1"
             variant="default"
           >
             Load Latest Version
           </Button>
+          <VersionDiffDialog
+            projectId={projectId}
+            projectName={projectName}
+            versions={versions.map((v) => ({
+              id: v.id,
+              slug: v.slug,
+              createdAt: v.createdAt,
+              message: v.message,
+            }))}
+          />
         </div>
 
         <ScrollArea className="max-h-[60vh]">
