@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { validateRequiredString, validateArray } from '@/lib/validation';
 
 async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
@@ -56,18 +57,44 @@ export async function POST(req: NextRequest) {
   try {
     // Check if demo mode is enabled
     checkDemoMode();
-    
-    const { name, nodes, edges, message } = await req.json();
 
-    if (!name || !nodes || !edges) {
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
       return NextResponse.json(
-        { error: 'Missing required fields: name, nodes, edges' },
+        { error: 'Invalid JSON in request body' },
         { status: 400 }
       );
     }
 
+    const { name, nodes, edges, message } = body as {
+      name?: unknown;
+      nodes?: unknown;
+      edges?: unknown;
+      message?: unknown;
+    };
+
+    // Validate name
+    const nameResult = validateRequiredString(name, 'name');
+    if (!nameResult.valid) {
+      return NextResponse.json({ error: nameResult.error }, { status: 400 });
+    }
+
+    // Validate nodes array
+    const nodesResult = validateArray(nodes, 'nodes');
+    if (!nodesResult.valid) {
+      return NextResponse.json({ error: nodesResult.error }, { status: 400 });
+    }
+
+    // Validate edges array
+    const edgesResult = validateArray(edges, 'edges');
+    if (!edgesResult.valid) {
+      return NextResponse.json({ error: edgesResult.error }, { status: 400 });
+    }
+
     // Validate and create slug from project name
-    const validatedName = validateProjectName(name);
+    const validatedName = validateProjectName(nameResult.value);
     const slug = slugify(validatedName);
     
     if (!slug) {
@@ -84,9 +111,9 @@ export async function POST(req: NextRequest) {
         versions: {
           create: {
             slug: await generateUniqueVersionSlug(),
-            nodes: JSON.stringify(nodes),
-            edges: JSON.stringify(edges),
-            message: message || 'Initial version',
+            nodes: JSON.stringify(nodesResult.value),
+            edges: JSON.stringify(edgesResult.value),
+            message: typeof message === 'string' ? message : 'Initial version',
           },
         },
       },

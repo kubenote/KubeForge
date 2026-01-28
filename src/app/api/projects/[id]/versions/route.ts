@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { validatePagination, isValidId } from '@/lib/validation';
 
 export async function GET(
   req: NextRequest,
@@ -7,9 +8,30 @@ export async function GET(
 ) {
   try {
     const { id: projectId } = await context.params;
+
+    // Validate project ID format
+    if (!isValidId(projectId)) {
+      return NextResponse.json(
+        { error: 'Invalid project ID format' },
+        { status: 400 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
-    const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const offset = parseInt(searchParams.get('offset') || '0', 10);
+    const pagination = validatePagination(
+      searchParams.get('limit'),
+      searchParams.get('offset'),
+      { maxLimit: 100 }
+    );
+
+    if (pagination.error) {
+      return NextResponse.json(
+        { error: pagination.error },
+        { status: 400 }
+      );
+    }
+
+    const { limit, offset } = pagination;
 
     const versions = await prisma.projectVersion.findMany({
       where: { projectId },

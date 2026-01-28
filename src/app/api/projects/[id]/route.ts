@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { isValidId, validateArray } from '@/lib/validation';
 
 async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
@@ -31,6 +32,14 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
+
+    // Validate ID format
+    if (!isValidId(id)) {
+      return NextResponse.json(
+        { error: 'Invalid project ID format' },
+        { status: 400 }
+      );
+    }
 
     const project = await prisma.project.findUnique({
       where: { id },
