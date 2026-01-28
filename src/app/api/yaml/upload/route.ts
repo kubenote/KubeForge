@@ -3,6 +3,7 @@ import path from 'path';
 import { nanoid } from 'nanoid';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkDemoMode } from '@/lib/demoMode';
+import { validateKubernetesYaml } from '@/lib/yamlValidation';
 
 export const config = {
     api: {
@@ -14,7 +15,7 @@ export const config = {
 
 export async function POST(req: NextRequest) {
     if (req.method !== 'POST') {
-        return NextResponse.json({ error: 'Method not allowed' });
+        return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
     }
 
     try {
@@ -27,10 +28,26 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const { yamlContent } = await req.json();
+    let requestBody: { yamlContent?: unknown };
+    try {
+        requestBody = await req.json();
+    } catch {
+        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+
+    const { yamlContent } = requestBody;
 
     if (!yamlContent || typeof yamlContent !== 'string') {
-        return NextResponse.json({ error: 'Missing yamlContent' });
+        return NextResponse.json({ error: 'Missing or invalid yamlContent' }, { status: 400 });
+    }
+
+    // Validate and sanitize the YAML content
+    const validation = validateKubernetesYaml(yamlContent);
+    if (!validation.isValid) {
+        return NextResponse.json(
+            { error: 'Invalid YAML content', details: validation.errors },
+            { status: 400 }
+        );
     }
 
     const id = nanoid();
@@ -39,10 +56,11 @@ export async function POST(req: NextRequest) {
 
     try {
         await mkdir(cacheDir, { recursive: true });
-        await writeFile(filePath, yamlContent, 'utf8');
+        // Write the sanitized content instead of raw input
+        await writeFile(filePath, validation.sanitizedContent || yamlContent, 'utf8');
         return NextResponse.json({ url: `/api/yaml/${id}.yml`, id });
     } catch (err) {
-        console.error(err);
-        return NextResponse.json({ error: 'Failed to save file' });
+        console.error('Failed to save YAML file:', err);
+        return NextResponse.json({ error: 'Failed to save file' }, { status: 500 });
     }
 }

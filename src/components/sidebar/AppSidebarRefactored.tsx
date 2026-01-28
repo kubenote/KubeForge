@@ -8,11 +8,19 @@ import {
 } from "@/components/ui/sidebar"
 import { useVersion } from "../../providers/VersionProvider";
 import { useSchema } from "@/providers/SchemaProvider";
+import { safeJsonParseWithResult } from "@/lib/safeJson";
 import { AppSidebarHeader } from "./components/SidebarHeader";
 import { AdvancedModeSidebar } from "./components/AdvancedModeSidebar";
 import { StandardModeSidebar } from "./components/StandardModeSidebar";
 import { DownloadDialog } from "./components/DownloadDialog";
 import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
+import { Schema, GVK } from "@/types";
+import { safeJsonParseWithResult } from "@/lib/safeJson";
+
+interface SchemaInfoObject {
+    name: string | GVK;
+    data: Schema | undefined;
+}
 
 export function AppSidebarRefactored({
     versions,
@@ -25,7 +33,7 @@ export function AppSidebarRefactored({
     const [downloadingVersion, setDownloadingVersion] = React.useState<string | null>(null);
     const [searchQuery, setSearchQuery] = React.useState("");
     const [dialogOpen, setDialogOpen] = React.useState(false);
-    const [loadObject, setLoadObject] = React.useState({});
+    const [loadObject, setLoadObject] = React.useState<SchemaInfoObject | Record<string, never>>({});
     const [advancedMode, setAdvancedMode] = React.useState(false);
     const [progress, setProgress] = React.useState(0);
 
@@ -41,7 +49,12 @@ export function AppSidebarRefactored({
         const events = new EventSource(`/api/schema/stream?version=${version}`);
 
         events.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            const parseResult = safeJsonParseWithResult<{ progress?: number; done?: boolean }>(event.data);
+            if (!parseResult.success || !parseResult.data) {
+                console.error('Failed to parse event data:', parseResult.error);
+                return;
+            }
+            const data = parseResult.data;
             if (data.progress !== undefined) setProgress(data.progress);
             if (data.done) {
                 setIsDownloading(false);
@@ -57,8 +70,8 @@ export function AppSidebarRefactored({
         };
     };
 
-    const handleInfoClick = (loadObject: any) => {
-        setLoadObject(loadObject);
+    const handleInfoClick = (newLoadObject: SchemaInfoObject) => {
+        setLoadObject(newLoadObject);
         setDialogOpen(true);
     };
 

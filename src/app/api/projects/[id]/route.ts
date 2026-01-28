@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { checkDemoMode } from '@/lib/demoMode';
+import { safeJsonParse } from '@/lib/safeJson';
 import {
   generateUniqueVersionSlug,
   isUniqueConstraintError,
@@ -36,8 +37,8 @@ export async function GET(
     if (latestVersion) {
       const projectData = {
         ...project,
-        nodes: JSON.parse(latestVersion.nodes),
-        edges: JSON.parse(latestVersion.edges),
+        nodes: safeJsonParse(latestVersion.nodes, []),
+        edges: safeJsonParse(latestVersion.edges, []),
       };
       return NextResponse.json(projectData);
     }

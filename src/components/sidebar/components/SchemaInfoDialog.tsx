@@ -9,11 +9,17 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import MonacoComponent from "../../dialog/dialog.monaco.component";
+import { Schema, GVK } from "@/types";
+
+interface SchemaInfoObject {
+    name: string | GVK;
+    data: Schema | undefined;
+}
 
 interface SchemaInfoDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    loadObject: any;
+    loadObject: SchemaInfoObject | Record<string, never>;
 }
 
 export function SchemaInfoDialog({
