@@ -168,7 +168,7 @@ export function VersionDiffDialog({
                     Compare
                 </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-7xl max-h-[90vh]">
+            <DialogContent className="w-[100vw] h-[100vh] max-w-[100vw] max-h-[100vh] rounded-none flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Compare Versions - {projectName}</DialogTitle>
                 </DialogHeader>
@@ -222,9 +222,9 @@ export function VersionDiffDialog({
                     </div>
                 )}
 
-                <div className="flex gap-4 h-[60vh]">
-                    <div className="flex-1 border rounded overflow-hidden">
-                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b">
+                <div className="flex gap-4 flex-1 min-h-0">
+                    <div className="flex-1 border rounded overflow-hidden flex flex-col">
+                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
                             {leftVersionId
                                 ? formatVersionName(
                                     versions.find((v) => v.id === leftVersionId)!,
@@ -232,22 +232,24 @@ export function VersionDiffDialog({
                                 )
                                 : 'Select a version'}
                         </div>
-                        <Editor
-                            height="calc(100% - 40px)"
-                            defaultLanguage="yaml"
-                            value={leftYaml || '# Select a version to view'}
-                            options={{
-                                readOnly: true,
-                                wordWrap: 'on',
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                lineNumbers: 'on',
-                            }}
-                            theme="vs-dark"
-                        />
+                        <div className="flex-1 min-h-0">
+                            <Editor
+                                height="100%"
+                                defaultLanguage="yaml"
+                                value={leftYaml || '# Select a version to view'}
+                                options={{
+                                    readOnly: true,
+                                    wordWrap: 'on',
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    lineNumbers: 'on',
+                                }}
+                                theme="vs-dark"
+                            />
+                        </div>
                     </div>
-                    <div className="flex-1 border rounded overflow-hidden">
-                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b">
+                    <div className="flex-1 border rounded overflow-hidden flex flex-col">
+                        <div className="bg-muted px-3 py-2 text-sm font-medium border-b shrink-0">
                             {rightVersionId
                                 ? formatVersionName(
                                     versions.find((v) => v.id === rightVersionId)!,
@@ -255,19 +257,21 @@ export function VersionDiffDialog({
                                 )
                                 : 'Select a version'}
                         </div>
-                        <Editor
-                            height="calc(100% - 40px)"
-                            defaultLanguage="yaml"
-                            value={rightYaml || '# Select a version to view'}
-                            options={{
-                                readOnly: true,
-                                wordWrap: 'on',
-                                minimap: { enabled: false },
-                                scrollBeyondLastLine: false,
-                                lineNumbers: 'on',
-                            }}
-                            theme="vs-dark"
-                        />
+                        <div className="flex-1 min-h-0">
+                            <Editor
+                                height="100%"
+                                defaultLanguage="yaml"
+                                value={rightYaml || '# Select a version to view'}
+                                options={{
+                                    readOnly: true,
+                                    wordWrap: 'on',
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    lineNumbers: 'on',
+                                }}
+                                theme="vs-dark"
+                            />
+                        </div>
                     </div>
                 </div>
             </DialogContent>
