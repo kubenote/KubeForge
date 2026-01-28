@@ -25,9 +25,11 @@ interface SchemaInfoObject {
 
 export function AppSidebarRefactored({
     versions,
+    isReadOnly = false,
     ...props
 }: {
     versions: string[];
+    isReadOnly?: boolean;
 } & React.ComponentProps<typeof Sidebar>) {
     // State
     const [isDownloading, setIsDownloading] = React.useState(false);
@@ -112,7 +114,7 @@ export function AppSidebarRefactored({
                     />
                 )}
                 <Separator className="my-2" />
-                <TemplatesSidebar className="h-64" />
+                <TemplatesSidebar className="h-64" isReadOnly={isReadOnly} />
             </SidebarContent>
 
             <SidebarRail />
