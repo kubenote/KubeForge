@@ -12,7 +12,7 @@ interface MonacoComponentProps {
   isK8s?: boolean;
 }
 
-const MonacoComponent = forwardRef<MonacoComponentRef, MonacoComponentProps>(({ jsonData, isK8s = false }, ref) => {
+const MonacoComponent = forwardRef<MonacoComponentRef, MonacoComponentProps>(function MonacoComponent({ jsonData, isK8s = false }, ref) {
   let yamlText = '';
 
   try {
