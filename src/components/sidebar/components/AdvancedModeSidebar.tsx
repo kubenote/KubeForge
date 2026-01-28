@@ -49,11 +49,11 @@ export function AdvancedModeSidebar({
         });
     };
 
-    const handleInfoClick = (e: React.MouseEvent, item: { kind: string }) => {
+    const handleInfoClick = (e: React.MouseEvent, item: GVK) => {
         e.preventDefault();
-        onInfoClick({ 
-            name: item, 
-            data: preRefSchemaData[item.kind] 
+        onInfoClick({
+            name: item,
+            data: preRefSchemaData[item.kind.toLowerCase()]
         });
     };
 

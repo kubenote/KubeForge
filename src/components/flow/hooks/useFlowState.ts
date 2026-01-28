@@ -45,6 +45,14 @@ export const useFlowState = ({
         }
     }, []) // Empty dependency array - only run once on mount
 
+    // Update state when initialNodes/initialEdges change (e.g., loading a version)
+    useEffect(() => {
+        if (initialNodes.length > 0 || initialEdges.length > 0) {
+            setNodes(initialNodes)
+            setEdges(initialEdges)
+        }
+    }, [initialNodes, initialEdges])
+
     return {
         nodes,
         edges,
