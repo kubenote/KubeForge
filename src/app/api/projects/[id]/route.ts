@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { slugify, validateProjectName } from '@/lib/slugify';
 import { generateFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { safeJsonParse } from '@/lib/safeJson';
 
 async function generateUniqueVersionSlug(): Promise<string> {
   let attempts = 0;
@@ -53,8 +54,8 @@ export async function GET(
     if (latestVersion) {
       const projectData = {
         ...project,
-        nodes: JSON.parse(latestVersion.nodes),
-        edges: JSON.parse(latestVersion.edges),
+        nodes: safeJsonParse(latestVersion.nodes, []),
+        edges: safeJsonParse(latestVersion.edges, []),
       };
       return NextResponse.json(projectData);
     }

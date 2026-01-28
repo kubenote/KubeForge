@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { isValidFriendlySlug } from '@/lib/friendlySlug';
 import { checkDemoMode } from '@/lib/demoMode';
+import { safeJsonParse } from '@/lib/safeJson';
 
 export async function GET(
   req: NextRequest,
@@ -32,8 +33,8 @@ export async function GET(
 
     const versionData = {
       ...version,
-      nodes: JSON.parse(version.nodes),
-      edges: JSON.parse(version.edges),
+      nodes: safeJsonParse(version.nodes, []),
+      edges: safeJsonParse(version.edges, []),
     };
 
     return NextResponse.json(versionData);

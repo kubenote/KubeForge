@@ -1,17 +1,18 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { safeJsonParseOrThrow } from '@/lib/safeJson';
 
 //Group Version Kinds
 
 const CACHE_DIR = path.join(process.cwd(), 'schema-cache');
 
-export async function loadSchemas(version: string, preRef = true): Promise<Record<string, any>> {
+export async function loadSchemas(version: string, preRef = true): Promise<Record<string, unknown>> {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
-  const schemaMap: Record<string, any> = {};
+  const schemaMap: Record<string, unknown> = {};
 
   const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
-  const definitionsJson = JSON.parse(defsRaw);
+  const definitionsJson = safeJsonParseOrThrow<{ definitions?: Record<string, unknown> }>(defsRaw, 'schema definitions');
   const definitions = definitionsJson.definitions || {};
 
   const walk = async (dir: string) => {
@@ -22,7 +23,7 @@ export async function loadSchemas(version: string, preRef = true): Promise<Recor
         await walk(fullPath);
       } else if (file.name.endsWith('.json') && file.name !== '_definitions.json') {
         const raw = await fs.readFile(fullPath, 'utf-8');
-        const parsed = JSON.parse(raw);
+        const parsed = safeJsonParseOrThrow<Record<string, unknown>>(raw, `schema file ${file.name}`);
         const name = path.basename(file.name, '.json');
         preRef ? schemaMap[name] = resolveRefs(parsed, definitions) : schemaMap[name] = parsed;
       }
@@ -33,14 +34,15 @@ export async function loadSchemas(version: string, preRef = true): Promise<Recor
   return schemaMap; // fully expanded schemas keyed by filename (e.g., "deployment")
 }
 
-function resolveRefs(obj: any, definitions: Record<string, any>, seen = new Set()): any {
+function resolveRefs(obj: unknown, definitions: Record<string, unknown>, seen = new Set()): unknown {
   if (Array.isArray(obj)) {
     return obj.map((item) => resolveRefs(item, definitions, seen));
   }
 
   if (obj && typeof obj === 'object') {
-    if (obj.$ref && typeof obj.$ref === 'string') {
-      const match = obj.$ref.match(/#\/definitions\/(.+)/);
+    const record = obj as Record<string, unknown>;
+    if (record.$ref && typeof record.$ref === 'string') {
+      const match = record.$ref.match(/#\/definitions\/(.+)/);
       if (match) {
         const key = match[1];
         if (seen.has(key)) return {}; // prevent circular refs
@@ -51,8 +53,8 @@ function resolveRefs(obj: any, definitions: Record<string, any>, seen = new Set(
       }
     }
 
-    const resolved: Record<string, any> = {};
-    for (const [k, v] of Object.entries(obj)) {
+    const resolved: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(record)) {
       resolved[k] = resolveRefs(v, definitions, seen);
     }
     return resolved;
@@ -66,14 +68,15 @@ export async function loadGvks(version: string) {
   const definitionsPath = path.join(basePath, '_definitions.json');
 
   const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
-  const definitionsJson = JSON.parse(defsRaw);
+  const definitionsJson = safeJsonParseOrThrow<{ definitions?: Record<string, unknown> }>(defsRaw, 'GVK definitions');
   const definitions = definitionsJson.definitions || {};
 
   const gvkList: { group: string; version: string; kind: string }[] = [];
 
-  for (const schema of Object.values<any>(definitions)) {
-    if (Array.isArray(schema['x-kubernetes-group-version-kind'])) {
-      for (const gvk of schema['x-kubernetes-group-version-kind']) {
+  for (const schema of Object.values(definitions)) {
+    const schemaObj = schema as Record<string, unknown>;
+    if (Array.isArray(schemaObj['x-kubernetes-group-version-kind'])) {
+      for (const gvk of schemaObj['x-kubernetes-group-version-kind'] as GVK[]) {
         gvkList.push(gvk);
       }
     }
@@ -152,13 +155,13 @@ export function filterRealResources(gvks: GVK[]): GVK[] {
 }
 
 
-export async function loadSpecificSchemas(version: string, schemas: string[] = [], full = true): Promise<Record<string, any>> {
+export async function loadSpecificSchemas(version: string, schemas: string[] = [], full = true): Promise<Record<string, unknown>> {
   const basePath = path.join(CACHE_DIR, version, "raw");
   const definitionsPath = path.join(basePath, '_definitions.json');
-  const schemaMap: Record<string, any> = {};
+  const schemaMap: Record<string, unknown> = {};
 
   const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
-  const definitionsJson = JSON.parse(defsRaw);
+  const definitionsJson = safeJsonParseOrThrow<{ definitions?: Record<string, unknown> }>(defsRaw, 'specific schema definitions');
   const definitions = definitionsJson.definitions || {};
 
   const walk = async (dir: string) => {
@@ -169,7 +172,7 @@ export async function loadSpecificSchemas(version: string, schemas: string[] = [
         await walk(fullPath);
       } else if (file.name.endsWith('.json') && file.name !== '_definitions.json') {
         const raw = await fs.readFile(fullPath, 'utf-8');
-        const parsed = JSON.parse(raw);
+        const parsed = safeJsonParseOrThrow<Record<string, unknown>>(raw, `specific schema file ${file.name}`);
         const name = path.basename(file.name, '.json');
         if (schemas.includes(name.toLowerCase())) full ? schemaMap[name] = resolveRefs(parsed, definitions) : schemaMap[name] = parsed;
       }
