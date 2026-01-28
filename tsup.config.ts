@@ -9,7 +9,11 @@ export default defineConfig({
     'types/index': 'src/types/index.ts',
   },
   format: ['esm', 'cjs'],
-  dts: true,
+  dts: {
+    compilerOptions: {
+      incremental: false,
+    },
+  },
   splitting: false,
   sourcemap: true,
   clean: true,
