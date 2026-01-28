@@ -12,6 +12,7 @@ import { useSchemaLoader } from './hooks/useSchemaLoader';
 import { useFlowState } from './hooks/useFlowState';
 import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -30,9 +31,10 @@ interface FlowProps {
   skipTemplate?: boolean;
   currentVersionSlug?: string | null;
   readOnly?: boolean;
+  onSave?: () => void;
 }
 
-export default function FlowRefactored({ 
+export default function FlowRefactored({
   initialNodes = [],
   initialEdges = [],
   initialProjectId = '',
@@ -43,7 +45,8 @@ export default function FlowRefactored({
   onGetCurrentState,
   skipTemplate = false,
   currentVersionSlug = null,
-  readOnly = false
+  readOnly = false,
+  onSave
 }: FlowProps) {
   const { version } = useVersion();
   
@@ -76,6 +79,14 @@ export default function FlowRefactored({
 
   // Determine if we're in read-only mode
   const isReadOnly = readOnly || !!currentVersionSlug;
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    isReadOnly,
+    onSave,
+    setNodes,
+    setEdges,
+  });
 
   return (
     <div className='flex flex-grow relative'>
