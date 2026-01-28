@@ -7,6 +7,8 @@ import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { Node, Edge } from '@xyflow/react';
 import { getVersionUrlId, findVersionByUrlId, isValidVersionId } from '@/lib/versionUtils';
 import { ProjectDataService } from '@/services/project.data.service';
+import { useAutoSave } from '@/hooks/useAutoSave';
+import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 
 interface Project {
   id: string;
@@ -138,13 +140,21 @@ export function ProjectPageClient({
     if (getCurrentFlowState) {
       return getCurrentFlowState();
     }
-    // Fallback to props if callback not available  
+    // Fallback to props if callback not available
     return { nodes: versionNodes || initialNodes, edges: versionEdges || initialEdges };
   }, [getCurrentFlowState, versionNodes, versionEdges, initialNodes, initialEdges]);
 
+  // Auto-save hook - uses callback to get fresh state, disabled in read-only mode
+  const autoSave = useAutoSave({
+    projectId: project.id,
+    enabled: true,
+    isReadOnly: !!currentVersionSlug,
+    getState: getCurrentFlowState || undefined,
+  });
+
   return (
-    <MainSidebar 
-      topics={topics} 
+    <MainSidebar
+      topics={topics}
       versions={versions}
       currentNodes={versionNodes || initialNodes}
       currentEdges={versionEdges || initialEdges}
@@ -153,17 +163,29 @@ export function ProjectPageClient({
       onLoadVersion={handleVersionLoad}
       getCurrentNodesEdges={getCurrentNodesEdges}
     >
-      <Flow
-        initialNodes={versionNodes || initialNodes}
-        initialEdges={versionEdges || initialEdges}
-        initialProjectId={project.id}
-        initialProjectName={project.name}
-        initialProjectSlug={project.slug}
-        onVersionLoad={handleVersionLoad}
-        loadingVersion={loadingVersion}
-        currentVersionSlug={currentVersionSlug}
-        onGetCurrentState={handleGetFlowState}
-      />
+      <div className="relative flex-grow flex">
+        <Flow
+          initialNodes={versionNodes || initialNodes}
+          initialEdges={versionEdges || initialEdges}
+          initialProjectId={project.id}
+          initialProjectName={project.name}
+          initialProjectSlug={project.slug}
+          onVersionLoad={handleVersionLoad}
+          loadingVersion={loadingVersion}
+          currentVersionSlug={currentVersionSlug}
+          onGetCurrentState={handleGetFlowState}
+        />
+        {/* Auto-save indicator - only shown when not viewing a version */}
+        {!currentVersionSlug && (
+          <div className="absolute top-4 right-4 z-40">
+            <AutoSaveIndicator
+              status={autoSave.status}
+              lastSaved={autoSave.lastSaved}
+              error={autoSave.error}
+            />
+          </div>
+        )}
+      </div>
     </MainSidebar>
   );
 }
