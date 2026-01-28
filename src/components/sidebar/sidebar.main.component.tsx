@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Save, History, FolderOpen, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { DeleteProjectDialog } from '../projects/delete-project-dialog'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 interface MainSidebarProps {
     children: React.ReactNode;
@@ -240,6 +241,7 @@ export default function MainSidebar({
                         </>
                     )}
                     <div className="flex-grow" />
+                    <ThemeToggle />
                     <WarningsDrawer />
                     <ExportDialog />
                     <HelperComponent className="mr-2" topics={initialTopics} />
