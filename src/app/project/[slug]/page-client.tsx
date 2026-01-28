@@ -144,19 +144,13 @@ export function ProjectPageClient({
     return { nodes: versionNodes || initialNodes, edges: versionEdges || initialEdges };
   }, [getCurrentFlowState, versionNodes, versionEdges, initialNodes, initialEdges]);
 
-  // Get current flow state for auto-save
-  const currentFlowState = getCurrentFlowState ? getCurrentFlowState() : { nodes: versionNodes || initialNodes, edges: versionEdges || initialEdges };
-
-  // Auto-save hook - disabled in read-only mode (viewing a version)
-  const autoSave = useAutoSave(
-    currentFlowState.nodes,
-    currentFlowState.edges,
-    {
-      projectId: project.id,
-      enabled: true,
-      isReadOnly: !!currentVersionSlug,
-    }
-  );
+  // Auto-save hook - uses callback to get fresh state, disabled in read-only mode
+  const autoSave = useAutoSave({
+    projectId: project.id,
+    enabled: true,
+    isReadOnly: !!currentVersionSlug,
+    getState: getCurrentFlowState || undefined,
+  });
 
   return (
     <MainSidebar
