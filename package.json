@@ -43,6 +43,7 @@
     "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.20",
@@ -50,6 +51,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@xyflow/react": "^12.8.2",
+    "eslint": "^9.39.2",
+    "eslint-config-next": "^16.1.6",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5"

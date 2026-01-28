@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useCallback, useRef } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useVersion } from '../../providers/VersionProvider';
@@ -12,6 +13,7 @@ import { useSchemaLoader } from './hooks/useSchemaLoader';
 import { useFlowState } from './hooks/useFlowState';
 import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
+import { useFlowHistory } from './hooks/useFlowHistory';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -46,7 +48,7 @@ export default function FlowRefactored({
   readOnly = false
 }: FlowProps) {
   const { version } = useVersion();
-  
+
   // Custom hooks for separated concerns
   const { nodes, edges, setNodes, setEdges } = useFlowState({
     initialNodes,
@@ -54,16 +56,16 @@ export default function FlowRefactored({
     skipTemplate,
     onGetCurrentState
   });
-  
+
   const { loading: schemaLoading } = useSchemaLoader(nodes, version);
-  
+
   const { handleLoadProject, handleLoadVersion } = useProjectSync({
     initialProjectId,
     initialProjectName,
     initialProjectSlug,
     onVersionLoad
   });
-  
+
   const {
     menu,
     ref,
@@ -76,6 +78,114 @@ export default function FlowRefactored({
 
   // Determine if we're in read-only mode
   const isReadOnly = readOnly || !!currentVersionSlug;
+
+  // History management for undo/redo
+  const {
+    recordHistory,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    pushToFuture,
+    pushToHistory
+  } = useFlowHistory();
+
+  // Track previous state for history recording
+  const prevStateRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
+  const isHistoryActionRef = useRef(false);
+
+  // Record initial state
+  useEffect(() => {
+    if (nodes.length > 0 && !prevStateRef.current && !isReadOnly) {
+      prevStateRef.current = { nodes, edges };
+    }
+  }, [nodes, edges, isReadOnly]);
+
+  // Record changes to history (debounced in the hook)
+  useEffect(() => {
+    if (isReadOnly || isHistoryActionRef.current) {
+      return;
+    }
+
+    if (prevStateRef.current && (nodes !== prevStateRef.current.nodes || edges !== prevStateRef.current.edges)) {
+      recordHistory(prevStateRef.current.nodes, prevStateRef.current.edges);
+      prevStateRef.current = { nodes, edges };
+    }
+  }, [nodes, edges, recordHistory, isReadOnly]);
+
+  // Handle undo action
+  const handleUndo = useCallback(() => {
+    if (!canUndo || isReadOnly) return;
+
+    isHistoryActionRef.current = true;
+    // Save current state to future stack
+    pushToFuture(nodes, edges);
+
+    const previousState = undo();
+    if (previousState) {
+      setNodes(previousState.nodes);
+      setEdges(previousState.edges);
+      prevStateRef.current = { nodes: previousState.nodes, edges: previousState.edges };
+    }
+
+    setTimeout(() => {
+      isHistoryActionRef.current = false;
+    }, 100);
+  }, [canUndo, isReadOnly, nodes, edges, pushToFuture, undo, setNodes, setEdges]);
+
+  // Handle redo action
+  const handleRedo = useCallback(() => {
+    if (!canRedo || isReadOnly) return;
+
+    isHistoryActionRef.current = true;
+    // Save current state to history
+    pushToHistory(nodes, edges);
+
+    const nextState = redo();
+    if (nextState) {
+      setNodes(nextState.nodes);
+      setEdges(nextState.edges);
+      prevStateRef.current = { nodes: nextState.nodes, edges: nextState.edges };
+    }
+
+    setTimeout(() => {
+      isHistoryActionRef.current = false;
+    }, 100);
+  }, [canRedo, isReadOnly, nodes, edges, pushToHistory, redo, setNodes, setEdges]);
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    if (isReadOnly) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip if target is an input field
+      const target = e.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      // Ctrl+Z or Cmd+Z for undo
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      // Ctrl+Y or Cmd+Shift+Z for redo
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isReadOnly, handleUndo, handleRedo]);
 
   return (
     <div className='flex flex-grow relative'>
