@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from '@/components/ui/progress';
 import { NodeContextType, AddNodeParams, GetSchemaParams, SchemaData } from '@/types';
+import { throwProviderError } from '@/lib/providerErrors';
 
 const NodeContext = createContext<NodeContextType | undefined>(undefined);
 
@@ -213,7 +214,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
 export const useNodeProvider = () => {
     const context = useContext(NodeContext);
     if (!context) {
-        throw new Error('Not being used within context provider');
+        throwProviderError('useNodeProvider', 'NodeProvider');
     }
     return context;
 };

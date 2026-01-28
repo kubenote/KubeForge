@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as Overrides from "@/components/data/schema-overrides.json"
 import { get, set, has, merge } from "lodash";
+import { throwProviderError } from '@/lib/providerErrors';
 
 type VersionContextType = {
   version: string;
@@ -59,7 +60,7 @@ export const VersionProvider = ({ children }: { children: React.ReactNode }) => 
 export const useVersion = () => {
   const context = useContext(VersionContext);
   if (!context) {
-    throw new Error('useVersion must be used within a VersionProvider');
+    throwProviderError('useVersion', 'VersionProvider');
   }
   return context;
 };

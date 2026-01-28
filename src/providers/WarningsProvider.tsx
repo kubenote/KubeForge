@@ -1,6 +1,7 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
+import { throwProviderError } from '@/lib/providerErrors';
 
 type WarningContextType = {
     notifications: any;
@@ -28,7 +29,7 @@ export const WarningProvider = ({ children }: { children: React.ReactNode }) => 
 export const useWarning = () => {
     const context = useContext(WarningContext);
     if (!context) {
-        throw new Error('useWarning must be used within a WarningProvider');
+        throwProviderError('useWarning', 'WarningProvider');
     }
     return context;
 };
