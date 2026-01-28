@@ -114,7 +114,7 @@ export const PrimitiveField = ({
                 ) : (
                     <div className="flex-1 ml-2">
                         <Input
-                            className={`h-6 px-2 py-0 text-xs rounded-sm disabled:bg-[#e0e0e0] disabled:border-[#bdbdbd] ${
+                            className={`h-6 px-2 py-0 text-xs rounded-sm disabled:bg-muted disabled:border-muted-foreground/30 ${
                                 hasErrors ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
                             }`}
                             value={inputValue}
@@ -131,9 +131,9 @@ export const PrimitiveField = ({
                 )
             ) : (
                 mode === 'kind' && !isConnected && (
-                    <button 
+                    <button
                         onClick={handleCreateObjectRef}
-                        className="ml-2 h-6 px-2 py-0 text-xs rounded-sm border cursor-pointer ml-auto bg-gray-100 hover:bg-gray-200"
+                        className="ml-2 h-6 px-2 py-0 text-xs rounded-sm border cursor-pointer ml-auto bg-muted hover:bg-muted/80"
                     >
                         Create {label} node
                     </button>

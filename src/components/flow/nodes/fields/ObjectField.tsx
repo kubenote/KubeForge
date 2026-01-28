@@ -120,7 +120,7 @@ export const ObjectField = ({
                 <span className={`text-xs ml-2 ${getTypeColor(valueType)}`}>
                     {valueType}
                 </span>
-                <span className="text-xs ml-auto text-[#333]">
+                <span className="text-xs ml-auto text-foreground">
                     {"{"}
                 </span>
             </>
@@ -135,7 +135,7 @@ export const ObjectField = ({
                     variant="ghost"
                     size="sm"
                 >
-                    <span className="text-xs ml-auto text-[#333]">{"}"}</span>
+                    <span className="text-xs ml-auto text-foreground">{"}"}</span>
                 </Button>
             </div>
         )
