@@ -46,7 +46,7 @@ export default function NodeContainer({ nodeId, children }: NodeContainerProps) 
     const borderClass = severity ? severityBorderClass[severity] : 'border-mute'
 
     return (
-        <div className={`border-1 p-2 bg-[#fff] shadow-md min-w-[350px] rounded-md ${borderClass}`}>
+        <div className={`border-1 p-2 bg-background shadow-md min-w-[350px] rounded-md ${borderClass}`}>
             {children}
         </div>
     )

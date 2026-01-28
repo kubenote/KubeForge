@@ -21,6 +21,7 @@ import { Node, Edge } from '@xyflow/react';
 import { ProjectDataService, ProjectVersion } from '@/services/project.data.service';
 import yaml from 'js-yaml';
 import Editor from '@monaco-editor/react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface VersionForSelect {
     id: string;
@@ -97,6 +98,7 @@ export function VersionDiffDialog({
     const [leftYaml, setLeftYaml] = useState<string>('');
     const [rightYaml, setRightYaml] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const { resolvedTheme } = useTheme();
 
     const formatVersionName = (version: VersionForSelect, index: number) => {
         const date = new Date(version.createdAt).toLocaleDateString();
@@ -250,7 +252,7 @@ export function VersionDiffDialog({
                                         scrollBeyondLastLine: false,
                                         lineNumbers: 'on',
                                     }}
-                                    theme="vs-dark"
+                                    theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
                                 />
                             </div>
                         </div>
@@ -275,7 +277,7 @@ export function VersionDiffDialog({
                                         scrollBeyondLastLine: false,
                                         lineNumbers: 'on',
                                     }}
-                                    theme="vs-dark"
+                                    theme={resolvedTheme === 'dark' ? 'vs-dark' : 'light'}
                                 />
                             </div>
                         </div>

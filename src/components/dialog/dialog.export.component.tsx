@@ -29,6 +29,7 @@ import {
     downloadFile,
     resolveNodeValues,
 } from "@/lib/export";
+import { useTheme } from "@/contexts/ThemeContext";
 
 export default function ExportDialog() {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function ExportDialog() {
     const [isGenerating, setIsGenerating] = useState(false);
     const { getNodes, getEdges } = useReactFlow();
     const { isDemoMode } = useDemoMode();
+    const { resolvedTheme } = useTheme();
     const origin = typeof window !== "undefined" ? window.location.origin : "";
 
     const prepDialog = () => {
@@ -209,6 +211,7 @@ ${data.map((r) => {
                     defaultLanguage={exportFormat === "json" ? "json" : "yaml"}
                     language={exportFormat === "json" ? "json" : "yaml"}
                     value={previewContent}
+                    theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
                     options={{
                         readOnly: true,
                         wordWrap: "on",
@@ -241,8 +244,8 @@ ${data.map((r) => {
                 </div>
 
                 {error && (
-                    <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                        <p className="text-sm text-red-700">{error}</p>
+                    <div className="p-3 rounded-md bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800">
+                        <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
                     </div>
                 )}
 
