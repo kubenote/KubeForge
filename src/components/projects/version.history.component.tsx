@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -194,7 +193,7 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
           <History className="w-4 h-4" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[85vh]">
+      <DialogContent className="w-fit min-w-[600px] max-w-[90vw] max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Version History - {projectName}</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -263,8 +262,8 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
         </div>
 
         {/* Table */}
-        <ScrollArea className="max-h-[55vh] border rounded-md">
-          <Table>
+        <div className="border rounded-md overflow-auto max-h-[55vh]">
+          <Table className="w-full">
             <TableHeader>
               <TableRow>
                 {visibleColumns.has('version') && (
@@ -371,7 +370,7 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
               )}
             </TableBody>
           </Table>
-        </ScrollArea>
+        </div>
 
         {/* Footer with count */}
         <div className="text-xs text-muted-foreground pt-2">
