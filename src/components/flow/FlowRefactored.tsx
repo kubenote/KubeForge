@@ -15,6 +15,7 @@ import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
 import { useFlowHistory } from './hooks/useFlowHistory';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useClipboard } from './hooks/useClipboard';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -121,7 +122,6 @@ export default function FlowRefactored({
     if (!canUndo || isReadOnly) return;
 
     isHistoryActionRef.current = true;
-    // Save current state to future stack
     pushToFuture(nodes, edges);
 
     const previousState = undo();
@@ -141,7 +141,6 @@ export default function FlowRefactored({
     if (!canRedo || isReadOnly) return;
 
     isHistoryActionRef.current = true;
-    // Save current state to history
     pushToHistory(nodes, edges);
 
     const nextState = redo();
@@ -156,12 +155,18 @@ export default function FlowRefactored({
     }, 100);
   }, [canRedo, isReadOnly, nodes, edges, pushToHistory, redo, setNodes, setEdges]);
 
-  // Keyboard shortcuts for undo/redo
+  // Clipboard operations
+  const { copySelected, pasteFromClipboard, cutSelected } = useClipboard({
+    isReadOnly,
+    setNodes,
+    setEdges,
+  });
+
+  // Keyboard shortcuts for undo/redo and copy/paste
   useEffect(() => {
     if (isReadOnly) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip if target is an input field
       const target = e.target as HTMLElement;
       if (
         target instanceof HTMLInputElement ||
@@ -184,11 +189,32 @@ export default function FlowRefactored({
         handleRedo();
         return;
       }
+
+      // Ctrl+C / Cmd+C - Copy
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+
+      // Ctrl+V / Cmd+V - Paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        pasteFromClipboard();
+        return;
+      }
+
+      // Ctrl+X / Cmd+X - Cut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+        e.preventDefault();
+        cutSelected();
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isReadOnly, handleUndo, handleRedo]);
+  }, [isReadOnly, handleUndo, handleRedo, copySelected, pasteFromClipboard, cutSelected]);
 
   // Keyboard shortcuts for delete, duplicate, save, escape
   useKeyboardShortcuts({
