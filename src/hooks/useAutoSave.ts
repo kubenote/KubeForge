@@ -11,6 +11,7 @@ interface UseAutoSaveOptions {
     projectId: string;
     enabled?: boolean;
     isReadOnly?: boolean;
+    getState?: () => { nodes: Node[]; edges: Edge[] };
 }
 
 interface UseAutoSaveReturn {
@@ -22,6 +23,7 @@ interface UseAutoSaveReturn {
 
 const DEFAULT_DEBOUNCE_MS = 2000;
 const SAVED_DISPLAY_MS = 2000;
+const POLL_INTERVAL_MS = 500; // Check for changes every 500ms
 
 /**
  * Compute a simple hash of the state for comparison
@@ -32,13 +34,12 @@ function computeStateHash(nodes: Node[], edges: Edge[]): string {
 
 /**
  * Hook for auto-saving project state with debouncing and status tracking
+ * Uses a callback to get fresh state, avoiding stale closure issues
  */
 export function useAutoSave(
-    nodes: Node[],
-    edges: Edge[],
     options: UseAutoSaveOptions
 ): UseAutoSaveReturn {
-    const { debounceMs = DEFAULT_DEBOUNCE_MS, projectId, enabled = true, isReadOnly = false } = options;
+    const { debounceMs = DEFAULT_DEBOUNCE_MS, projectId, enabled = true, isReadOnly = false, getState } = options;
 
     const [status, setStatus] = useState<AutoSaveStatus>('idle');
     const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -47,19 +48,25 @@ export function useAutoSave(
     // Refs for state tracking
     const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
     const savedDisplayTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastSavedHashRef = useRef<string | null>(null);
-    const pendingNodesRef = useRef<Node[]>(nodes);
-    const pendingEdgesRef = useRef<Edge[]>(edges);
+    const lastCheckedHashRef = useRef<string | null>(null);
+    const getStateRef = useRef(getState);
+
+    // Keep getState ref up to date
+    getStateRef.current = getState;
 
     /**
      * Execute the actual save operation
      */
-    const executeSave = useCallback(async (nodesToSave: Node[], edgesToSave: Edge[]) => {
-        if (!projectId || isReadOnly || !enabled) {
+    const executeSave = useCallback(async () => {
+        if (!projectId || isReadOnly || !enabled || !getStateRef.current) {
             return;
         }
 
-        const currentHash = computeStateHash(nodesToSave, edgesToSave);
+        // Get fresh state from callback
+        const { nodes, edges } = getStateRef.current();
+        const currentHash = computeStateHash(nodes, edges);
 
         // Skip if state hasn't changed since last save
         if (currentHash === lastSavedHashRef.current) {
@@ -72,12 +79,13 @@ export function useAutoSave(
 
         try {
             await ProjectDataService.updateProject(projectId, {
-                nodes: nodesToSave,
-                edges: edgesToSave,
+                nodes,
+                edges,
                 message: 'Auto-saved',
             });
 
             lastSavedHashRef.current = currentHash;
+            lastCheckedHashRef.current = currentHash;
             setLastSaved(new Date());
             setStatus('saved');
 
@@ -106,61 +114,69 @@ export function useAutoSave(
             clearTimeout(debounceTimerRef.current);
             debounceTimerRef.current = null;
         }
-        executeSave(pendingNodesRef.current, pendingEdgesRef.current);
+        executeSave();
     }, [executeSave]);
 
     /**
-     * Handle state changes with debouncing
+     * Poll for state changes and trigger debounced save
      */
     useEffect(() => {
-        // Skip if disabled, read-only, or no project
-        if (!enabled || isReadOnly || !projectId) {
+        // Skip if disabled, read-only, no project, or no getState callback
+        if (!enabled || isReadOnly || !projectId || !getState) {
             return;
         }
 
-        // Update pending refs
-        pendingNodesRef.current = nodes;
-        pendingEdgesRef.current = edges;
+        const checkForChanges = () => {
+            const state = getStateRef.current?.();
+            if (!state || state.nodes.length === 0) {
+                return;
+            }
 
-        // Skip if no nodes (likely initial load)
-        if (nodes.length === 0) {
-            return;
-        }
+            const currentHash = computeStateHash(state.nodes, state.edges);
 
-        const currentHash = computeStateHash(nodes, edges);
+            // Initialize hash on first check
+            if (!lastSavedHashRef.current) {
+                lastSavedHashRef.current = currentHash;
+                lastCheckedHashRef.current = currentHash;
+                return;
+            }
 
-        // Skip if state hasn't changed
-        if (currentHash === lastSavedHashRef.current) {
-            return;
-        }
+            // Skip if state hasn't changed since last check
+            if (currentHash === lastCheckedHashRef.current) {
+                return;
+            }
 
-        // Set status to pending
-        setStatus('pending');
+            lastCheckedHashRef.current = currentHash;
 
-        // Clear existing debounce timer
-        if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
-        }
+            // Set status to pending if different from last save
+            if (currentHash !== lastSavedHashRef.current) {
+                setStatus('pending');
 
-        // Set new debounce timer
-        debounceTimerRef.current = setTimeout(() => {
-            executeSave(nodes, edges);
-            debounceTimerRef.current = null;
-        }, debounceMs);
+                // Clear existing debounce timer
+                if (debounceTimerRef.current) {
+                    clearTimeout(debounceTimerRef.current);
+                }
+
+                // Set new debounce timer
+                debounceTimerRef.current = setTimeout(() => {
+                    executeSave();
+                    debounceTimerRef.current = null;
+                }, debounceMs);
+            }
+        };
+
+        // Start polling
+        pollTimerRef.current = setInterval(checkForChanges, POLL_INTERVAL_MS);
 
         return () => {
+            if (pollTimerRef.current) {
+                clearInterval(pollTimerRef.current);
+            }
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
             }
         };
-    }, [nodes, edges, projectId, enabled, isReadOnly, debounceMs, executeSave]);
-
-    // Initialize last saved hash on mount
-    useEffect(() => {
-        if (nodes.length > 0 && !lastSavedHashRef.current) {
-            lastSavedHashRef.current = computeStateHash(nodes, edges);
-        }
-    }, [nodes, edges]);
+    }, [projectId, enabled, isReadOnly, debounceMs, executeSave, getState]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -170,6 +186,9 @@ export function useAutoSave(
             }
             if (savedDisplayTimerRef.current) {
                 clearTimeout(savedDisplayTimerRef.current);
+            }
+            if (pollTimerRef.current) {
+                clearInterval(pollTimerRef.current);
             }
         };
     }, []);
