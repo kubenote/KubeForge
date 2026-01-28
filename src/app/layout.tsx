@@ -9,6 +9,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { DemoModeProvider } from "@/contexts/DemoModeContext";
 import { DemoModeIndicator } from "@/components/ui/demo-mode-indicator";
 import { isDemoModeEnabled } from "@/lib/demoMode";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,20 +40,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <DemoModeProvider isDemoMode={demoMode}>
-          <WarningProvider>
-            <ReactFlowProvider>
-              <VersionProvider>
-                <SchemaProvider>
-                  <NodeProvider>
-                    {children}
-                    <DemoModeIndicator />
-                  </NodeProvider>
-                </SchemaProvider>
-              </VersionProvider>
-            </ReactFlowProvider>
-          </WarningProvider>
-        </DemoModeProvider>
+        <ThemeProvider>
+          <DemoModeProvider isDemoMode={demoMode}>
+            <WarningProvider>
+              <ReactFlowProvider>
+                <VersionProvider>
+                  <SchemaProvider>
+                    <NodeProvider>
+                      {children}
+                      <DemoModeIndicator />
+                    </NodeProvider>
+                  </SchemaProvider>
+                </VersionProvider>
+              </ReactFlowProvider>
+            </WarningProvider>
+          </DemoModeProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

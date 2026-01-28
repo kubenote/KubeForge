@@ -9,17 +9,18 @@ import { getTypeColor } from "../flow.node.types"
 import { useNodeProvider } from "@/providers/NodeProvider"
 import { BaseFieldProps } from "./types"
 import { useFieldConnection } from "./useFieldConnection"
+import { validateField, ValidationError } from "@/lib/validation"
 
 interface PrimitiveFieldProps extends BaseFieldProps {
     valueType: string
 }
 
-export const PrimitiveField = ({ 
-    label, 
-    value, 
-    schema, 
-    path, 
-    nodeId, 
+export const PrimitiveField = ({
+    label,
+    value,
+    schema,
+    path,
+    nodeId,
     edges,
     mode = 'kind',
     readOnly = false,
@@ -28,6 +29,7 @@ export const PrimitiveField = ({
     valueType
 }: PrimitiveFieldProps) => {
     const [inputValue, setInputValue] = useState(String(value ?? ""))
+    const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
     const { addNode } = useNodeProvider()
     const { isConnected, targetHandleId } = useFieldConnection({
         edges,
@@ -38,6 +40,12 @@ export const PrimitiveField = ({
         onChange
     })
 
+    // Validate on value change
+    const runValidation = (val: unknown) => {
+        const errors = validateField(val, schema, path, valueType)
+        setValidationErrors(errors)
+    }
+
     // Update input value when the value prop changes
     useEffect(() => {
         setInputValue(String(value ?? ""))
@@ -46,14 +54,20 @@ export const PrimitiveField = ({
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newInputValue = e.target.value
         setInputValue(newInputValue)
-        const parsedValue = valueType === "number" || valueType === "integer" 
-            ? Number(newInputValue) 
+        const parsedValue = valueType === "number" || valueType === "integer"
+            ? Number(newInputValue)
             : newInputValue
         onChange(path, parsedValue)
 
         const selfId = `${nodeId}.${label}`
         publish(selfId, parsedValue)
     }
+
+    const handleBlur = () => {
+        runValidation(inputValue)
+    }
+
+    const hasErrors = validationErrors.length > 0
 
     const handleBooleanChange = (checked: boolean | "indeterminate") => {
         const boolValue = checked === true
@@ -91,19 +105,29 @@ export const PrimitiveField = ({
                 valueType === "boolean" && mode === 'objectRef' ? (
                     <div className="flex w-full pr-8">
                         <div className="flex-grow" />
-                        <Checkbox 
-                            checked={Boolean(value)} 
+                        <Checkbox
+                            checked={Boolean(value)}
                             onCheckedChange={readOnly ? undefined : handleBooleanChange}
                             disabled={readOnly}
                         />
                     </div>
                 ) : (
-                    <Input
-                        className="ml-2 h-6 px-2 py-0 text-xs rounded-sm disabled:bg-[#e0e0e0] disabled:border-[#bdbdbd]"
-                        value={inputValue}
-                        onChange={!isConnected && !readOnly ? handleChange : undefined}
-                        disabled={isConnected || readOnly}
-                    />
+                    <div className="flex-1 ml-2">
+                        <Input
+                            className={`h-6 px-2 py-0 text-xs rounded-sm disabled:bg-[#e0e0e0] disabled:border-[#bdbdbd] ${
+                                hasErrors ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                            }`}
+                            value={inputValue}
+                            onChange={!isConnected && !readOnly ? handleChange : undefined}
+                            onBlur={handleBlur}
+                            disabled={isConnected || readOnly}
+                        />
+                        {hasErrors && (
+                            <div className="text-[10px] text-red-500 mt-0.5 leading-tight">
+                                {validationErrors[0].message}
+                            </div>
+                        )}
+                    </div>
                 )
             ) : (
                 mode === 'kind' && !isConnected && (

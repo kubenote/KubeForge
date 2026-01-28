@@ -24,6 +24,7 @@ import { History, RotateCcw, Search, SlidersHorizontal, Save } from 'lucide-reac
 import { Node, Edge } from '@xyflow/react';
 import { ProjectDataService } from '@/services/project.data.service';
 import { DeleteVersionDialog } from './delete-version-dialog';
+import { VersionDiffDialog } from '@/components/dialog/dialog.version-diff.component';
 
 interface ProjectVersion {
   id: string;
@@ -212,6 +213,17 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
           >
             Load Latest
           </Button>
+
+          <VersionDiffDialog
+            projectId={projectId}
+            projectName={projectName}
+            versions={versions.map((v) => ({
+              id: v.id,
+              slug: v.slug,
+              createdAt: v.createdAt,
+              message: v.message,
+            }))}
+          />
 
           {/* Search */}
           <div className="relative flex-1 max-w-xs">

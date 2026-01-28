@@ -14,6 +14,8 @@ import { useFlowState } from './hooks/useFlowState';
 import { useProjectSync } from './hooks/useProjectSync';
 import { useFlowInteractions } from './hooks/useFlowInteractions';
 import { useFlowHistory } from './hooks/useFlowHistory';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
+import { useClipboard } from './hooks/useClipboard';
 
 const nodeTypes = {
   KindNode: KindNode,
@@ -32,9 +34,10 @@ interface FlowProps {
   skipTemplate?: boolean;
   currentVersionSlug?: string | null;
   readOnly?: boolean;
+  onSave?: () => void;
 }
 
-export default function FlowRefactored({ 
+export default function FlowRefactored({
   initialNodes = [],
   initialEdges = [],
   initialProjectId = '',
@@ -45,7 +48,8 @@ export default function FlowRefactored({
   onGetCurrentState,
   skipTemplate = false,
   currentVersionSlug = null,
-  readOnly = false
+  readOnly = false,
+  onSave
 }: FlowProps) {
   const { version } = useVersion();
 
@@ -118,7 +122,6 @@ export default function FlowRefactored({
     if (!canUndo || isReadOnly) return;
 
     isHistoryActionRef.current = true;
-    // Save current state to future stack
     pushToFuture(nodes, edges);
 
     const previousState = undo();
@@ -138,7 +141,6 @@ export default function FlowRefactored({
     if (!canRedo || isReadOnly) return;
 
     isHistoryActionRef.current = true;
-    // Save current state to history
     pushToHistory(nodes, edges);
 
     const nextState = redo();
@@ -153,12 +155,18 @@ export default function FlowRefactored({
     }, 100);
   }, [canRedo, isReadOnly, nodes, edges, pushToHistory, redo, setNodes, setEdges]);
 
-  // Keyboard shortcuts for undo/redo
+  // Clipboard operations
+  const { copySelected, pasteFromClipboard, cutSelected } = useClipboard({
+    isReadOnly,
+    setNodes,
+    setEdges,
+  });
+
+  // Keyboard shortcuts for undo/redo and copy/paste
   useEffect(() => {
     if (isReadOnly) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip if target is an input field
       const target = e.target as HTMLElement;
       if (
         target instanceof HTMLInputElement ||
@@ -181,11 +189,40 @@ export default function FlowRefactored({
         handleRedo();
         return;
       }
+
+      // Ctrl+C / Cmd+C - Copy
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        e.preventDefault();
+        copySelected();
+        return;
+      }
+
+      // Ctrl+V / Cmd+V - Paste
+      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        e.preventDefault();
+        pasteFromClipboard();
+        return;
+      }
+
+      // Ctrl+X / Cmd+X - Cut
+      if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+        e.preventDefault();
+        cutSelected();
+        return;
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isReadOnly, handleUndo, handleRedo]);
+  }, [isReadOnly, handleUndo, handleRedo, copySelected, pasteFromClipboard, cutSelected]);
+
+  // Keyboard shortcuts for delete, duplicate, save, escape
+  useKeyboardShortcuts({
+    isReadOnly,
+    onSave,
+    setNodes,
+    setEdges,
+  });
 
   return (
     <div className='flex flex-grow relative'>
@@ -209,16 +246,16 @@ export default function FlowRefactored({
           {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
         </ReactFlow>
       </ReadOnlyProvider>
-      
+
       {/* Read-only indicator */}
       {isReadOnly && (
         <div className="absolute top-4 right-4 z-40">
           <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 px-3 py-2 rounded-md text-sm font-medium shadow-lg border border-amber-300 dark:border-amber-700">
-            🔒 Read-only mode
+            Read-only mode
           </div>
         </div>
       )}
-      
+
       <TopProgressBar loading={schemaLoading || loadingVersion} />
       {loadingVersion && (
         <div className="absolute inset-0 bg-black bg-opacity-20 flex items-center justify-center z-50">
