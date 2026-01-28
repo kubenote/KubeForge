@@ -5,6 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useSchema } from './SchemaProvider';
 import { useVersion } from './VersionProvider';
+import { safeJsonParseWithResult } from '@/lib/safeJson';
 import {
     Dialog,
     DialogContent,
@@ -91,7 +92,13 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
             }
 
-            let parsedSchema: SchemaData = JSON.parse(schema);
+            const parseResult = safeJsonParseWithResult<SchemaData>(schema);
+            if (!parseResult.success || !parseResult.data) {
+                console.error('Failed to parse schema:', parseResult.error);
+                setIsLoading(false);
+                return;
+            }
+            let parsedSchema: SchemaData = parseResult.data;
             if (type === "ObjectRefNode" && 'objectRef' in data && typeof data.objectRef === 'string') {
                 const kindSchema = parsedSchema[data.kind.toLowerCase()];
                 if (kindSchema?.properties?.[data.objectRef]) {
@@ -145,8 +152,11 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 }
                 const raw = await res.json();
-                const parsed: SchemaData = JSON.parse(raw);
-                setSchemaData((prev: SchemaData) => ({ ...prev, ...parsed }));
+                const parseResult = safeJsonParseWithResult<SchemaData>(raw);
+                if (!parseResult.success || !parseResult.data) {
+                    throw new Error(`Failed to parse base schema: ${parseResult.error}`);
+                }
+                setSchemaData((prev: SchemaData) => ({ ...prev, ...parseResult.data }));
             } catch (err) {
                 console.error("Base schema fetch failed:", err);
             }
@@ -164,10 +174,13 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                     throw new Error(`HTTP ${res.status}: ${res.statusText}`);
                 }
                 const raw = await res.json();
-                const parsed: SchemaData = JSON.parse(raw);
+                const parseResult = safeJsonParseWithResult<SchemaData>(raw);
+                if (!parseResult.success || !parseResult.data) {
+                    throw new Error(`Failed to parse nested schema: ${parseResult.error}`);
+                }
 
                 const key = `${kind.toLowerCase()}.${property}`;
-                const kindSchema = parsed[kind.toLowerCase()];
+                const kindSchema = parseResult.data[kind.toLowerCase()];
                 const schemaSubset = kindSchema?.properties?.[property];
 
                 if (schemaSubset) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { safeJsonParse } from '@/lib/safeJson';
 
 export async function GET(
   req: NextRequest,
@@ -29,8 +30,8 @@ export async function GET(
     if (latestVersion) {
       const projectData = {
         ...project,
-        nodes: JSON.parse(latestVersion.nodes),
-        edges: JSON.parse(latestVersion.edges),
+        nodes: safeJsonParse(latestVersion.nodes, []),
+        edges: safeJsonParse(latestVersion.edges, []),
       };
       return NextResponse.json(projectData);
     }

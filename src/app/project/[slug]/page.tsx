@@ -1,11 +1,10 @@
-import Flow from "@/components/flow/flow.main.component";
-import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { ProjectProvider } from "@/contexts/ProjectContext";
 import { getTopics } from "@/lib/getDocs";
 import { getKubeSchemaBranches } from "@/lib/getBranches";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { ProjectPageClient } from "./page-client";
+import { safeJsonParse } from "@/lib/safeJson";
 
 interface ProjectPageProps {
   params: Promise<{ slug: string }>;
@@ -40,8 +39,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   // Get the latest version's nodes and edges
   const latestVersion = project.versions[0];
-  const initialNodes = latestVersion ? JSON.parse(latestVersion.nodes) : [];
-  const initialEdges = latestVersion ? JSON.parse(latestVersion.edges) : [];
+  const initialNodes = latestVersion ? safeJsonParse(latestVersion.nodes, []) : [];
+  const initialEdges = latestVersion ? safeJsonParse(latestVersion.edges, []) : [];
 
   return (
     <div className="flex flex-col min-h-screen">

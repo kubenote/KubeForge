@@ -5,6 +5,7 @@
 
 import { Node, Edge } from '@xyflow/react';
 import { DEMO_MODE_MESSAGE } from '@/lib/demoMode';
+import { safeJsonParse } from '@/lib/safeJson';
 
 export interface ProjectData {
   id: string;
@@ -38,6 +39,16 @@ export interface UpdateProjectRequest {
   nodes: Node[];
   edges: Edge[];
   message?: string;
+}
+
+interface ProjectVersionResponse {
+  id: string;
+  slug?: string | null;
+  projectId: string;
+  nodes: Node[] | string;
+  edges: Edge[] | string;
+  message: string | null;
+  createdAt: string;
 }
 
 export class ProjectDataService {
@@ -225,12 +236,12 @@ export class ProjectDataService {
     });
 
     return {
-      versions: result.versions.map((v: any) => ({
+      versions: result.versions.map((v: ProjectVersionResponse) => ({
         id: v.id,
         slug: v.slug,
         projectId: v.projectId,
-        nodes: Array.isArray(v.nodes) ? v.nodes : (v.nodes ? JSON.parse(v.nodes) : []),
-        edges: Array.isArray(v.edges) ? v.edges : (v.edges ? JSON.parse(v.edges) : []),
+        nodes: Array.isArray(v.nodes) ? v.nodes : safeJsonParse<Node[]>(v.nodes as string, []),
+        edges: Array.isArray(v.edges) ? v.edges : safeJsonParse<Edge[]>(v.edges as string, []),
         message: v.message,
         createdAt: v.createdAt,
       })),

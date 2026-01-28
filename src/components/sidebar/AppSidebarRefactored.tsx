@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sidebar"
 import { useVersion } from "../../providers/VersionProvider";
 import { useSchema } from "@/providers/SchemaProvider";
+import { safeJsonParseWithResult } from "@/lib/safeJson";
 import { AppSidebarHeader } from "./components/SidebarHeader";
 import { AdvancedModeSidebar } from "./components/AdvancedModeSidebar";
 import { StandardModeSidebar } from "./components/StandardModeSidebar";
@@ -41,7 +42,12 @@ export function AppSidebarRefactored({
         const events = new EventSource(`/api/schema/stream?version=${version}`);
 
         events.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+            const parseResult = safeJsonParseWithResult<{ progress?: number; done?: boolean }>(event.data);
+            if (!parseResult.success || !parseResult.data) {
+                console.error('Failed to parse event data:', parseResult.error);
+                return;
+            }
+            const data = parseResult.data;
             if (data.progress !== undefined) setProgress(data.progress);
             if (data.done) {
                 setIsDownloading(false);
