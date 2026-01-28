@@ -110,7 +110,7 @@ export function DeleteVersionDialog({
           {currentVersionId === versionId && (
             <div className="p-3 rounded-md bg-orange-50 border border-orange-200">
               <p className="text-sm text-orange-700">
-                <strong>Note:</strong> You are currently viewing this version. After deletion, you'll be redirected to the latest remaining version.
+                <strong>Note:</strong> You are currently viewing this version. After deletion, you&apos;ll be redirected to the latest remaining version.
               </p>
             </div>
           )}
