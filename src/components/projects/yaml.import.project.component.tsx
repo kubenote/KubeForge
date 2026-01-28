@@ -30,48 +30,70 @@ function importYamlToNodes(yamlDocs: NodeData[]): { nodes: Node[]; edges: Edge[]
       const kind = yamlData.kind;
       const mainNodeId = nanoid();
       let xOffset = 200 + (docIndex * 400);
-      
-      // Create main KindNode
+
+      // Build the main node values with #ref- placeholders for complex objects
+      const mainNodeValues: Record<string, unknown> = {};
+      const refNodes: { id: string; key: string; values: Record<string, unknown> }[] = [];
+
+      let refYOffset = yOffset + 200;
+
+      for (const key of Object.keys(yamlData)) {
+        const value = yamlData[key];
+
+        // For complex objects (not arrays), create an ObjectRefNode and use a reference
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          const refId = nanoid();
+
+          // Store #ref- placeholder in main node
+          mainNodeValues[key] = `#ref-${refId}`;
+
+          // Queue the ObjectRefNode creation
+          refNodes.push({
+            id: refId,
+            key: key,
+            values: value as Record<string, unknown>
+          });
+        } else {
+          // For primitives and arrays, store directly
+          mainNodeValues[key] = value;
+        }
+      }
+
+      // Create main KindNode with references
       nodes.push({
         id: mainNodeId,
         type: 'KindNode',
         position: { x: xOffset, y: yOffset },
         data: {
-          type: kind,
+          type: kind.toLowerCase(),
           kind: kind,
-          values: yamlData as Record<string, unknown>
+          values: mainNodeValues
         }
       });
 
       // Create ObjectRefNodes for complex fields
-      let refYOffset = yOffset + 200;
-      for (const key of Object.keys(yamlData)) {
-        const value = yamlData[key];
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          const refId = nanoid();
-          
-          nodes.push({
-            id: refId,
-            type: 'ObjectRefNode',
-            position: { x: xOffset - 300, y: refYOffset },
-            data: {
-              kind: kind,
-              objectRef: key,
-              values: yamlData[key] as Record<string, unknown>,
-            }
-          });
+      for (const refNode of refNodes) {
+        nodes.push({
+          id: refNode.id,
+          type: 'ObjectRefNode',
+          position: { x: xOffset - 300, y: refYOffset },
+          data: {
+            kind: kind,
+            objectRef: refNode.key,
+            values: refNode.values,
+          }
+        });
 
-          // Create edge from ObjectRefNode to KindNode
-          edges.push({
-            id: `${refId}-${mainNodeId}`,
-            source: refId,
-            sourceHandle: `source-${refId}`,
-            target: mainNodeId,
-            targetHandle: `target-${key}`
-          });
+        // Create edge from ObjectRefNode to KindNode
+        edges.push({
+          id: `${refNode.id}-${mainNodeId}`,
+          source: refNode.id,
+          sourceHandle: `source-${refNode.id}`,
+          target: mainNodeId,
+          targetHandle: `target-${refNode.key}`
+        });
 
-          refYOffset += 300;
-        }
+        refYOffset += 300;
       }
 
       yOffset += Math.max(600, refYOffset - yOffset + 100);
