@@ -14,7 +14,9 @@ import { AdvancedModeSidebar } from "./components/AdvancedModeSidebar";
 import { StandardModeSidebar } from "./components/StandardModeSidebar";
 import { DownloadDialog } from "./components/DownloadDialog";
 import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
+import { TemplatesSidebar } from "./sidebar.templates.component";
 import { Schema, GVK } from "@/types";
+import { Separator } from "@/components/ui/separator";
 
 interface SchemaInfoObject {
     name: string | GVK;
@@ -109,6 +111,8 @@ export function AppSidebarRefactored({
                         onInfoClick={handleInfoClick}
                     />
                 )}
+                <Separator className="my-2" />
+                <TemplatesSidebar className="h-64" />
             </SidebarContent>
 
             <SidebarRail />
