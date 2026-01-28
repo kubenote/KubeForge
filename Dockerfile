@@ -13,9 +13,8 @@ RUN git submodule update --init --recursive
 # Install Node deps
 RUN npm ci
 
-# Set environment variables for build
-ENV DATABASE_URL="file:./dev.db"
-ENV DATABASE_URL_DEMO="file:./demo.db"
+# Dummy DATABASE_URL for build (Prisma generate needs a valid-looking URL)
+ENV DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy"
 ENV NODE_ENV=production
 
 # Generate Prisma client
@@ -30,13 +29,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=builder /app ./
 
-# Runtime environment variables
 ENV NODE_ENV=production
-ENV DATABASE_URL="file:./dev.db"
-ENV DATABASE_URL_DEMO="file:./demo.db"
-
-# Ensure database directory exists and run migrations
-RUN mkdir -p prisma && npx prisma migrate deploy
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD sh -c "npx prisma migrate deploy && npm start"
