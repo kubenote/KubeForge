@@ -1,12 +1,6 @@
 'use client'
 
-// Extend HTMLInputElement to support directory selection attributes
-declare module 'react' {
-  interface InputHTMLAttributes<T> extends HTMLAttributes<T> {
-    webkitdirectory?: string;
-    directory?: string;
-  }
-}
+/// <reference path="./react-input-attrs.d.ts" />
 
 import { useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
