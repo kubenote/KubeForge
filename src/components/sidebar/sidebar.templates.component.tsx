@@ -156,7 +156,7 @@ export function TemplatesSidebar({ className = '', isReadOnly = false }: Templat
                                     </span>
                                 </Button>
                             </CollapsibleTrigger>
-                            <CollapsibleContent className="pl-4 space-y-1">
+                            <CollapsibleContent className="space-y-1">
                                 {category.templates.map((template) => (
                                     <div
                                         key={template.id}
@@ -172,7 +172,7 @@ export function TemplatesSidebar({ className = '', isReadOnly = false }: Templat
                                             <div className="text-sm font-medium truncate">
                                                 {template.name}
                                             </div>
-                                            <div className="text-xs text-muted-foreground truncate">
+                                            <div className="text-xs text-muted-foreground break-words">
                                                 {template.description}
                                             </div>
                                         </div>

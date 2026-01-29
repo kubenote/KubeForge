@@ -44,6 +44,7 @@ export function VersionSwitcher({
   };
 
   return (
+    <>
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
@@ -89,5 +90,7 @@ export function VersionSwitcher({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
+    <hr className="border-t" />
+    </>
   );
 }

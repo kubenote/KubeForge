@@ -14,7 +14,7 @@ import { StandardModeSidebar } from "./components/StandardModeSidebar";
 import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
 import { TemplatesSidebar } from "./sidebar.templates.component";
 import { Schema, GVK } from "@/types";
-import { Separator } from "@/components/ui/separator";
+import { IconSidebar, SidebarView } from "./IconSidebar";
 
 interface SchemaInfoObject {
     name: string | GVK;
@@ -34,6 +34,7 @@ export function AppSidebarRefactored({
     const [dialogOpen, setDialogOpen] = React.useState(false);
     const [loadObject, setLoadObject] = React.useState<SchemaInfoObject | Record<string, never>>({});
     const [advancedMode, setAdvancedMode] = React.useState(false);
+    const [activeView, setActiveView] = React.useState<SidebarView>('workloads');
 
     // Context
     const { version, setVersion, schemaData, preRefSchemaData } = useVersion();
@@ -50,39 +51,48 @@ export function AppSidebarRefactored({
 
     return (
         <Sidebar {...props}>
-            <AppSidebarHeader
-                versions={versions}
-                version={version}
-                onVersionSelect={handleVersionSelect}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                advancedMode={advancedMode}
-                onAdvancedModeChange={setAdvancedMode}
-            />
-
-            <SidebarContent>
-                {advancedMode ? (
-                    <AdvancedModeSidebar
-                        schemaGvks={schemaGvks}
+            <div className="flex h-full w-full">
+                <IconSidebar activeView={activeView} onViewChange={setActiveView} />
+                <div className="flex flex-col flex-1 min-w-0">
+                    <AppSidebarHeader
+                        versions={versions}
+                        version={version}
+                        onVersionSelect={handleVersionSelect}
                         searchQuery={searchQuery}
-                        schemaData={schemaData}
-                        preRefSchemaData={preRefSchemaData}
-                        onInfoClick={handleInfoClick}
+                        onSearchChange={setSearchQuery}
+                        advancedMode={advancedMode}
+                        onAdvancedModeChange={setAdvancedMode}
+                        showSearch={activeView === 'workloads'}
                     />
-                ) : (
-                    <StandardModeSidebar
-                        schemaGvks={schemaGvks}
-                        searchQuery={searchQuery}
-                        preRefSchemaData={preRefSchemaData}
-                        onInfoClick={handleInfoClick}
-                    />
-                )}
-                <Separator className="my-2" />
-                <TemplatesSidebar className="h-64" isReadOnly={isReadOnly} />
-            </SidebarContent>
+                    {activeView === 'workloads' ? (
+                        <SidebarContent>
+                            {advancedMode ? (
+                                <AdvancedModeSidebar
+                                    schemaGvks={schemaGvks}
+                                    searchQuery={searchQuery}
+                                    schemaData={schemaData}
+                                    preRefSchemaData={preRefSchemaData}
+                                    onInfoClick={handleInfoClick}
+                                />
+                            ) : (
+                                <StandardModeSidebar
+                                    schemaGvks={schemaGvks}
+                                    searchQuery={searchQuery}
+                                    preRefSchemaData={preRefSchemaData}
+                                    onInfoClick={handleInfoClick}
+                                />
+                            )}
+                        </SidebarContent>
+                    ) : (
+                        <SidebarContent>
+                            <TemplatesSidebar className="h-full" isReadOnly={isReadOnly} />
+                        </SidebarContent>
+                    )}
+                </div>
+            </div>
 
             <SidebarRail />
-            
+
             <SchemaInfoDialog
                 isOpen={dialogOpen}
                 onOpenChange={setDialogOpen}

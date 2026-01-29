@@ -15,6 +15,7 @@ interface SidebarHeaderProps {
     onSearchChange: (query: string) => void;
     advancedMode: boolean;
     onAdvancedModeChange: (advanced: boolean) => void;
+    showSearch?: boolean;
 }
 
 export function AppSidebarHeader({
@@ -24,7 +25,8 @@ export function AppSidebarHeader({
     searchQuery,
     onSearchChange,
     advancedMode,
-    onAdvancedModeChange
+    onAdvancedModeChange,
+    showSearch = true
 }: SidebarHeaderProps) {
     return (
         <SidebarHeader>
@@ -33,14 +35,18 @@ export function AppSidebarHeader({
                 defaultVersion={version ?? "latest"}
                 onSelect={onVersionSelect}
             />
-            <SearchForm onChange={onSearchChange} />
-            <div className="flex items-center space-x-2 px-2">
-                <Label htmlFor="airplane-mode">Advanced</Label>
-                <Switch 
-                    onCheckedChange={() => onAdvancedModeChange(!advancedMode)} 
-                    id="airplane-mode" 
-                />
-            </div>
+            {showSearch && (
+                <>
+                    <SearchForm onChange={onSearchChange} />
+                    <div className="flex items-center space-x-2 px-2">
+                        <Label htmlFor="airplane-mode">Advanced</Label>
+                        <Switch
+                            onCheckedChange={() => onAdvancedModeChange(!advancedMode)}
+                            id="airplane-mode"
+                        />
+                    </div>
+                </>
+            )}
         </SidebarHeader>
     );
 }
