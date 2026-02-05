@@ -33,6 +33,8 @@ model ProjectVersion {
   createdAt DateTime @default(now())
   message   String?  // Optional commit message
 
+  @@index([projectId])
+  @@index([createdAt])
   @@map("project_versions")
 }
 
@@ -46,6 +48,8 @@ model HostedYaml {
   createdAt DateTime @default(now())
   lastAccessedAt DateTime?
 
+  @@index([yamlHash])
+  @@index([createdAt])
   @@map("hosted_yamls")
 }
 
