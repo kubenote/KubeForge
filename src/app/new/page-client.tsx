@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Node, Edge, ReactFlowProvider } from '@xyflow/react';
 import Flow from "@/components/flow/flow.main.component";
 import MainSidebar from "@/components/sidebar/sidebar.main.component";
-import { NodeProvider } from '@/providers/NodeProvider';
+import { NodeProvider } from '@/providers/node.provider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Zap } from 'lucide-react';

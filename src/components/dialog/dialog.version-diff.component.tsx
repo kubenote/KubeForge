@@ -23,7 +23,7 @@ import { exportToYaml } from '@/lib/export';
 import dynamic from 'next/dynamic';
 import '@/lib/monaco-config';
 const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/contexts/theme.context';
 
 interface VersionForSelect {
     id: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { Sun, Moon, Monitor } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
+import { useTheme } from '@/contexts/theme.context';
 import {
     DropdownMenu,
     DropdownMenuContent,

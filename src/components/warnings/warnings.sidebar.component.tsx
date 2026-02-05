@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useStore, useReactFlow } from '@xyflow/react'
-import { useWarning } from '../../providers/WarningsProvider'
+import { useWarning } from '../../providers/warnings.provider'
 import { Info, AlertTriangle, OctagonAlert, X, Search } from 'lucide-react'
 import type { Notification } from '@/types'
 

@@ -1,2 +1,2 @@
-export { ProjectProvider, useProject } from './ProjectContext';
-export { ReadOnlyProvider, useReadOnly } from './ReadOnlyContext';
+export { ProjectProvider, useProject } from './project.context';
+export { ReadOnlyProvider, useReadOnly } from './read-only.context';

@@ -5,7 +5,7 @@ import type {
   KubernetesSchemaRecord,
   SchemaUpsertInput,
   GvkUpsertInput,
-} from '../interfaces/ISchemaRepository';
+} from '../interfaces/schema.repository.interface';
 
 export class PrismaSchemaRepository implements ISchemaRepository {
   async getGvks(version: string): Promise<SchemaGvkRecord[]> {

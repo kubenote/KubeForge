@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { useVersion } from "@/providers/VersionProvider";
+import { useVersion } from "@/providers/version.provider";
 import { Badge } from "../ui/badge";
 function KubernetesIcon() {
   return (

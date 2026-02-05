@@ -3,7 +3,7 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { ReactFlow, Background, BackgroundVariant, Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useVersion } from '../../providers/VersionProvider';
+import { useVersion } from '../../providers/version.provider';
 import { KindNode } from './nodes/node.kind.component';
 import { ObjectRefNode } from './nodes/node.objectref.component';
 import { StorageBucketNode } from './nodes/node.storagebucket.component';
@@ -13,14 +13,14 @@ import {
 } from './nodes/node.integration.component';
 import ContextMenu from './flow.contextmenu.component';
 import { TopProgressBar } from '../ui/progress-bar';
-import { ReadOnlyProvider } from '@/contexts/ReadOnlyContext';
-import { useSchemaLoader } from './hooks/useSchemaLoader';
-import { useFlowState } from './hooks/useFlowState';
-import { useProjectSync } from './hooks/useProjectSync';
-import { useFlowInteractions } from './hooks/useFlowInteractions';
-import { useFlowHistory } from './hooks/useFlowHistory';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import { useClipboard } from './hooks/useClipboard';
+import { ReadOnlyProvider } from '@/contexts/read-only.context';
+import { useSchemaLoader } from './hooks/use-schema-loader.hook';
+import { useFlowState } from './hooks/use-flow-state.hook';
+import { useProjectSync } from './hooks/use-project-sync.hook';
+import { useFlowInteractions } from './hooks/use-flow-interactions.hook';
+import { useFlowHistory } from './hooks/use-flow-history.hook';
+import { useKeyboardShortcuts } from './hooks/use-keyboard-shortcuts.hook';
+import { useClipboard } from './hooks/use-clipboard.hook';
 import { analytics } from '@/lib/analytics';
 
 const nodeTypes = {

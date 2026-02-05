@@ -6,16 +6,16 @@ import {
     SidebarContent,
     SidebarRail,
 } from "@/components/ui/sidebar"
-import { useVersion } from "../../providers/VersionProvider";
-import { useSchema } from "@/providers/SchemaProvider";
-import { AppSidebarHeader } from "./components/SidebarHeader";
-import { AdvancedModeSidebar } from "./components/AdvancedModeSidebar";
-import { StandardModeSidebar } from "./components/StandardModeSidebar";
-import { SchemaInfoDialog } from "./components/SchemaInfoDialog";
+import { useVersion } from "../../providers/version.provider";
+import { useSchema } from "@/providers/schema.provider";
+import { AppSidebarHeader } from "./components/sidebar.header.component";
+import { AdvancedModeSidebar } from "./components/sidebar.advanced-mode.component";
+import { StandardModeSidebar } from "./components/sidebar.standard-mode.component";
+import { SchemaInfoDialog } from "./components/sidebar.schema-info-dialog.component";
 import { TemplatesSidebar } from "./sidebar.templates.component";
-import { LayersSidebar } from "./LayersSidebar";
+import { LayersSidebar } from "./sidebar.layers.component";
 import { GVK } from "@/types";
-import { IconSidebar, SidebarView } from "./IconSidebar";
+import { IconSidebar, SidebarView } from "./sidebar.icon.component";
 import { HelperComponent } from "../dialog/dialog.helper.component";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { BoxIcon, Zap } from "lucide-react";

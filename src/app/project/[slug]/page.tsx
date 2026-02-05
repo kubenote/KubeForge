@@ -1,4 +1,4 @@
-import { ProjectProvider } from "@/contexts/ProjectContext";
+import { ProjectProvider } from "@/contexts/project.context";
 import { getTopics } from "@/lib/getDocs";
 import { getKubeSchemaBranches } from "@/lib/getBranches";
 import { getProjectRepository } from "@/repositories/registry";

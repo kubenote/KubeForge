@@ -1,6 +1,6 @@
 'use client';
 
-import { AutoSaveStatus } from '@/hooks/useAutoSave';
+import { AutoSaveStatus } from '@/hooks/use-auto-save.hook';
 import { Loader2, Check, AlertCircle, Cloud, CloudOff } from 'lucide-react';
 import {
     Tooltip,

@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
-import { useWarning } from "../../providers/WarningsProvider";
-import ViewObjectDialog from "./ViewObjectDialog";
+import { useWarning } from "../../providers/warnings.provider";
+import ViewObjectDialog from "./flow.view-object-dialog.component";
 
 interface ContextMenuProps extends React.HTMLAttributes<HTMLDivElement> {
     id: string;

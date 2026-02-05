@@ -8,7 +8,7 @@ import type {
   ProjectVersionWithProject,
   ProjectVersionRecord,
   PaginatedVersions,
-} from '../interfaces/IProjectRepository';
+} from '../interfaces/project.repository.interface';
 
 export class PrismaProjectRepository implements IProjectRepository {
   async findAll(): Promise<ProjectWithLatestVersion[]> {

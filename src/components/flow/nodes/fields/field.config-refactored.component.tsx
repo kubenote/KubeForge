@@ -1,11 +1,11 @@
 "use client"
 
 import { Trash } from "lucide-react"
-import { BaseFieldProps, ComplexFieldResult } from "./types"
-import { PrimitiveField } from "./PrimitiveField"
-import { ObjectField } from "./ObjectField"
-import { ArrayField } from "./ArrayField"
-import { FieldLabel } from "./FieldLabel"
+import { BaseFieldProps, ComplexFieldResult } from "./field.types"
+import { PrimitiveField } from "./field.primitive.component"
+import { ObjectField } from "./field.object.component"
+import { ArrayField } from "./field.array.component"
+import { FieldLabel } from "./field.label.component"
 
 export const ConfigFieldRefactored = ({
     label,

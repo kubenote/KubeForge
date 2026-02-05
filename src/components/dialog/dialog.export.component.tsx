@@ -12,7 +12,7 @@ import { useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { Input } from "../ui/input";
 import { LinkIcon, FileJson, FileText, FolderArchive } from "lucide-react";
-import { useDemoMode } from "@/contexts/DemoModeContext";
+import { useDemoMode } from "@/contexts/demo-mode.context";
 import {
     Select,
     SelectContent,
@@ -31,7 +31,7 @@ import {
     downloadFile,
     resolveNodeValues,
 } from "@/lib/export";
-import { useTheme } from "@/contexts/ThemeContext";
+import { useTheme } from "@/contexts/theme.context";
 import { yamlUrls } from '@/lib/apiUrls';
 
 interface ExportDialogProps {

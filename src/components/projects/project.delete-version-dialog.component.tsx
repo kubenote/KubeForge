@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { ProjectDataService } from '@/services/project.data.service';
-import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useDemoMode } from '@/contexts/demo-mode.context';
 import { useRouter } from 'next/navigation';
 
 interface DeleteVersionDialogProps {

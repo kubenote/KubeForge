@@ -10,8 +10,8 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { BoxIcon, InfoIcon } from "lucide-react";
-import { k8sIcons } from "../../data/k8sIcons";
-import { useNodeProvider } from "@/providers/NodeProvider";
+import { k8sIcons } from "../../data/data.k8s-icons";
+import { useNodeProvider } from "@/providers/node.provider";
 import { GVK } from "@/types";
 
 interface StandardModeSidebarProps {

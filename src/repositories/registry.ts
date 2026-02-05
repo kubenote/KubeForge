@@ -1,9 +1,9 @@
-import type { IProjectRepository } from './interfaces/IProjectRepository';
-import type { IHostedYamlRepository } from './interfaces/IHostedYamlRepository';
-import type { ISchemaRepository } from './interfaces/ISchemaRepository';
-import { PrismaProjectRepository } from './implementations/PrismaProjectRepository';
-import { PrismaHostedYamlRepository } from './implementations/PrismaHostedYamlRepository';
-import { PrismaSchemaRepository } from './implementations/PrismaSchemaRepository';
+import type { IProjectRepository } from './interfaces/project.repository.interface';
+import type { IHostedYamlRepository } from './interfaces/hosted-yaml.repository.interface';
+import type { ISchemaRepository } from './interfaces/schema.repository.interface';
+import { PrismaProjectRepository } from './implementations/prisma.project.repository';
+import { PrismaHostedYamlRepository } from './implementations/prisma.hosted-yaml.repository';
+import { PrismaSchemaRepository } from './implementations/prisma.schema.repository';
 
 let projectRepository: IProjectRepository = new PrismaProjectRepository();
 let hostedYamlRepository: IHostedYamlRepository = new PrismaHostedYamlRepository();

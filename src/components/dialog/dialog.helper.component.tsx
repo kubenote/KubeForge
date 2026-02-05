@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 import { cn } from "@/lib/utils"
 import ReactMarkdown from 'react-markdown'
 import { CircleQuestionMarkIcon } from 'lucide-react'
-import { capitalize } from '@/helpers/textTransform'
+import { capitalize } from '@/helpers/text-transform.helper'
 
 export function HelperComponent({ topics: initialTopics, className }: { topics: string[], className?: string }) {
     const [topics, setTopics] = useState<string[]>(initialTopics || [])

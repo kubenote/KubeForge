@@ -6,7 +6,7 @@
 import { useState, useCallback } from 'react';
 import { Node, Edge } from '@xyflow/react';
 import { ProjectDataService, ProjectData, ProjectVersion } from '@/services/project.data.service';
-import { useProject } from '@/contexts/ProjectContext';
+import { useProject } from '@/contexts/project.context';
 
 export interface UseProjectDataManagerReturn {
   // State

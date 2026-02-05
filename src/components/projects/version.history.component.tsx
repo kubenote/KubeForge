@@ -23,8 +23,8 @@ import {
 import { RotateCcw, Search, SlidersHorizontal, Save } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { ProjectDataService } from '@/services/project.data.service';
-import { useProjectVersions } from '@/hooks/useProjectVersions';
-import { DeleteVersionDialog } from './delete-version-dialog';
+import { useProjectVersions } from '@/hooks/use-project-versions.hook';
+import { DeleteVersionDialog } from './project.delete-version-dialog.component';
 import { VersionDiffDialog } from '@/components/dialog/dialog.version-diff.component';
 import { toast } from 'sonner';
 import { formatDateParts } from '@/lib/format';

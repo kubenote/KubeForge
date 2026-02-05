@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { DemoModeProvider } from '@/contexts/DemoModeContext';
-import { WarningProvider } from '@/providers/WarningsProvider';
-import { VersionProvider } from '@/providers/VersionProvider';
-import { SchemaProvider } from '@/providers/SchemaProvider';
-import { SWRProvider } from '@/providers/SWRProvider';
+import { ThemeProvider } from '@/contexts/theme.context';
+import { DemoModeProvider } from '@/contexts/demo-mode.context';
+import { WarningProvider } from '@/providers/warnings.provider';
+import { VersionProvider } from '@/providers/version.provider';
+import { SchemaProvider } from '@/providers/schema.provider';
+import { SWRProvider } from '@/providers/swr.provider';
 import { Toaster } from '@/components/ui/sonner';
 
 interface KubeForgeProvidersProps {

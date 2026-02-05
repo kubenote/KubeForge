@@ -17,17 +17,17 @@ import {
 } from "@/components/ui/sidebar"
 import { Badge } from "../ui/badge"
 import YamlImportButton from "../flow/flow.import.component"
-import { useProject } from "@/contexts/ProjectContext"
+import { useProject } from "@/contexts/project.context"
 import { VersionHistory } from "../projects/version.history.component"
 import { Node, Edge } from '@xyflow/react'
 import { useState } from 'react'
-import { useProjects } from '@/hooks/useProjects'
+import { useProjects } from '@/hooks/use-projects.hook'
 import { projectUrls } from '@/lib/apiUrls'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
-import { DeleteProjectDialog } from '../projects/delete-project-dialog'
+import { DeleteProjectDialog } from '../projects/project.delete-project-dialog.component'
 import { toast } from 'sonner'
 
 interface MainSidebarProps {

@@ -7,14 +7,14 @@ import { publish } from "@/lib/eventBus"
 import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
 import { getTypeColor } from "./flow.node.types"
-import { useSchema } from "@/providers/SchemaProvider"
+import { useSchema } from "@/providers/schema.provider"
 import { ConfigField } from "./flow.configfield.component"
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ObjectRefNodeData, FlowEdge, Schema, PluginSlotEntry } from "@/types"
-import { PluginSlots } from "./PluginSlots"
+import { PluginSlots } from "./node.plugin-slots.component"
 
 function inferSchemaFromValue(value: unknown): Schema {
     if (typeof value === 'string') return { type: 'string' };

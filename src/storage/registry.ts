@@ -1,5 +1,5 @@
-import type { IStorageProvider } from './IStorageProvider';
-import { FilesystemStorageProvider } from './FilesystemStorageProvider';
+import type { IStorageProvider } from './storage-provider.interface';
+import { FilesystemStorageProvider } from './filesystem.storage-provider';
 
 let storageProvider: IStorageProvider = new FilesystemStorageProvider();
 
