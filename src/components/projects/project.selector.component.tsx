@@ -51,6 +51,8 @@ import Link from 'next/link';
 import { YamlProjectImport } from './yaml.import.project.component';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
+import { useProjects } from '@/hooks/useProjects';
+import { projectUrls, hostedYamlUrls, yamlUrls } from '@/lib/apiUrls';
 
 interface Project {
   id: string;
@@ -87,9 +89,9 @@ interface HostedYaml {
 type ActiveView = 'projects' | 'hosted';
 
 export function ProjectSelector() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { data: projectsData, loading, refetch: refetchProjects } = useProjects();
+  const projects = (projectsData || []) as Project[];
   const [hostedYamls, setHostedYamls] = useState<HostedYaml[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('projects');
@@ -110,28 +112,12 @@ export function ProjectSelector() {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   useEffect(() => {
-    fetchProjects();
     fetchHostedYamls();
   }, []);
 
-  const fetchProjects = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('/api/projects');
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchHostedYamls = async () => {
     try {
-      const response = await fetch('/api/hosted-yamls');
+      const response = await fetch(hostedYamlUrls.listAll());
       if (response.ok) {
         const data = await response.json();
         setHostedYamls(data);
@@ -162,14 +148,14 @@ export function ProjectSelector() {
 
     setRenameLoading(true);
     try {
-      const response = await fetch(`/api/projects/${projectToRename.id}`, {
+      const response = await fetch(projectUrls.get(projectToRename.id), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newName.trim() }),
       });
 
       if (response.ok) {
-        await fetchProjects();
+        await refetchProjects(true);
         setRenameDialogOpen(false);
         setProjectToRename(null);
         setNewName('');
@@ -186,12 +172,12 @@ export function ProjectSelector() {
 
     setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/projects/${projectToDelete.id}`, {
+      const response = await fetch(projectUrls.get(projectToDelete.id), {
         method: 'DELETE',
       });
 
       if (response.ok) {
-        await fetchProjects();
+        await refetchProjects(true);
         setDeleteDialogOpen(false);
         setProjectToDelete(null);
       }
@@ -204,7 +190,7 @@ export function ProjectSelector() {
 
   const handleDeleteHostedYaml = async (id: string) => {
     try {
-      const response = await fetch(`/api/hosted-yamls/${id}`, {
+      const response = await fetch(hostedYamlUrls.get(id), {
         method: 'DELETE',
       });
       if (response.ok) {
@@ -216,7 +202,7 @@ export function ProjectSelector() {
   };
 
   const copyToClipboard = useCallback((id: string) => {
-    const url = `${window.location.origin}/api/yaml/${id}.yml`;
+    const url = `${window.location.origin}${yamlUrls.file(id)}`;
     navigator.clipboard.writeText(url);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
@@ -487,7 +473,7 @@ export function ProjectSelector() {
                         <TableRow key={yaml.id}>
                           <TableCell>
                             <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all">
-                              {origin}/api/yaml/{yaml.id}.yml
+                              {origin}{yamlUrls.file(yaml.id)}
                             </code>
                           </TableCell>
                           <TableCell>
@@ -533,7 +519,7 @@ export function ProjectSelector() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                onClick={() => window.open(`/api/yaml/${yaml.id}.yml`, '_blank')}
+                                onClick={() => window.open(yamlUrls.file(yaml.id), '_blank')}
                                 title="Open URL"
                               >
                                 <ExternalLink className="h-4 w-4" />
@@ -616,7 +602,7 @@ export function ProjectSelector() {
           <YamlProjectImport
             onProjectCreated={() => {
               setImportDialogOpen(false);
-              fetchProjects();
+              refetchProjects(true);
             }}
           />
         </DialogContent>

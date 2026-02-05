@@ -27,6 +27,16 @@
       "import": "./dist/types/index.mjs",
       "require": "./dist/types/index.js",
       "types": "./dist/types/index.d.ts"
+    },
+    "./lib/import": {
+      "import": "./dist/lib/import.mjs",
+      "require": "./dist/lib/import.js",
+      "types": "./dist/lib/import.d.ts"
+    },
+    "./lib/export": {
+      "import": "./dist/lib/export.mjs",
+      "require": "./dist/lib/export.js",
+      "types": "./dist/lib/export.d.ts"
     }
   },
   "files": [
@@ -74,6 +84,8 @@
     "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "shadcn-ui": "^0.9.5",
+    "sonner": "^2.0.7",
+    "swr": "^2.3.3",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
     "zustand": "^5.0.6"

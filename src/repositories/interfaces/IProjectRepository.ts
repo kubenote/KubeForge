@@ -2,6 +2,7 @@ export interface ProjectCreateInput {
   name: string;
   slug: string;
   kubernetesVersion?: string;
+  gitSource?: Record<string, unknown>;
   initialVersion: {
     slug: string;
     nodes: string;
@@ -26,6 +27,7 @@ export interface ProjectWithVersions {
   name: string;
   slug: string;
   kubernetesVersion: string | null;
+  gitSource: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
   versions: ProjectVersionRecord[];
@@ -36,6 +38,7 @@ export interface ProjectWithLatestVersion {
   name: string;
   slug: string;
   kubernetesVersion: string | null;
+  gitSource: Record<string, unknown> | null;
   createdAt: Date;
   updatedAt: Date;
   versions: ProjectVersionRecord[];

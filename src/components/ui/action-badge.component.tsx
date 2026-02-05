@@ -11,10 +11,10 @@ interface ActionBadgeProps {
 }
 
 const variantClasses: Record<BadgeVariant, string> = {
-    blue: "bg-blue-500 text-white dark:bg-blue-600",
-    orange: "bg-orange-500 text-white dark:bg-orange-600", 
-    green: "bg-green-500 text-white dark:bg-green-600",
-    red: "bg-red-500 text-white dark:bg-red-600",
+    blue: "bg-info text-info-foreground",
+    orange: "bg-orange-500 text-white dark:bg-orange-600",
+    green: "bg-success text-success-foreground",
+    red: "bg-destructive text-white",
     gray: "bg-gray-500 text-white dark:bg-gray-600"
 };
 

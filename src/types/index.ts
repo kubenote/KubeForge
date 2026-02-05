@@ -4,7 +4,15 @@ export interface Schema {
   $ref?: string;
   properties?: Record<string, Schema>;
   items?: Schema;
+  additionalProperties?: boolean | Schema;
   description?: string;
+}
+
+// Plugin slot entry — tracks a plugin connected to a target node
+export interface PluginSlotEntry {
+  sourceNodeId: string;
+  sourceNodeType: string;
+  containerName?: string;
 }
 
 // Node data types
@@ -12,6 +20,9 @@ export interface BaseNodeData extends Record<string, unknown> {
   kind: string;
   apiVersion?: string;
   values?: Record<string, unknown>;
+  pluginSlots?: PluginSlotEntry[];
+  editing?: boolean;
+  sourceFile?: string;
 }
 
 export interface KindNodeData extends BaseNodeData {
@@ -50,23 +61,32 @@ export type UnsubscribeFunction = () => void;
 // Warning system types
 export interface NodeWarning {
   id: number;
+  ruleId: string;
   title: string;
   message: string;
   level?: 'info' | 'warn' | 'danger';
   nodes?: string[];
+  fieldPath?: string;
 }
 
 export interface Notification {
   id: number;
+  ruleId: string;
   title: string;
   message: string;
   level?: 'info' | 'warn' | 'danger';
   nodes?: string[];
+  fieldPath?: string;
 }
 
 export type WarningContextType = {
   notifications: Notification[];
   setNotifications: (data: Notification[]) => void;
+  suppressedKeys: Set<string>;
+  suppressWarning: (key: string) => void;
+  unsuppressWarning: (key: string) => void;
+  filterNodeId: string | null;
+  setFilterNodeId: (id: string | null) => void;
 };
 
 // Default flow data structure (from defaultFlow.json)
@@ -81,7 +101,7 @@ export interface AddNodeParams {
   data: BaseNodeData;
   id?: string | null;
   targetNode?: string | null;
-  type?: "KindNode" | "ObjectRefNode";
+  type?: "KindNode" | "ObjectRefNode" | "StorageBucketNode" | "SecretRefNode" | "RegistryNode" | "ConfigMapNode" | "IngressNode" | "DatabaseNode" | "MessageQueueNode" | "LoggingSidecarNode" | "MonitoringNode" | "ServiceAccountNode";
 }
 
 export interface GetSchemaParams {
@@ -100,6 +120,7 @@ export type SchemaContextType = {
   setSchemaGvks: (data: GVK[]) => void;
   schemaData: SchemaData;
   setSchemaData: (data: SchemaData | ((prev: SchemaData) => SchemaData)) => void;
+  loadGvks: (version: string) => Promise<void>;
 };
 
 export type VersionContextType = {
@@ -109,4 +130,5 @@ export type VersionContextType = {
   setSchemaData: (data: SchemaData) => void;
   preRefSchemaData: SchemaData;
   setPreRefSchemaData: (data: SchemaData) => void;
+  setProjectContext: (projectId: string | null, projectVersion: string | null) => void;
 };

@@ -1,5 +1,5 @@
-import { ProjectSelector } from "@/components/projects/project.selector.component";
+import { redirect } from 'next/navigation';
 
 export default function Home() {
-  return <ProjectSelector />;
+  redirect('/dashboard');
 }

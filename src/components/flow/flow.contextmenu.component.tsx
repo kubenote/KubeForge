@@ -1,5 +1,7 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
+import { useWarning } from "../../providers/WarningsProvider";
+import ViewObjectDialog from "./ViewObjectDialog";
 
 interface ContextMenuProps extends React.HTMLAttributes<HTMLDivElement> {
     id: string;
@@ -7,6 +9,7 @@ interface ContextMenuProps extends React.HTMLAttributes<HTMLDivElement> {
     left: number;
     right?: number;
     bottom?: number;
+    onOpenWarnings?: () => void;
 }
 
 export default function ContextMenu({
@@ -15,46 +18,67 @@ export default function ContextMenu({
     left,
     right,
     bottom,
+    onOpenWarnings,
     ...props
 }: ContextMenuProps) {
     const { getNode, setNodes, setEdges } = useReactFlow();
-
-
+    const { setFilterNodeId } = useWarning();
+    const [viewObjectOpen, setViewObjectOpen] = useState(false);
+    const [viewObjectValues, setViewObjectValues] = useState<Record<string, unknown> | undefined>(undefined);
 
     const deleteNode = useCallback(() => {
         setNodes((nodes) => nodes.filter((node) => node.id !== id));
         setEdges((edges) => edges.filter((edge) => edge.source !== id));
     }, [id, setNodes, setEdges]);
 
+    const handleViewObject = useCallback(() => {
+        const node = getNode(id);
+        setViewObjectValues(node?.data?.values as Record<string, unknown> | undefined);
+        setViewObjectOpen(true);
+    }, [id, getNode]);
 
+    const handleViewIssues = useCallback(() => {
+        setFilterNodeId(id);
+        onOpenWarnings?.();
+    }, [id, setFilterNodeId, onOpenWarnings]);
 
     return (
-        <div
-            style={{ top, left, right, bottom }}
-            className="absolute z-10 bg-white border border-gray-300 shadow-lg rounded-md text-sm"
-            {...props}
-        >
-            <p className="px-3 py-2 text-xs text-muted-foreground">
-                node: <span className="font-mono text-[11px]">{id}</span>
-            </p>
-            <button
-                onClick={() => {
-                    const node = getNode(id);
-                    const values = node?.data?.values;
-                    console.log("🧩 Node values:", values);
-                    alert(JSON.stringify(values, null, 2)); // or open a drawer/modal
-                }}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 transition"
+        <>
+            <div
+                style={{ top, left, right, bottom }}
+                className="absolute z-10 bg-popover border border-border shadow-lg rounded-xl text-sm min-w-[160px]"
+                {...props}
             >
-                View Object
-            </button>
-
-            <button
-                onClick={deleteNode}
-                className="w-full text-left px-3 py-2 hover:bg-gray-100 transition"
-            >
-                Delete
-            </button>
-        </div>
+                <p className="px-3 py-2 text-xs text-muted-foreground border-b border-border">
+                    node: <span className="font-mono text-[11px]">{id}</span>
+                </p>
+                <div className="py-1">
+                    <button
+                        onClick={handleViewObject}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-brand-muted hover:text-brand transition-colors cursor-pointer"
+                    >
+                        View Object
+                    </button>
+                    <button
+                        onClick={handleViewIssues}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-brand-muted hover:text-brand transition-colors cursor-pointer"
+                    >
+                        View Issues
+                    </button>
+                    <button
+                        onClick={deleteNode}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+                    >
+                        Delete
+                    </button>
+                </div>
+            </div>
+            <ViewObjectDialog
+                open={viewObjectOpen}
+                onClose={() => setViewObjectOpen(false)}
+                nodeId={id}
+                values={viewObjectValues}
+            />
+        </>
     );
 }

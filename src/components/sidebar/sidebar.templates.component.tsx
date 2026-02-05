@@ -127,7 +127,7 @@ export function TemplatesSidebar({ className = '', isReadOnly = false }: Templat
 
     return (
         <div className={`flex flex-col ${className}`}>
-            <div className="flex items-center gap-2 px-3 py-2 border-b">
+            <div className="flex items-center gap-2 px-3 pb-4 py-2 border-b">
                 <Layers className="w-4 h-4" />
                 <span className="font-medium text-sm">Templates</span>
             </div>

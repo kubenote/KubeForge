@@ -18,9 +18,11 @@ import {
 } from '@/components/ui/select';
 import { GitCompare } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
-import { ProjectDataService, ProjectVersion } from '@/services/project.data.service';
-import yaml from 'js-yaml';
-import Editor from '@monaco-editor/react';
+import { ProjectDataService } from '@/services/project.data.service';
+import { exportToYaml } from '@/lib/export';
+import dynamic from 'next/dynamic';
+import '@/lib/monaco-config';
+const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface VersionForSelect {
@@ -34,57 +36,6 @@ interface VersionDiffDialogProps {
     projectId: string;
     projectName: string;
     versions: VersionForSelect[];
-}
-
-/**
- * Convert nodes to YAML for comparison (similar to export logic)
- */
-function nodesToYaml(nodes: Node[], edges: Edge[]): string {
-    const nodeValuesMap = Object.fromEntries(
-        nodes.map((n) => [n.id, n.data?.values || {}])
-    );
-
-    // Create a map of connected ObjectRef nodes
-    const connectedRefs = new Set<string>();
-    edges.forEach((edge) => {
-        const sourceNode = nodes.find((n) => n.id === edge.source);
-        if (sourceNode?.type === 'ObjectRefNode') {
-            connectedRefs.add(edge.source);
-        }
-    });
-
-    const resolveRefs = (value: unknown): unknown => {
-        if (Array.isArray(value)) {
-            return value.map(resolveRefs);
-        } else if (typeof value === 'object' && value !== null) {
-            return Object.fromEntries(
-                Object.entries(value).map(([k, v]) => [k, resolveRefs(v)])
-            );
-        } else if (typeof value === 'string' && value.startsWith('#ref-')) {
-            const refNodeId = value.slice(5);
-            if (connectedRefs.has(refNodeId)) {
-                return nodeValuesMap[refNodeId] || {};
-            }
-            return {};
-        }
-        return value;
-    };
-
-    const data = nodes
-        .filter((node) => node.type !== 'ObjectRefNode')
-        .map((node) => {
-            const resolved = resolveRefs(structuredClone(node.data?.values || {}));
-            return resolved;
-        });
-
-    try {
-        if (Array.isArray(data)) {
-            return data.map((doc) => yaml.dump(doc)).join('\n---\n');
-        }
-        return yaml.dump(data);
-    } catch (e) {
-        return '# Error converting to YAML:\n' + (e instanceof Error ? e.message : String(e));
-    }
 }
 
 export function VersionDiffDialog({
@@ -115,7 +66,7 @@ export function VersionDiffDialog({
         setLoading(true);
         try {
             const versionData = await ProjectDataService.loadProjectVersion(projectId, versionId);
-            const yamlContent = nodesToYaml(versionData.nodes, versionData.edges);
+            const yamlContent = exportToYaml(versionData.nodes, versionData.edges);
             if (side === 'left') {
                 setLeftYaml(yamlContent);
             } else {

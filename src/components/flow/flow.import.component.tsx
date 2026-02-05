@@ -32,7 +32,6 @@ function importYamlToFlowNodes(
 
     for (const key of Object.keys(yamlData)) {
       const value = yamlData[key];
-      console.log(value)
       if (value && typeof value === 'object' && !Array.isArray(value)) {
         const refId = nanoid()
 

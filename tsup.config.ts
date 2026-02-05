@@ -7,6 +7,8 @@ export default defineConfig({
     'storage/index': 'src/storage/index.ts',
     'providers/index': 'src/providers/index.ts',
     'types/index': 'src/types/index.ts',
+    'lib/import': 'src/lib/import.ts',
+    'lib/export': 'src/lib/export.ts',
   },
   format: ['esm', 'cjs'],
   dts: {

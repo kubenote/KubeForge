@@ -7,103 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import yaml from 'js-yaml';
 import { FolderArchive, Upload, FileText } from 'lucide-react';
-import { nanoid } from 'nanoid';
-import { Node, Edge } from '@xyflow/react';
 import { useRouter } from 'next/navigation';
 import { validateProjectName, slugify } from '@/lib/slugify';
 import { useDemoMode } from '@/contexts/DemoModeContext';
 import { removeNullFields } from '@/lib/objectUtils';
-
-interface NodeData {
-  kind: string;
-  apiVersion: string;
-  [key: string]: unknown;
-}
-
-function importYamlToNodes(yamlDocs: NodeData[]): { nodes: Node[]; edges: Edge[] } {
-  const nodes: Node[] = [];
-  const edges: Edge[] = [];
-  let yOffset = 50;
-
-  yamlDocs.forEach((yamlData, docIndex) => {
-    try {
-      const kind = yamlData.kind;
-      const mainNodeId = nanoid();
-      let xOffset = 200 + (docIndex * 400);
-
-      // Build the main node values with #ref- placeholders for complex objects
-      const mainNodeValues: Record<string, unknown> = {};
-      const refNodes: { id: string; key: string; values: Record<string, unknown> }[] = [];
-
-      let refYOffset = yOffset + 200;
-
-      for (const key of Object.keys(yamlData)) {
-        const value = yamlData[key];
-
-        // For complex objects (not arrays), create an ObjectRefNode and use a reference
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          const refId = nanoid();
-
-          // Store #ref- placeholder in main node
-          mainNodeValues[key] = `#ref-${refId}`;
-
-          // Queue the ObjectRefNode creation
-          refNodes.push({
-            id: refId,
-            key: key,
-            values: value as Record<string, unknown>
-          });
-        } else {
-          // For primitives and arrays, store directly
-          mainNodeValues[key] = value;
-        }
-      }
-
-      // Create main KindNode with references
-      nodes.push({
-        id: mainNodeId,
-        type: 'KindNode',
-        position: { x: xOffset, y: yOffset },
-        data: {
-          type: kind.toLowerCase(),
-          kind: kind,
-          values: mainNodeValues
-        }
-      });
-
-      // Create ObjectRefNodes for complex fields
-      for (const refNode of refNodes) {
-        nodes.push({
-          id: refNode.id,
-          type: 'ObjectRefNode',
-          position: { x: xOffset - 300, y: refYOffset },
-          data: {
-            kind: kind,
-            objectRef: refNode.key,
-            values: refNode.values,
-          }
-        });
-
-        // Create edge from ObjectRefNode to KindNode
-        edges.push({
-          id: `${refNode.id}-${mainNodeId}`,
-          source: refNode.id,
-          sourceHandle: `source-${refNode.id}`,
-          target: mainNodeId,
-          targetHandle: `target-${refNode.key}`
-        });
-
-        refYOffset += 300;
-      }
-
-      yOffset += Math.max(600, refYOffset - yOffset + 100);
-    } catch (err) {
-      console.error('Error importing YAML to flow nodes:', err);
-    }
-  });
-
-  return { nodes, edges };
-}
+import { importYamlToNodes } from '@/lib/import';
+import { projectUrls } from '@/lib/apiUrls';
 
 function basicSanitizeYamlTemplates(yaml: string): string {
   return yaml
@@ -191,7 +100,7 @@ export function YamlProjectImport({ onProjectCreated }: YamlProjectImportProps) 
       // Convert YAML to nodes and edges
       const { nodes, edges } = importYamlToNodes(parsedYaml);
 
-      const response = await fetch('/api/projects', {
+      const response = await fetch(projectUrls.list(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

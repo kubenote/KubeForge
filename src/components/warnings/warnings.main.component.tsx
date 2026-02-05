@@ -1,41 +1,40 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef } from 'react'
-import {
-    Drawer,
-    DrawerContent,
-    DrawerHeader,
-    DrawerTitle,
-} from '@/components/ui/drawer'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useEffect, useMemo, useRef } from 'react'
 import { useStore } from '@xyflow/react'
 import { NodeWarning, nodeWarningRules } from './warnings.rules.types'
-import { Info, AlertTriangle, OctagonAlert, TriangleAlert } from 'lucide-react'
+import { resetPreDeploymentIds } from './warnings.predeployment.rules'
 import { useWarning } from '../../providers/WarningsProvider'
+import { useVersion } from '../../providers/VersionProvider'
+import { useSchema } from '../../providers/SchemaProvider'
+import { TriangleAlert } from 'lucide-react'
 
-const levelIcon = {
-    info: <Info className="text-blue-500 w-4 h-4" />,
-    warn: <AlertTriangle className="text-yellow-500 w-4 h-4" />,
-    danger: <OctagonAlert className="text-red-500 w-4 h-4" />,
+interface WarningsBadgeProps {
+    onClick: () => void
 }
 
-export default function WarningsDrawer() {
-    const [open, setOpen] = useState(false)
+export default function WarningsBadge({ onClick }: WarningsBadgeProps) {
     const nodes = useStore((s) => s.nodes)
-
-    const { notifications, setNotifications } = useWarning()
+    const { notifications, setNotifications, suppressedKeys } = useWarning()
+    const { version } = useVersion()
+    const { schemaGvks } = useSchema()
     const prevWarningsRef = useRef<string>('')
 
+    // Compute warnings (always mounted so provider stays in sync)
     const warnings = useMemo(() => {
+        resetPreDeploymentIds()
         const warningsArray: NodeWarning[] = []
         const context: {
             seenKinds: Record<string, string[]>;
             allNodes: typeof nodes;
             __overlapWarnings?: NodeWarning[];
+            projectVersion?: string;
+            schemaGvks?: any[];
         } = {
             seenKinds: {} as Record<string, string[]>,
-            allNodes: nodes
+            allNodes: nodes,
+            projectVersion: version || undefined,
+            schemaGvks: schemaGvks || undefined,
         }
 
         nodes.forEach((node, index) => {
@@ -45,65 +44,40 @@ export default function WarningsDrawer() {
             })
         })
 
-        // Collect any batch overlap warnings
         if (context.__overlapWarnings?.length) {
             warningsArray.push(...context.__overlapWarnings)
         }
 
         return warningsArray
-    }, [nodes])
+    }, [nodes, version, schemaGvks])
 
     useEffect(() => {
-        // Create a stable string representation for comparison
         const warningsStr = JSON.stringify(
             warnings
-                .map(w => ({ id: w.id, title: w.title, message: w.message, level: w.level }))
+                .map(w => ({ id: w.id, title: w.title, message: w.message, level: w.level, ruleId: w.ruleId }))
                 .sort((a, b) => a.id - b.id)
         )
-        
-        // Only update if warnings actually changed
         if (prevWarningsRef.current !== warningsStr) {
             prevWarningsRef.current = warningsStr
             setNotifications(warnings)
         }
     }, [warnings, setNotifications])
 
+    // Count active (non-suppressed) warnings
+    const activeCount = notifications.filter(n => {
+        const key = `${n.nodes?.[0] ?? 'global'}::${n.ruleId}`
+        return !suppressedKeys.has(key)
+    }).length
+
+    if (activeCount === 0) return null
 
     return (
-        <>
-            {notifications.length > 0 && (<Button
-                variant="default"
-                className="bg-orange-400"
-                onClick={() => setOpen(true)}
-            >
-                <TriangleAlert color="white" />
-            </Button>)}
-
-            <Drawer open={open} onOpenChange={setOpen} direction="right">
-                <DrawerContent className="right-0 ml-auto w-[320px] sm:w-[400px]">
-                    <DrawerHeader>
-                        <DrawerTitle>Warnings</DrawerTitle>
-                    </DrawerHeader>
-
-                    <div className="px-4 pb-4 space-y-3 overflow-y-auto max-h-[calc(100vh-6rem)]">
-                        {notifications.length === 0 ? (
-                            <p className="text-muted-foreground text-sm">No warnings 🎉</p>
-                        ) : (
-                            notifications.sort().map((note) => (
-                                <Card key={note.id} className="shadow-md rounded-sm p-2">
-                                    <CardContent className="px-2 flex items-start gap-2">
-                                        {levelIcon[note.level ?? 'info']}
-                                        <div>
-                                            <h3 className="text-xs font-semibold mb-1">{note.title}</h3>
-                                            <p className="text-xs text-muted-foreground">{note.message}</p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))
-                        )}
-                    </div>
-                </DrawerContent>
-            </Drawer>
-        </>
+        <button
+            onClick={onClick}
+            className="flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium bg-orange-400 hover:bg-orange-500 transition-colors cursor-pointer"
+        >
+            <TriangleAlert className="h-4 w-4 text-white" />
+            <span className="text-white">{activeCount}</span>
+        </button>
     )
 }

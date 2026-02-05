@@ -1,12 +1,18 @@
 import { useEffect, useCallback } from 'react';
 import { Node, Edge, useReactFlow } from '@xyflow/react';
 import { nanoid } from 'nanoid';
+import { analytics } from '@/lib/analytics';
 
 interface UseKeyboardShortcutsOptions {
     isReadOnly: boolean;
     onSave?: () => void;
     setNodes: React.Dispatch<React.SetStateAction<Node[]>>;
     setEdges: React.Dispatch<React.SetStateAction<Edge[]>>;
+    onUndo?: () => void;
+    onRedo?: () => void;
+    onCopy?: () => void;
+    onPaste?: () => void;
+    onCut?: () => void;
 }
 
 /**
@@ -22,6 +28,11 @@ export function useKeyboardShortcuts({
     onSave,
     setNodes,
     setEdges,
+    onUndo,
+    onRedo,
+    onCopy,
+    onPaste,
+    onCut,
 }: UseKeyboardShortcutsOptions) {
     const { getNodes, getEdges, setNodes: rfSetNodes, setEdges: rfSetEdges } = useReactFlow();
 
@@ -34,11 +45,15 @@ export function useKeyboardShortcuts({
         const nodes = getNodes();
         const edges = getEdges();
 
-        const selectedNodeIds = nodes
-            .filter((node) => node.selected)
-            .map((node) => node.id);
+        const selectedNodes = nodes.filter((node) => node.selected);
+        const selectedNodeIds = selectedNodes.map((node) => node.id);
 
         if (selectedNodeIds.length === 0) return;
+
+        // Track deletions
+        selectedNodes.forEach((node) => {
+            analytics.nodeDeleted(node.type || 'unknown', node.data?.kind as string);
+        });
 
         // Remove selected nodes
         const remainingNodes = nodes.filter((node) => !node.selected);
@@ -140,6 +155,41 @@ export function useKeyboardShortcuts({
                 return;
             }
 
+            // Ctrl+Z / Cmd+Z - Undo
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                onUndo?.();
+                return;
+            }
+
+            // Ctrl+Y / Cmd+Shift+Z - Redo
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                onRedo?.();
+                return;
+            }
+
+            // Ctrl+C / Cmd+C - Copy
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                e.preventDefault();
+                onCopy?.();
+                return;
+            }
+
+            // Ctrl+V / Cmd+V - Paste
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                e.preventDefault();
+                onPaste?.();
+                return;
+            }
+
+            // Ctrl+X / Cmd+X - Cut
+            if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+                e.preventDefault();
+                onCut?.();
+                return;
+            }
+
             // Delete/Backspace - Delete selected
             if (e.key === 'Delete' || e.key === 'Backspace') {
                 e.preventDefault();
@@ -173,7 +223,7 @@ export function useKeyboardShortcuts({
 
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [deleteSelected, duplicateSelected, deselectAll, onSave]);
+    }, [deleteSelected, duplicateSelected, deselectAll, onSave, onUndo, onRedo, onCopy, onPaste, onCut]);
 
     return {
         deleteSelected,

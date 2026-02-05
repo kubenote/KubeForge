@@ -1,11 +1,12 @@
 /**
  * Centralized Project Data Management Service
- * Handles all project creation, updating, loading, and version management
+ * Handles project mutations (create, update, delete) and imperative loads.
+ * For cached reads, use SWR hooks: useProjects, useProject, useProjectVersions.
  */
 
 import { Node, Edge } from '@xyflow/react';
 import { DEMO_MODE_MESSAGE } from '@/lib/demoMode';
-import { safeJsonParse } from '@/lib/safeJson';
+import { projectUrls } from '@/lib/apiUrls';
 
 export interface ProjectData {
   id: string;
@@ -41,30 +42,13 @@ export interface UpdateProjectRequest {
   message?: string;
 }
 
-interface ProjectVersionResponse {
-  id: string;
-  slug?: string | null;
-  projectId: string;
-  nodes: Node[] | string;
-  edges: Edge[] | string;
-  message: string | null;
-  createdAt: string;
-}
-
 export class ProjectDataService {
-  
+
   /**
    * Create a new project with initial nodes and edges
    */
   static async createProject(request: CreateProjectRequest): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Creating project', {
-      name: request.name,
-      nodeCount: request.nodes.length,
-      edgeCount: request.edges.length,
-      nodesPreview: request.nodes.slice(0, 2).map(n => ({ id: n.id, type: n.type }))
-    });
-
-    const response = await fetch('/api/projects', {
+    const response = await fetch(projectUrls.list(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -78,22 +62,13 @@ export class ProjectDataService {
     if (!response.ok) {
       const error = await response.json();
       const errorMessage = error.error || 'Failed to create project';
-      
-      // Check if it's a demo mode error and provide user-friendly message
       if (errorMessage.includes('demo mode')) {
         throw new Error(DEMO_MODE_MESSAGE);
       }
-      
       throw new Error(errorMessage);
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project created', {
-      id: result.id,
-      slug: result.slug,
-      versionCount: result.versions?.length || 0
-    });
-
     return {
       id: result.id,
       name: result.name,
@@ -109,14 +84,7 @@ export class ProjectDataService {
    * Update an existing project (creates a new version)
    */
   static async updateProject(projectId: string, request: UpdateProjectRequest): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Updating project', {
-      projectId,
-      nodeCount: request.nodes.length,
-      edgeCount: request.edges.length,
-      nodesPreview: request.nodes.slice(0, 2).map(n => ({ id: n.id, type: n.type }))
-    });
-
-    const response = await fetch(`/api/projects/${projectId}`, {
+    const response = await fetch(projectUrls.get(projectId), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -129,22 +97,13 @@ export class ProjectDataService {
     if (!response.ok) {
       const error = await response.json();
       const errorMessage = error.error || 'Failed to update project';
-      
-      // Check if it's a demo mode error and provide user-friendly message
       if (errorMessage.includes('demo mode')) {
         throw new Error(DEMO_MODE_MESSAGE);
       }
-      
       throw new Error(errorMessage);
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project updated', {
-      id: result.id,
-      slug: result.slug,
-      latestVersionSlug: result.versions?.[0]?.slug
-    });
-
     return {
       id: result.id,
       name: result.name,
@@ -157,24 +116,15 @@ export class ProjectDataService {
   }
 
   /**
-   * Load project data (latest version)
+   * Load project data (latest version) — imperative, for one-shot loads
    */
   static async loadProject(projectId: string): Promise<ProjectData> {
-    console.log('🔄 ProjectDataService: Loading project', { projectId });
-
-    const response = await fetch(`/api/projects/${projectId}`);
-    
+    const response = await fetch(projectUrls.get(projectId));
     if (!response.ok) {
       throw new Error('Failed to load project');
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Project loaded', {
-      id: result.id,
-      nodeCount: result.nodes?.length || 0,
-      edgeCount: result.edges?.length || 0
-    });
-
     return {
       id: result.id,
       name: result.name,
@@ -187,25 +137,15 @@ export class ProjectDataService {
   }
 
   /**
-   * Load a specific version of a project
+   * Load a specific version of a project — imperative, for one-shot loads
    */
   static async loadProjectVersion(projectId: string, versionId: string): Promise<ProjectVersion> {
-    console.log('🔄 ProjectDataService: Loading project version', { projectId, versionId });
-
-    const response = await fetch(`/api/projects/${projectId}/versions/${versionId}`);
-    
+    const response = await fetch(projectUrls.version(projectId, versionId));
     if (!response.ok) {
       throw new Error('Failed to load project version');
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Version loaded', {
-      id: result.id,
-      slug: result.slug,
-      nodeCount: result.nodes?.length || 0,
-      edgeCount: result.edges?.length || 0
-    });
-
     return {
       id: result.id,
       slug: result.slug,
@@ -218,93 +158,42 @@ export class ProjectDataService {
   }
 
   /**
-   * Get all versions for a project
-   */
-  static async getProjectVersions(projectId: string, limit = 20): Promise<{ versions: ProjectVersion[], totalVersions: number }> {
-    console.log('🔄 ProjectDataService: Getting project versions', { projectId, limit });
-
-    const response = await fetch(`/api/projects/${projectId}/versions?limit=${limit}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to load project versions');
-    }
-
-    const result = await response.json();
-    console.log('✅ ProjectDataService: Versions loaded', {
-      count: result.versions?.length || 0,
-      total: result.totalVersions
-    });
-
-    return {
-      versions: result.versions.map((v: ProjectVersionResponse) => ({
-        id: v.id,
-        slug: v.slug,
-        projectId: v.projectId,
-        nodes: Array.isArray(v.nodes) ? v.nodes : safeJsonParse<Node[]>(v.nodes as string, []),
-        edges: Array.isArray(v.edges) ? v.edges : safeJsonParse<Edge[]>(v.edges as string, []),
-        message: v.message,
-        createdAt: v.createdAt,
-      })),
-      totalVersions: result.totalVersions,
-    };
-  }
-
-  /**
    * Delete a project
    */
   static async deleteProject(projectId: string): Promise<void> {
-    console.log('🗑️ ProjectDataService: Deleting project', { projectId });
-
-    const response = await fetch(`/api/projects/${projectId}`, {
+    const response = await fetch(projectUrls.get(projectId), {
       method: 'DELETE',
     });
 
     if (!response.ok) {
       const error = await response.json();
       const errorMessage = error.error || 'Failed to delete project';
-      
-      // Check if it's a demo mode error and provide user-friendly message
       if (errorMessage.includes('demo mode')) {
         throw new Error(DEMO_MODE_MESSAGE);
       }
-      
       throw new Error(errorMessage);
     }
-
-    console.log('✅ ProjectDataService: Project deleted successfully');
   }
 
   /**
    * Delete a project version
    */
   static async deleteVersion(projectId: string, versionId: string): Promise<{ newLatestVersion?: { id: string; slug?: string | null; createdAt: string } | null }> {
-    console.log('🗑️ ProjectDataService: Deleting version', { projectId, versionId });
-
-    const response = await fetch(`/api/projects/${projectId}/versions/${versionId}`, {
+    const response = await fetch(projectUrls.version(projectId, versionId), {
       method: 'DELETE',
     });
 
     if (!response.ok) {
       const error = await response.json();
       const errorMessage = error.error || 'Failed to delete version';
-      
-      // Check if it's a demo mode error and provide user-friendly message
       if (errorMessage.includes('demo mode')) {
         throw new Error(DEMO_MODE_MESSAGE);
       }
-      
       throw new Error(errorMessage);
     }
 
     const result = await response.json();
-    console.log('✅ ProjectDataService: Version deleted successfully', {
-      deletedVersionId: result.deletedVersionId,
-      newLatestVersion: result.newLatestVersion
-    });
-
-    return {
-      newLatestVersion: result.newLatestVersion
-    };
+    return { newLatestVersion: result.newLatestVersion };
   }
 
   /**
@@ -313,54 +202,27 @@ export class ProjectDataService {
   static validateProjectData(nodes: Node[], edges: Edge[]): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
 
-    // Validate nodes
     if (!Array.isArray(nodes)) {
       errors.push('Nodes must be an array');
     } else {
       nodes.forEach((node, index) => {
-        if (!node.id) {
-          errors.push(`Node at index ${index} is missing an ID`);
-        }
-        if (!node.type) {
-          errors.push(`Node ${node.id} is missing a type`);
-        }
+        if (!node.id) errors.push(`Node at index ${index} is missing an ID`);
+        if (!node.type) errors.push(`Node ${node.id} is missing a type`);
         if (!node.position || typeof node.position.x !== 'number' || typeof node.position.y !== 'number') {
           errors.push(`Node ${node.id} has invalid position`);
         }
       });
     }
 
-    // Validate edges
     if (!Array.isArray(edges)) {
       errors.push('Edges must be an array');
     } else {
       edges.forEach((edge, index) => {
-        if (!edge.id) {
-          errors.push(`Edge at index ${index} is missing an ID`);
-        }
-        if (!edge.source || !edge.target) {
-          errors.push(`Edge ${edge.id} is missing source or target`);
-        }
+        if (!edge.id) errors.push(`Edge at index ${index} is missing an ID`);
+        if (!edge.source || !edge.target) errors.push(`Edge ${edge.id} is missing source or target`);
       });
     }
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
+    return { isValid: errors.length === 0, errors };
   }
-}
-
-/**
- * React hook for project data management
- */
-export function useProjectData() {
-  return {
-    createProject: ProjectDataService.createProject,
-    updateProject: ProjectDataService.updateProject,
-    loadProject: ProjectDataService.loadProject,
-    loadProjectVersion: ProjectDataService.loadProjectVersion,
-    getProjectVersions: ProjectDataService.getProjectVersions,
-    validateProjectData: ProjectDataService.validateProjectData,
-  };
 }

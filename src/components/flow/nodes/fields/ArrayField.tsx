@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { getTypeColor } from "../flow.node.types"
 import { publish } from "@/lib/eventBus"
@@ -14,20 +13,21 @@ interface ArrayFieldProps extends BaseFieldProps {
     FieldComponent: React.ComponentType<BaseFieldProps>
 }
 
-export const ArrayField = ({ 
-    label, 
-    value, 
-    schema, 
-    path, 
-    nodeId, 
+export const ArrayField = ({
+    label,
+    value,
+    schema,
+    path,
+    nodeId,
     edges,
     mode = 'kind',
     readOnly = false,
     kind,
     onChange,
     valueType,
-    FieldComponent
-}: ArrayFieldProps): ComplexFieldResult => {
+    FieldComponent,
+    depth = 0
+}: ArrayFieldProps & { depth?: number }): ComplexFieldResult => {
     const [collapsed, setCollapsed] = useState(mode === 'kind')
 
     const handleAddItem = () => {
@@ -57,6 +57,7 @@ export const ArrayField = ({
                         edges={edges}
                         mode={mode}
                         readOnly={readOnly}
+                        depth={depth + 1}
                     />
                 )
             })
@@ -73,6 +74,11 @@ export const ArrayField = ({
                     edges={edges}
                     mode={mode}
                     readOnly={readOnly}
+                    depth={depth + 1}
+                    onRemove={() => {
+                        const updated = (value as unknown[]).filter((_, i) => i !== index)
+                        onChange(path, updated)
+                    }}
                 />
             ))
         }
@@ -82,48 +88,31 @@ export const ArrayField = ({
         // Inline content that goes in the flex row
         inlineContent: (
             <>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-4 h-4 p-0 absolute left-[-8] top-1/2 -translate-y-1/2"
+                <button
+                    className="shrink-0 w-4 h-4 flex items-center justify-center rounded hover:bg-muted order-0"
                     onClick={() => setCollapsed(!collapsed)}
                 >
                     {collapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                </Button>
+                </button>
 
-                {mode === 'objectRef' && (
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-4 h-4 p-0"
+                {mode === 'objectRef' && !readOnly && (
+                    <button
+                        className="shrink-0 w-4 h-4 flex items-center justify-center rounded text-xs hover:bg-muted order-2"
                         onClick={handleAddItem}
-                        disabled={readOnly}
                     >
                         +
-                    </Button>
+                    </button>
                 )}
 
-                <span className={`text-xs ml-2 ${getTypeColor(valueType)}`}>
+                <span className={`text-xs shrink-0 ${getTypeColor(valueType)} order-2`}>
                     {valueType}
-                </span>
-                <span className="text-xs ml-auto text-foreground">
-                    {"["}
                 </span>
             </>
         ),
         // Expanded content that goes below the flex row
         expandedContent: !collapsed && (
-            <div className="space-y-1">
-                <div className={mode === 'kind' ? "ml-2" : "ml-4"}>
-                    {renderArrayFields()}
-                </div>
-                <Button
-                    onClick={() => setCollapsed(!collapsed)}
-                    variant="ghost"
-                    size="sm"
-                >
-                    <span className="text-xs ml-auto text-foreground">{"]"}</span>
-                </Button>
+            <div className="ml-[11px] pl-3 space-y-1 pb-1 border-l border-border">
+                {renderArrayFields()}
             </div>
         )
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -14,6 +14,7 @@ import { validateProjectName, slugify } from '@/lib/slugify';
 import { useProject } from '@/contexts/ProjectContext';
 import { useProjectDataManager } from '@/hooks/useProjectDataManager';
 import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useProjects } from '@/hooks/useProjects';
 
 interface Project {
   id: string;
@@ -42,27 +43,12 @@ export function ProjectManager({ currentNodes, currentEdges, onLoadProject, curr
   const { navigateToProject } = useProject();
   const dataManager = useProjectDataManager();
   const { isDemoMode } = useDemoMode();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const { data: projectsData, refetch: refetchProjects } = useProjects();
+  const projects = (projectsData || []) as Project[];
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [saveMessage, setSaveMessage] = useState('');
   const [nameError, setNameError] = useState('');
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
-    try {
-      const response = await fetch('/api/projects');
-      if (response.ok) {
-        const projectsData = await response.json();
-        setProjects(projectsData);
-      }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
-    }
-  };
 
   const handleSaveProject = async () => {
     if (!projectName.trim()) return;
@@ -82,13 +68,6 @@ export function ProjectManager({ currentNodes, currentEdges, onLoadProject, curr
 
       // Get current state from Flow component if available, otherwise use props
       const currentState = getCurrentNodesEdges ? getCurrentNodesEdges() : { nodes: currentNodes, edges: currentEdges };
-      console.log('🔄 ProjectManager: Using current state', {
-        fromCallback: !!getCurrentNodesEdges,
-        nodeCount: currentState.nodes.length,
-        edgeCount: currentState.edges.length,
-        nodesPreview: currentState.nodes.slice(0, 2).map(n => ({ id: n.id, type: n.type, pos: n.position }))
-      });
-
       const isUpdate = currentProjectId && projects.some(p => p.id === currentProjectId);
       const message = saveMessage || (isUpdate ? 'Updated project' : 'Initial version');
 
@@ -104,7 +83,7 @@ export function ProjectManager({ currentNodes, currentEdges, onLoadProject, curr
       setSaveDialogOpen(false);
       setProjectName('');
       setSaveMessage('');
-      fetchProjects();
+      refetchProjects(true);
       
       // Notify parent component
       if (onLoadProject) {

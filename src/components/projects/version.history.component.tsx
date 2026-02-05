@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,11 +20,14 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { History, RotateCcw, Search, SlidersHorizontal, Save } from 'lucide-react';
+import { RotateCcw, Search, SlidersHorizontal, Save } from 'lucide-react';
 import { Node, Edge } from '@xyflow/react';
 import { ProjectDataService } from '@/services/project.data.service';
+import { useProjectVersions } from '@/hooks/useProjectVersions';
 import { DeleteVersionDialog } from './delete-version-dialog';
 import { VersionDiffDialog } from '@/components/dialog/dialog.version-diff.component';
+import { toast } from 'sonner';
+import { formatDateParts } from '@/lib/format';
 
 interface ProjectVersion {
   id: string;
@@ -61,10 +64,8 @@ const COLUMNS: ColumnConfig[] = [
 ];
 
 export function VersionHistory({ projectId, projectName, onLoadVersion, externalOpen, onExternalOpenChange, currentVersionId }: VersionHistoryProps) {
-  const [versions, setVersions] = useState<ProjectVersion[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [internalDialogOpen, setInternalDialogOpen] = useState(false);
-  const [totalVersions, setTotalVersions] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAutoSave, setShowAutoSave] = useState(true);
   const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(
@@ -75,68 +76,57 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
   const dialogOpen = externalOpen !== undefined ? externalOpen : internalDialogOpen;
   const setDialogOpen = onExternalOpenChange || setInternalDialogOpen;
 
-  useEffect(() => {
-    if (dialogOpen && projectId) {
-      fetchVersions();
-    }
-  }, [dialogOpen, projectId]);
+  // SWR-powered version fetching (only when dialog is open)
+  const { data: versionsData, isLoading: swrLoading, mutate: mutateVersions } = useProjectVersions(
+    dialogOpen ? projectId : null,
+    50
+  );
 
-  const fetchVersions = async () => {
-    setLoading(true);
-    try {
-      const data = await ProjectDataService.getProjectVersions(projectId, 50);
-      setVersions(data.versions.map(v => ({
-        ...v,
-        nodes: JSON.stringify(v.nodes),
-        edges: JSON.stringify(v.edges)
-      })));
-      setTotalVersions(data.totalVersions);
-    } catch (error) {
-      console.error('Failed to fetch versions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const versions: ProjectVersion[] = useMemo(() => {
+    if (!versionsData) return [];
+    return versionsData.versions.map(v => ({
+      ...v,
+      nodes: JSON.stringify(v.nodes),
+      edges: JSON.stringify(v.edges),
+    }));
+  }, [versionsData]);
+
+  const totalVersions = versionsData?.totalVersions ?? 0;
+  const loading = swrLoading || actionLoading;
 
   const handleLoadVersion = async (version: ProjectVersion) => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const versionData = await ProjectDataService.loadProjectVersion(projectId, version.id);
       onLoadVersion(versionData.nodes, versionData.edges, version.id, { id: version.id, slug: version.slug });
       setDialogOpen(false);
     } catch (error) {
       console.error('Failed to load version:', error);
-      alert('Failed to load version');
+      toast.error('Failed to load version');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const loadLatestVersion = async () => {
-    setLoading(true);
+    setActionLoading(true);
     try {
       const project = await ProjectDataService.loadProject(projectId);
       onLoadVersion(project.nodes || [], project.edges || [], null);
       setDialogOpen(false);
     } catch (error) {
       console.error('Failed to load latest version:', error);
-      alert('Failed to load latest version');
+      toast.error('Failed to load latest version');
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   const handleVersionDeleted = async () => {
-    await fetchVersions();
+    await mutateVersions();
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-  };
+  const formatDate = formatDateParts;
 
   const isAutoSave = (message: string | null): boolean => {
     return message?.toLowerCase().includes('auto-save') ||
@@ -189,11 +179,6 @@ export function VersionHistory({ projectId, projectName, onLoadVersion, external
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <History className="w-4 h-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent className="w-fit min-w-[600px] max-w-[90vw] max-h-[85vh]">
         <DialogHeader>
           <DialogTitle>Version History - {projectName}</DialogTitle>

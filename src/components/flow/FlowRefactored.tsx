@@ -6,6 +6,11 @@ import '@xyflow/react/dist/style.css';
 import { useVersion } from '../../providers/VersionProvider';
 import { KindNode } from './nodes/node.kind.component';
 import { ObjectRefNode } from './nodes/node.objectref.component';
+import { StorageBucketNode } from './nodes/node.storagebucket.component';
+import {
+  SecretRefNode, RegistryNode, ConfigMapNode, IngressNode,
+  DatabaseNode, MessageQueueNode, LoggingSidecarNode, MonitoringNode, ServiceAccountNode
+} from './nodes/node.integration.component';
 import ContextMenu from './flow.contextmenu.component';
 import { TopProgressBar } from '../ui/progress-bar';
 import { ReadOnlyProvider } from '@/contexts/ReadOnlyContext';
@@ -16,10 +21,21 @@ import { useFlowInteractions } from './hooks/useFlowInteractions';
 import { useFlowHistory } from './hooks/useFlowHistory';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useClipboard } from './hooks/useClipboard';
+import { analytics } from '@/lib/analytics';
 
 const nodeTypes = {
   KindNode: KindNode,
-  ObjectRefNode: ObjectRefNode
+  ObjectRefNode: ObjectRefNode,
+  StorageBucketNode: StorageBucketNode,
+  SecretRefNode: SecretRefNode,
+  RegistryNode: RegistryNode,
+  ConfigMapNode: ConfigMapNode,
+  IngressNode: IngressNode,
+  DatabaseNode: DatabaseNode,
+  MessageQueueNode: MessageQueueNode,
+  LoggingSidecarNode: LoggingSidecarNode,
+  MonitoringNode: MonitoringNode,
+  ServiceAccountNode: ServiceAccountNode,
 };
 
 interface FlowProps {
@@ -35,6 +51,7 @@ interface FlowProps {
   currentVersionSlug?: string | null;
   readOnly?: boolean;
   onSave?: () => void;
+  onOpenWarnings?: () => void;
 }
 
 export default function FlowRefactored({
@@ -49,7 +66,8 @@ export default function FlowRefactored({
   skipTemplate = false,
   currentVersionSlug = null,
   readOnly = false,
-  onSave
+  onSave,
+  onOpenWarnings
 }: FlowProps) {
   const { version } = useVersion();
 
@@ -77,7 +95,9 @@ export default function FlowRefactored({
     onPaneClick,
     onNodesChange,
     onEdgesChange,
-    onConnect
+    onConnect,
+    handlePluginConnect,
+    handlePluginEdgeDelete,
   } = useFlowInteractions();
 
   // Determine if we're in read-only mode
@@ -162,66 +182,17 @@ export default function FlowRefactored({
     setEdges,
   });
 
-  // Keyboard shortcuts for undo/redo and copy/paste
-  useEffect(() => {
-    if (isReadOnly) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target.isContentEditable
-      ) {
-        return;
-      }
-
-      // Ctrl+Z or Cmd+Z for undo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-        e.preventDefault();
-        handleUndo();
-        return;
-      }
-
-      // Ctrl+Y or Cmd+Shift+Z for redo
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-        e.preventDefault();
-        handleRedo();
-        return;
-      }
-
-      // Ctrl+C / Cmd+C - Copy
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
-        e.preventDefault();
-        copySelected();
-        return;
-      }
-
-      // Ctrl+V / Cmd+V - Paste
-      if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
-        e.preventDefault();
-        pasteFromClipboard();
-        return;
-      }
-
-      // Ctrl+X / Cmd+X - Cut
-      if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
-        e.preventDefault();
-        cutSelected();
-        return;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isReadOnly, handleUndo, handleRedo, copySelected, pasteFromClipboard, cutSelected]);
-
-  // Keyboard shortcuts for delete, duplicate, save, escape
+  // All keyboard shortcuts consolidated into a single listener
   useKeyboardShortcuts({
     isReadOnly,
     onSave,
     setNodes,
     setEdges,
+    onUndo: handleUndo,
+    onRedo: handleRedo,
+    onCopy: copySelected,
+    onPaste: pasteFromClipboard,
+    onCut: cutSelected,
   });
 
   return (
@@ -233,8 +204,41 @@ export default function FlowRefactored({
           edges={edges}
           nodeTypes={nodeTypes}
           onNodesChange={isReadOnly ? undefined : (changes) => setNodes(onNodesChange(changes))}
-          onEdgesChange={isReadOnly ? undefined : (changes) => setEdges(onEdgesChange(changes))}
-          onConnect={isReadOnly ? undefined : (params) => setEdges(onConnect(params))}
+          onEdgesChange={isReadOnly ? undefined : (changes) => {
+            // Detect removed edges for plugin slot cleanup
+            const removeChanges = changes.filter((c) => c.type === 'remove');
+            if (removeChanges.length > 0) {
+              // Get current edges before applying changes to find what was removed
+              setEdges((currentEdges) => {
+                const removedIds = new Set(removeChanges.map((c: any) => c.id));
+                const removedEdges = currentEdges.filter((e) => removedIds.has(e.id));
+                if (removedEdges.length > 0) {
+                  setNodes((currentNodes) => handlePluginEdgeDelete(removedEdges, currentNodes));
+                }
+                return onEdgesChange(changes)(currentEdges);
+              });
+              return;
+            }
+            setEdges(onEdgesChange(changes));
+          }}
+          onConnect={isReadOnly ? undefined : (params) => {
+            const isPluginHandle = params.targetHandle?.startsWith('target-plugin-');
+            if (isPluginHandle && params.source) {
+              // Rewrite the edge so it targets the filled-slot handle instead of -empty
+              const rewritten = {
+                ...params,
+                targetHandle: `target-plugin-${params.target}-${params.source}`,
+              };
+              setEdges(onConnect(rewritten));
+              setNodes((currentNodes) => handlePluginConnect(rewritten, currentNodes));
+            } else {
+              setEdges(onConnect(params));
+            }
+            // Track connection
+            const sourceNode = nodes.find(n => n.id === params.source);
+            const targetNode = nodes.find(n => n.id === params.target);
+            analytics.nodesConnected(sourceNode?.type || 'unknown', targetNode?.type || 'unknown');
+          }}
           onPaneClick={onPaneClick}
           onNodeContextMenu={isReadOnly ? undefined : onNodeContextMenu}
           nodesDraggable={!isReadOnly}
@@ -243,7 +247,7 @@ export default function FlowRefactored({
           fitView
         >
           <Background variant={BackgroundVariant.Dots} />
-          {menu && <ContextMenu onClick={onPaneClick} {...menu} />}
+          {menu && <ContextMenu onClick={onPaneClick} onOpenWarnings={onOpenWarnings} {...menu} />}
         </ReactFlow>
       </ReadOnlyProvider>
 
