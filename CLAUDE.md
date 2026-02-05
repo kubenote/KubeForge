@@ -38,6 +38,12 @@ src/
 prisma/               # Database schema & migrations
 scripts/              # CLI scripts (schema ingestion, setup)
 schema-cache/         # Kubernetes JSON schemas (git submodule)
+
+## Related Repositories
+
+- **KubeForge-Agent** — Kubernetes cluster agent (polling + Supabase Realtime)
+  - Repo: https://github.com/kubenote/KubeForge-Agent
+  - Local path: `/home/ubuntu/KubeForge-Agent`
 ```
 
 ## Key Commands

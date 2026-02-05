@@ -14,6 +14,7 @@ interface AutoSaveIndicatorProps {
     lastSaved: Date | null;
     error: string | null;
     className?: string;
+    onClick?: () => void;
 }
 
 function formatLastSaved(date: Date | null): string {
@@ -36,6 +37,7 @@ export function AutoSaveIndicator({
     lastSaved,
     error,
     className = '',
+    onClick,
 }: AutoSaveIndicatorProps) {
     const getStatusIcon = () => {
         switch (status) {
@@ -87,7 +89,9 @@ export function AutoSaveIndicator({
             <Tooltip>
                 <TooltipTrigger asChild>
                     <div
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        onClick={onClick}
+                        role={onClick ? 'button' : undefined}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors ${onClick ? 'cursor-pointer hover:ring-1 hover:ring-border' : ''} ${
                             status === 'error'
                                 ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
                                 : status === 'saved'

@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { Node, Edge, useReactFlow } from '@xyflow/react';
 import { nanoid } from 'nanoid';
+import { analytics } from '@/lib/analytics';
 
 interface ClipboardData {
     nodes: Node[];
@@ -54,6 +55,9 @@ export function useClipboard({
         // Store in local ref
         clipboardRef.current = clipboardData;
 
+        // Track copy
+        analytics.nodesCopied(selectedNodes.length);
+
         // Also try to write to system clipboard
         try {
             await navigator.clipboard.writeText(JSON.stringify(clipboardData));
@@ -82,19 +86,28 @@ export function useClipboard({
         if (!clipboardData) {
             try {
                 const text = await navigator.clipboard.readText();
-                const parsed = JSON.parse(text);
-                if (parsed.nodes && Array.isArray(parsed.nodes)) {
-                    clipboardData = parsed;
+                try {
+                    const parsed = JSON.parse(text);
+                    if (parsed?.nodes && Array.isArray(parsed.nodes)) {
+                        clipboardData = parsed;
+                    }
+                } catch {
+                    // Clipboard contains non-JSON text — this is normal, not an error
                 }
-            } catch (err) {
-                // Try localStorage fallback
+            } catch {
+                // System clipboard API failed — try localStorage fallback
                 try {
                     const stored = localStorage.getItem(CLIPBOARD_KEY);
                     if (stored) {
-                        clipboardData = JSON.parse(stored);
+                        try {
+                            clipboardData = JSON.parse(stored);
+                        } catch {
+                            // Corrupted localStorage data — clear it
+                            localStorage.removeItem(CLIPBOARD_KEY);
+                        }
                     }
-                } catch (storageErr) {
-                    console.error('Failed to read from clipboard:', storageErr);
+                } catch {
+                    // localStorage not available
                 }
             }
         }
@@ -136,6 +149,9 @@ export function useClipboard({
         });
 
         setEdges((prev) => [...prev, ...newEdges]);
+
+        // Track paste
+        analytics.nodesPasted(newNodes.length);
     }, [isReadOnly, setNodes, setEdges]);
 
     /**

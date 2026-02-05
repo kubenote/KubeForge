@@ -7,13 +7,31 @@ const WarningContext = createContext<WarningContextType | undefined>(undefined);
 
 export const WarningProvider = ({ children }: { children: React.ReactNode }) => {
     const [notifications, setNotificationsState] = useState<Notification[]>([])
+    const [suppressedKeys, setSuppressedKeys] = useState<Set<string>>(new Set())
+    const [filterNodeId, setFilterNodeId] = useState<string | null>(null)
 
     const setNotifications = useCallback((data: Notification[]) => {
         setNotificationsState(data);
     }, []);
 
+    const suppressWarning = useCallback((key: string) => {
+        setSuppressedKeys(prev => {
+            const next = new Set(prev)
+            next.add(key)
+            return next
+        })
+    }, [])
+
+    const unsuppressWarning = useCallback((key: string) => {
+        setSuppressedKeys(prev => {
+            const next = new Set(prev)
+            next.delete(key)
+            return next
+        })
+    }, [])
+
     return (
-        <WarningContext.Provider value={{ notifications, setNotifications }}>
+        <WarningContext.Provider value={{ notifications, setNotifications, suppressedKeys, suppressWarning, unsuppressWarning, filterNodeId, setFilterNodeId }}>
             {children}
         </WarningContext.Provider>
     );

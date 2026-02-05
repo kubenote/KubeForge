@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     // Check if demo mode is enabled
     checkDemoMode();
 
-    const { name, nodes, edges, message } = await req.json();
+    const { name, nodes, edges, message, gitSource } = await req.json();
 
     if (!name || !nodes || !edges) {
       return NextResponse.json(
@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
     const project = await repo.create({
       name: validatedName,
       slug,
+      gitSource: gitSource || undefined,
       initialVersion: {
         slug: await generateUniqueVersionSlug(),
         nodes: JSON.stringify(nodes),

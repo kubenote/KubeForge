@@ -13,7 +13,7 @@ export const FieldLabel = ({ label, schema, isComplex = false }: FieldLabelProps
     return (
         <Tooltip>
             <TooltipTrigger asChild>
-                <span className={`text-xs text-muted-foreground ${isComplex && "pl-2"}`}>
+                <span className={`text-xs text-muted-foreground shrink-0 ${isComplex ? 'order-1' : ''}`}>
                     {label}
                 </span>
             </TooltipTrigger>

@@ -10,13 +10,14 @@ export async function GET(req: NextRequest) {
   if (schemasParam) {
     // Use loadSpecificSchemas if `schemas` are provided
     schemas = await loadSpecificSchemas(version, schemasParam.toLowerCase().split(","), fullSchema);
-    return NextResponse.json(JSON.stringify(schemas));
+    const schemasRes = NextResponse.json(JSON.stringify(schemas));
+    schemasRes.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return schemasRes;
   } else {
-    //const schemas2 = await loadSchemas(version, false);
     const schemas3 = await loadGvks(version);
-    //schemas = await loadSchemas(version);
-    return NextResponse.json({ gvks: schemas3 });
-
+    const gvksRes = NextResponse.json({ gvks: schemas3 });
+    gvksRes.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return gvksRes;
   }
 
 

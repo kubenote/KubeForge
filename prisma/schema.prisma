@@ -18,6 +18,9 @@ model Project {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   versions          ProjectVersion[]
+  gitSource         Json?        // Git source metadata (connectionId, repo, branch, folder, originalFiles)
+  warningCount      Int          @default(0) @map("warning_count")
+  errorCount        Int          @default(0) @map("error_count")
   hostedYamls       HostedYaml[]
 
   @@map("projects")
@@ -42,12 +45,14 @@ model HostedYaml {
   id        String   @id @default(cuid())
   projectId String?
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  orgId     String?  // Organization that owns this hosted yaml
   name      String?  // Optional friendly name
   yamlHash  String   // Hash of content for deduplication
   viewCount Int      @default(0)
   createdAt DateTime @default(now())
   lastAccessedAt DateTime?
 
+  @@index([orgId])
   @@index([yamlHash])
   @@index([createdAt])
   @@map("hosted_yamls")

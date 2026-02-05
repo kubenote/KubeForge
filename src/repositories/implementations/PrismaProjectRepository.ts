@@ -26,7 +26,7 @@ export class PrismaProjectRepository implements IProjectRepository {
         },
       },
       orderBy: { updatedAt: 'desc' },
-    });
+    }) as unknown as ProjectWithLatestVersion[];
   }
 
   async findById(id: string): Promise<ProjectWithVersions | null> {
@@ -35,9 +35,18 @@ export class PrismaProjectRepository implements IProjectRepository {
       include: {
         versions: {
           orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            slug: true,
+            createdAt: true,
+            message: true,
+            nodes: true,
+            edges: true,
+          },
         },
       },
-    });
+    }) as unknown as ProjectWithVersions | null;
   }
 
   async findBySlug(slug: string): Promise<ProjectWithVersions | null> {
@@ -46,9 +55,18 @@ export class PrismaProjectRepository implements IProjectRepository {
       include: {
         versions: {
           orderBy: { createdAt: 'desc' },
+          take: 10,
+          select: {
+            id: true,
+            slug: true,
+            createdAt: true,
+            message: true,
+            nodes: true,
+            edges: true,
+          },
         },
       },
-    });
+    }) as unknown as ProjectWithVersions | null;
   }
 
   async create(data: ProjectCreateInput): Promise<ProjectWithLatestVersion> {
@@ -57,6 +75,7 @@ export class PrismaProjectRepository implements IProjectRepository {
         name: data.name,
         slug: data.slug,
         kubernetesVersion: data.kubernetesVersion,
+        gitSource: data.gitSource as unknown as string | undefined,
         versions: {
           create: {
             slug: data.initialVersion.slug,
@@ -72,7 +91,7 @@ export class PrismaProjectRepository implements IProjectRepository {
           take: 1,
         },
       },
-    });
+    }) as unknown as ProjectWithLatestVersion;
   }
 
   async update(id: string, data: ProjectUpdateInput): Promise<ProjectWithLatestVersion> {
@@ -98,7 +117,7 @@ export class PrismaProjectRepository implements IProjectRepository {
           take: 1,
         },
       },
-    });
+    }) as unknown as ProjectWithLatestVersion;
   }
 
   async delete(id: string): Promise<{ id: string; name: string }> {
@@ -131,7 +150,7 @@ export class PrismaProjectRepository implements IProjectRepository {
         ...(isSlug ? { slug: versionIdOrSlug } : { id: versionIdOrSlug }),
       },
       include: { project: true },
-    });
+    }) as unknown as ProjectVersionWithProject | null;
   }
 
   async deleteVersion(versionId: string): Promise<void> {

@@ -12,45 +12,36 @@ import {
 import { BoxIcon, InfoIcon } from "lucide-react";
 import { k8sIcons } from "../../data/k8sIcons";
 import { useNodeProvider } from "@/providers/NodeProvider";
-import { GVK, SchemaData, Schema } from "@/types";
-
-interface SchemaInfoObject {
-    name: string;
-    data: Schema | undefined;
-}
+import { GVK } from "@/types";
 
 interface StandardModeSidebarProps {
     schemaGvks: GVK[];
     searchQuery: string;
-    preRefSchemaData: SchemaData;
-    onInfoClick: (loadObject: SchemaInfoObject) => void;
+    onInfoClick: (kind: string) => void;
 }
 
 export function StandardModeSidebar({
     schemaGvks,
     searchQuery,
-    preRefSchemaData,
     onInfoClick
 }: StandardModeSidebarProps) {
     const { addNode } = useNodeProvider();
     const matchedKeys = new Set<string>();
 
     const handleAddNode = (kind: string, version: string) => {
-        addNode({ 
-            data: { 
-                type: kind, 
-                kind, 
-                values: { kind, apiVersion: version } 
-            } 
+        addNode({
+            data: {
+                type: kind,
+                kind,
+                values: { kind, apiVersion: version }
+            }
         });
     };
 
     const handleInfoClick = (e: React.MouseEvent, kind: string) => {
         e.preventDefault();
-        onInfoClick({ 
-            name: kind, 
-            data: preRefSchemaData[kind.toLowerCase()] 
-        });
+        e.stopPropagation();
+        onInfoClick(kind);
     };
 
     const buildKindMap = (gvks: GVK[]) => {
@@ -105,12 +96,11 @@ export function StandardModeSidebar({
                     <SidebarGroup key={groupLabel}>
                         <SidebarGroupLabel>{groupLabel}</SidebarGroupLabel>
                         <SidebarGroupContent>
-                            <SidebarMenu className="max-h-[calc(100vh-210px)] overflow-y-auto">
+                            <SidebarMenu>
                                 {matchedGroupItems.map(({ kind, icon, group, version, ...rest }) => (
                                     <SidebarMenuItem key={group + kind}>
                                         <SidebarMenuButton
                                             onClick={(e) => {
-                                                console.log(kind);
                                                 e.preventDefault();
                                                 handleAddNode(kind, version);
                                             }}
@@ -125,7 +115,7 @@ export function StandardModeSidebar({
                                                 <span className="truncate">{kind}</span>
                                                 <span
                                                     onClick={(e) => handleInfoClick(e, kind)}
-                                                    className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-opacity"
+                                                    className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-blue-500 transition-opacity"
                                                 >
                                                     <InfoIcon size={15} />
                                                 </span>

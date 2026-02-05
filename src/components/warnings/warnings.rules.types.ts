@@ -1,13 +1,16 @@
 export type NodeWarning = {
     id: number
+    ruleId: string
     title: string
     message: string
     level?: 'info' | 'warn' | 'danger',
-    nodes?: any
+    nodes?: any,
+    fieldPath?: string
 }
 
 type RuleFunction = (node: any, index: number, context?: any) => NodeWarning | null
 import singletonKinds from '../data/schema-singleton.json'
+import { preDeploymentRules } from './warnings.predeployment.rules'
 
 const singletonKindRule: RuleFunction = (node, index, context) => {
     const kind = node.data?.kind?.toLowerCase()
@@ -24,6 +27,7 @@ const singletonKindRule: RuleFunction = (node, index, context) => {
     if (context.seenKinds[kind].length === 2) {
         return {
             id: 9000 + index,
+            ruleId: 'singleton-kind',
             nodes: context.seenKinds[kind],
             title: `Multiple "${kind}" detected`,
             message: `Usually one "${kind}" kind is used per deployment.`,
@@ -70,6 +74,7 @@ const overlappingNodeRule: RuleFunction = (() => {
                         seen.add(key)
                         warnings.push({
                             id: 8000 + warnings.length,
+                            ruleId: 'overlapping-nodes',
                             title: 'Overlapping Nodes',
                             message: `Node "${a.data.type}" overlaps with "${b.data.type ?? "ObjectRef"}".`,
                             nodes: [a.id, b.id],
@@ -93,6 +98,7 @@ export const nodeWarningRules: RuleFunction[] = [
         if (node.type === 'ObjectRefNode' && Object.keys(values).length === 0) {
             return {
                 id: index + 1,
+                ruleId: 'empty-objectref',
                 nodes: [node.id],
                 title: `Empty objectRef for "${node?.data?.kind}"`,
                 message: `Node "objectRef.${node?.data?.kind}" has no values configured.`,
@@ -102,6 +108,7 @@ export const nodeWarningRules: RuleFunction[] = [
         return null
     },
     //singletonKindRule,
-    overlappingNodeRule
+    overlappingNodeRule,
+    ...preDeploymentRules
 ]
 

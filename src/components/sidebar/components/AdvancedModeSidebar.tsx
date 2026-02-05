@@ -11,59 +11,50 @@ import {
 } from "@/components/ui/sidebar"
 import { BoxIcon, InfoIcon } from "lucide-react";
 import { useNodeProvider } from "@/providers/NodeProvider";
-import { GVK, SchemaData, Schema } from "@/types";
-
-interface SchemaInfoObject {
-    name: GVK;
-    data: Schema | undefined;
-}
+import { GVK, SchemaData } from "@/types";
 
 interface AdvancedModeSidebarProps {
     schemaGvks: GVK[];
     searchQuery: string;
     schemaData: SchemaData;
-    preRefSchemaData: SchemaData;
-    onInfoClick: (loadObject: SchemaInfoObject) => void;
+    onInfoClick: (gvk: GVK) => void;
 }
 
 export function AdvancedModeSidebar({
     schemaGvks,
     searchQuery,
     schemaData,
-    preRefSchemaData,
     onInfoClick
 }: AdvancedModeSidebarProps) {
     const { addNode } = useNodeProvider();
 
-    const filteredSchemas = schemaGvks.filter((item) => 
+    const filteredSchemas = schemaGvks.filter((item) =>
         item.kind.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const handleAddNode = (item: { kind: string; version: string }) => {
-        addNode({ 
-            data: { 
-                type: item.kind, 
-                kind: item.kind, 
-                values: { kind: item.kind, apiVersion: item.version } 
-            } 
+        addNode({
+            data: {
+                type: item.kind,
+                kind: item.kind,
+                values: { kind: item.kind, apiVersion: item.version }
+            }
         });
     };
 
     const handleInfoClick = (e: React.MouseEvent, item: GVK) => {
         e.preventDefault();
-        onInfoClick({
-            name: item,
-            data: preRefSchemaData[item.kind.toLowerCase()]
-        });
+        e.stopPropagation();
+        onInfoClick(item);
     };
 
     return (
         <SidebarGroup key="schemas">
             <SidebarGroupLabel>Deployment Scripts</SidebarGroupLabel>
             <SidebarGroupContent>
-                <SidebarMenu className="max-h-[calc(100vh-220px)] overflow-y-auto">
+                <SidebarMenu>
                     {filteredSchemas.map((item) => (
-                        <SidebarMenuItem key={item.group + item.kind}>
+                        <SidebarMenuItem key={item.group + item.version + item.kind}>
                             <SidebarMenuButton
                                 onClick={(e) => {
                                     e.preventDefault();
@@ -80,7 +71,7 @@ export function AdvancedModeSidebar({
                                     <span className="truncate">{item.kind}</span>
                                     <span
                                         onClick={(e) => handleInfoClick(e, item)}
-                                        className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-red-500 transition-opacity"
+                                        className="absolute right-0 ml-1 opacity-0 group-hover/item:opacity-100 hover:text-blue-500 transition-opacity"
                                     >
                                         <InfoIcon size={15} />
                                     </span>

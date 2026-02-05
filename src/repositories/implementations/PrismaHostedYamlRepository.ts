@@ -28,6 +28,7 @@ export class PrismaHostedYamlRepository implements IHostedYamlRepository {
       data: {
         id: data.id,
         projectId: data.projectId || null,
+        orgId: data.orgId || null,
         name: data.name || null,
         yamlHash: data.yamlHash,
       },

@@ -4,11 +4,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Flow from "@/components/flow/flow.main.component";
 import MainSidebar from "@/components/sidebar/sidebar.main.component";
-import { Node, Edge } from '@xyflow/react';
+import { Node, Edge, ReactFlowProvider } from '@xyflow/react';
+import { NodeProvider } from '@/providers/NodeProvider';
 import { getVersionUrlId, findVersionByUrlId, isValidVersionId } from '@/lib/versionUtils';
 import { ProjectDataService } from '@/services/project.data.service';
 import { useAutoSave } from '@/hooks/useAutoSave';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
+import ExportDialog from '@/components/dialog/dialog.export.component';
 
 interface Project {
   id: string;
@@ -153,39 +155,44 @@ export function ProjectPageClient({
   });
 
   return (
-    <MainSidebar
-      topics={topics}
-      versions={versions}
-      currentNodes={versionNodes || initialNodes}
-      currentEdges={versionEdges || initialEdges}
-      currentVersionSlug={currentVersionSlug}
-      onLoadProject={handleLoadProject}
-      onLoadVersion={handleVersionLoad}
-      getCurrentNodesEdges={getCurrentNodesEdges}
-    >
-      <div className="relative flex-grow flex">
-        <Flow
-          initialNodes={versionNodes || initialNodes}
-          initialEdges={versionEdges || initialEdges}
-          initialProjectId={project.id}
-          initialProjectName={project.name}
-          initialProjectSlug={project.slug}
-          onVersionLoad={handleVersionLoad}
-          loadingVersion={loadingVersion}
+    <ReactFlowProvider>
+      <NodeProvider>
+        <MainSidebar
+          topics={topics}
+          versions={versions}
+          currentNodes={versionNodes || initialNodes}
+          currentEdges={versionEdges || initialEdges}
           currentVersionSlug={currentVersionSlug}
-          onGetCurrentState={handleGetFlowState}
-        />
-        {/* Auto-save indicator - only shown when not viewing a version */}
-        {!currentVersionSlug && (
-          <div className="absolute top-4 right-4 z-40">
-            <AutoSaveIndicator
-              status={autoSave.status}
-              lastSaved={autoSave.lastSaved}
-              error={autoSave.error}
+          onLoadProject={handleLoadProject}
+          onLoadVersion={handleVersionLoad}
+          getCurrentNodesEdges={getCurrentNodesEdges}
+          toolbarExtra={<ExportDialog projectId={project.id} />}
+        >
+          <div className="relative flex-grow flex">
+            <Flow
+              initialNodes={versionNodes || initialNodes}
+              initialEdges={versionEdges || initialEdges}
+              initialProjectId={project.id}
+              initialProjectName={project.name}
+              initialProjectSlug={project.slug}
+              onVersionLoad={handleVersionLoad}
+              loadingVersion={loadingVersion}
+              currentVersionSlug={currentVersionSlug}
+              onGetCurrentState={handleGetFlowState}
             />
+            {/* Auto-save indicator - only shown when not viewing a version */}
+            {!currentVersionSlug && (
+              <div className="absolute top-4 right-4 z-40">
+                <AutoSaveIndicator
+                  status={autoSave.status}
+                  lastSaved={autoSave.lastSaved}
+                  error={autoSave.error}
+                />
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </MainSidebar>
+        </MainSidebar>
+      </NodeProvider>
+    </ReactFlowProvider>
   );
 }

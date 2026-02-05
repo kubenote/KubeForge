@@ -11,6 +11,8 @@ export interface BaseFieldProps {
     readOnly?: boolean
     kind?: string
     onChange: (path: string, val: unknown) => void
+    onRemove?: () => void
+    depth?: number
 }
 
 export interface FieldContextValue {

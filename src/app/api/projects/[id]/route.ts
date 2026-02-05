@@ -55,6 +55,31 @@ export async function PUT(
     const { name, nodes, edges, message } = await req.json();
 
     const repo = getProjectRepository();
+
+    // For auto-save (nodes+edges only, no rename), skip the findById lookup
+    if (nodes && edges && !name) {
+      try {
+        const updatedProject = await repo.update(id, {
+          newVersion: {
+            slug: await generateUniqueVersionSlug(),
+            nodes: JSON.stringify(nodes),
+            edges: JSON.stringify(edges),
+            message: message || 'Updated version',
+          },
+        });
+        return NextResponse.json(updatedProject);
+      } catch (error) {
+        if (isUniqueConstraintError(error)) {
+          return uniqueConstraintErrorResponse();
+        }
+        // Prisma P2025 = record not found
+        if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') {
+          return notFoundResponse('Project');
+        }
+        throw error;
+      }
+    }
+
     const existingProject = await repo.findById(id);
 
     if (!existingProject) {

@@ -92,12 +92,12 @@ export const PrimitiveField = ({
                 <Handle
                     type="target"
                     position={Position.Left}
-                    className={`!w-2 !h-2 !border-2 ${getTypeColor(valueType)} !bg-white`}
+                    className={`!w-2 !h-2 !border-2 !-ml-1 ${getTypeColor(valueType)} !bg-white`}
                     id={targetHandleId}
                 />
             )}
 
-            <span className={`text-xs ml-2 ${getTypeColor(valueType)}`}>
+            <span className={`text-xs ml-4 ${getTypeColor(valueType)}`}>
                 {valueType}
             </span>
             

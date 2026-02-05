@@ -5,7 +5,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { useSchema } from './SchemaProvider';
 import { useVersion } from './VersionProvider';
-import { safeJsonParseWithResult } from '@/lib/safeJson';
+import { analytics } from '@/lib/analytics';
+import { fetchSchemas } from '@/lib/schema/schemaFetchService';
 import {
     Dialog,
     DialogContent,
@@ -70,7 +71,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 id: id || generatedId,
                 type,
                 position: { x: type == "ObjectRefNode" ? -500 : 100, y: 100 },
-                data: data,
+                data: { ...data, editing: true },
             });
             if (type === "ObjectRefNode" && targetNode && 'objectRef' in data && typeof data.objectRef === 'string') {
                 addEdges({
@@ -83,22 +84,14 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
             }
         } else {
             const generatedId = nanoid()
-            const schema = await fetch(`/api/schema/load?version=${version}&schemas=${data.kind}&full=${type != "KindNode"}`)
-                .then(res => res.json())
-                .catch(console.error);
+            const schema = await fetchSchemas(version, [data.kind], type !== "KindNode");
 
             if (!schema) {
                 setIsLoading(false);
                 return;
             }
 
-            const parseResult = safeJsonParseWithResult<SchemaData>(schema);
-            if (!parseResult.success || !parseResult.data) {
-                console.error('Failed to parse schema:', parseResult.error);
-                setIsLoading(false);
-                return;
-            }
-            let parsedSchema: SchemaData = parseResult.data;
+            let parsedSchema: SchemaData = schema as SchemaData;
             if (type === "ObjectRefNode" && 'objectRef' in data && typeof data.objectRef === 'string') {
                 const kindSchema = parsedSchema[data.kind.toLowerCase()];
                 if (kindSchema?.properties?.[data.objectRef]) {
@@ -113,7 +106,7 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
                 id: id || generatedId,
                 type,
                 position: { x: type == "ObjectRefNode" ? -500 : 100, y: 100 },
-                data: data,
+                data: { ...data, editing: true },
             });
 
             if (type === "ObjectRefNode" && targetNode && 'objectRef' in data && typeof data.objectRef === 'string') {
@@ -130,6 +123,8 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
         setProgress(100);
         setTimeout(() => setIsLoading(false), 500); // smooth finish
 
+        // Track node addition
+        analytics.nodeAdded(type, data.kind);
     };
 
     const getSchema = async ({ schemas, v }: GetSchemaParams): Promise<boolean> => {
@@ -142,57 +137,61 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
         const baseSchemas = schemas.filter(s => !s.includes("."));
         const nestedSchemas = schemas.filter(s => s.includes("."));
 
-        // 1. Fetch base schemas with full=false
-        if (baseSchemas.length > 0) {
-            try {
-                const res = await fetch(
-                    `/api/schema/load?version=${versionToUse}&schemas=${baseSchemas.join(",")}&full=false`
-                );
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                const raw = await res.json();
-                const parseResult = safeJsonParseWithResult<SchemaData>(raw);
-                if (!parseResult.success || !parseResult.data) {
-                    throw new Error(`Failed to parse base schema: ${parseResult.error}`);
-                }
-                setSchemaData((prev: SchemaData) => ({ ...prev, ...parseResult.data }));
-            } catch (err) {
-                console.error("Base schema fetch failed:", err);
+        // Get unique kinds needed for nested schemas (will need full=true)
+        const nestedKinds = [...new Set(nestedSchemas.map(s => s.split(".")[0]))];
+
+        // Combine all unique kinds: base schemas + nested kinds
+        // Base schemas only need full=false, but nested need full=true
+        // If a kind appears in both, we need full=true
+        const allKinds = [...new Set([...baseSchemas, ...nestedKinds])];
+        const kindsNeedingFull = new Set(nestedKinds);
+
+        // Batch into at most 2 requests: one for full=false, one for full=true
+        const fullFalseKinds = allKinds.filter(k => !kindsNeedingFull.has(k));
+        const fullTrueKinds = allKinds.filter(k => kindsNeedingFull.has(k));
+
+        const fetchPromises: Promise<{ data: SchemaData | null; full: boolean }>[] = [];
+
+        // Fetch schemas that only need full=false
+        if (fullFalseKinds.length > 0) {
+            fetchPromises.push(
+                fetchSchemas(versionToUse, fullFalseKinds, false)
+                    .then(raw => ({ data: (raw as SchemaData | null), full: false }))
+                    .catch(() => ({ data: null, full: false }))
+            );
+        }
+
+        // Fetch schemas that need full=true (batched into single request)
+        if (fullTrueKinds.length > 0) {
+            fetchPromises.push(
+                fetchSchemas(versionToUse, fullTrueKinds, true)
+                    .then(raw => ({ data: (raw as SchemaData | null), full: true }))
+                    .catch(() => ({ data: null, full: true }))
+            );
+        }
+
+        // Wait for all fetches in parallel
+        const results = await Promise.all(fetchPromises);
+
+        // Merge results into schema data
+        const newSchemaData: SchemaData = {};
+
+        for (const result of results) {
+            if (result.data) {
+                Object.assign(newSchemaData, result.data);
             }
         }
 
-        // 2. Fetch nested schemas with full=true
+        // Extract nested schema subsets (e.g., "deployment.spec" from full deployment schema)
         for (const item of nestedSchemas) {
             const [kind, property] = item.split(".");
-
-            try {
-                const res = await fetch(
-                    `/api/schema/load?version=${versionToUse}&schemas=${kind}&full=true`
-                );
-                if (!res.ok) {
-                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-                }
-                const raw = await res.json();
-                const parseResult = safeJsonParseWithResult<SchemaData>(raw);
-                if (!parseResult.success || !parseResult.data) {
-                    throw new Error(`Failed to parse nested schema: ${parseResult.error}`);
-                }
-
-                const key = `${kind.toLowerCase()}.${property}`;
-                const kindSchema = parseResult.data[kind.toLowerCase()];
-                const schemaSubset = kindSchema?.properties?.[property];
-
-                if (schemaSubset) {
-                    setSchemaData((prev: SchemaData) => ({
-                        ...prev,
-                        [key]: schemaSubset,
-                    }));
-                }
-            } catch (err) {
-                console.error(`Nested schema fetch failed for ${item}:`, err);
+            const kindSchema = newSchemaData[kind.toLowerCase()];
+            if (kindSchema?.properties?.[property]) {
+                newSchemaData[`${kind.toLowerCase()}.${property}`] = kindSchema.properties[property];
             }
         }
+
+        setSchemaData((prev: SchemaData) => ({ ...prev, ...newSchemaData }));
 
         setProgress(100);
         setTimeout(() => setIsLoading(false), 500); // smooth finish

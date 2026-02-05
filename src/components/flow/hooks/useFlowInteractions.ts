@@ -9,6 +9,8 @@ import {
     applyEdgeChanges,
     addEdge
 } from '@xyflow/react'
+import { isPluginNodeType } from '@/lib/pluginAttachments'
+import { PluginSlotEntry } from '@/types'
 
 export const useFlowInteractions = () => {
     const [menu, setMenu] = useState<{
@@ -57,6 +59,58 @@ export const useFlowInteractions = () => {
         []
     )
 
+    /**
+     * When a plugin connects to a target-plugin-* handle, add a PluginSlotEntry
+     * to the target node's data.pluginSlots.
+     */
+    const handlePluginConnect = useCallback(
+        (params: Connection, nodesSnapshot: Node[]): Node[] => {
+            const targetHandle = params.targetHandle || ''
+            if (!targetHandle.startsWith('target-plugin-')) return nodesSnapshot
+
+            const sourceNodeType = nodesSnapshot.find((n) => n.id === params.source)?.type || ''
+            if (!isPluginNodeType(sourceNodeType)) return nodesSnapshot
+
+            const targetId = params.target
+            return nodesSnapshot.map((node) => {
+                if (node.id !== targetId) return node
+                const currentSlots: PluginSlotEntry[] = (node.data?.pluginSlots as PluginSlotEntry[] | undefined) || []
+                if (currentSlots.some((s) => s.sourceNodeId === params.source)) return node
+                const newSlot: PluginSlotEntry = {
+                    sourceNodeId: params.source!,
+                    sourceNodeType,
+                }
+                return { ...node, data: { ...node.data, pluginSlots: [...currentSlots, newSlot] } }
+            })
+        },
+        []
+    )
+
+    /**
+     * When edges are deleted, remove corresponding PluginSlotEntry from target nodes.
+     */
+    const handlePluginEdgeDelete = useCallback(
+        (deletedEdges: Edge[], nodesSnapshot: Node[]): Node[] => {
+            const pluginEdges = deletedEdges.filter(
+                (e) => e.targetHandle && e.targetHandle.startsWith('target-plugin-')
+            )
+            if (pluginEdges.length === 0) return nodesSnapshot
+
+            return nodesSnapshot.map((node) => {
+                const slotsToRemove = pluginEdges
+                    .filter((e) => e.target === node.id)
+                    .map((e) => e.source)
+
+                if (slotsToRemove.length === 0) return node
+
+                const currentSlots: PluginSlotEntry[] = (node.data?.pluginSlots as PluginSlotEntry[] | undefined) || []
+                const updatedSlots = currentSlots.filter((s) => !slotsToRemove.includes(s.sourceNodeId))
+                return { ...node, data: { ...node.data, pluginSlots: updatedSlots } }
+            })
+        },
+        []
+    )
+
     return {
         menu,
         ref,
@@ -64,6 +118,8 @@ export const useFlowInteractions = () => {
         onPaneClick,
         onNodesChange,
         onEdgesChange,
-        onConnect
+        onConnect,
+        handlePluginConnect,
+        handlePluginEdgeDelete,
     }
 }

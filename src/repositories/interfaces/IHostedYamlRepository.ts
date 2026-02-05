@@ -16,6 +16,7 @@ export interface HostedYamlRecord {
 export interface HostedYamlCreateInput {
   id: string;
   projectId?: string | null;
+  orgId?: string | null;
   name?: string | null;
   yamlHash: string;
 }

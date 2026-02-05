@@ -79,36 +79,38 @@ export function HelperComponent({ topics: initialTopics, className }: { topics: 
                             <div className="prose prose-neutral dark:prose-invert max-w-none">
                                 <ReactMarkdown
                                     components={{
-                                        h1: ({ node, ...props }) => <h1 className="text-3xl font-bold mb-6" {...props} />,
-                                        h2: ({ node, ...props }) => <h2 className="text-2xl font-semibold mt-6" {...props} />,
-                                        h3: ({ node, ...props }) => <h3 className="text-xl font-medium mt-4" {...props} />,
-                                        p: ({ node, ...props }) => <p className="text-sm leading-6" {...props} />,
-                                        ul: ({ node, ...props }) => <ul className="list-disc list-inside space-y-1" {...props} />,
-                                        code: ({ node, inline, className, children, ...props }: any) => {
-                                            if (inline) {
-                                                return <code className="bg-muted px-1 py-0.5 rounded text-xs">{children}</code>
+                                        h1: (props) => <h1 className="text-3xl font-bold mb-6" {...props} />,
+                                        h2: (props) => <h2 className="text-2xl font-semibold mt-6" {...props} />,
+                                        h3: (props) => <h3 className="text-xl font-medium mt-4" {...props} />,
+                                        p: (props) => <p className="text-sm leading-6" {...props} />,
+                                        ul: (props) => <ul className="list-disc list-inside space-y-1" {...props} />,
+                                        code: ({ className, children, ...props }) => {
+                                            const isBlock = className?.startsWith('language-');
+                                            if (isBlock) {
+                                                return (
+                                                    <pre className="bg-muted p-2 rounded overflow-auto text-sm">
+                                                        <code className={className}>{children}</code>
+                                                    </pre>
+                                                )
                                             }
-                                            return (
-                                                <pre className="bg-muted p-2 rounded overflow-auto text-sm">
-                                                    <code className="language-bash">{children}</code>
-                                                </pre>
-                                            )
+                                            return <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props}>{children}</code>
                                         },
-                                        strong: ({ node, ...props }) => <strong className="font-semibold" {...props} />,
-                                        table: ({ node, ...props }) => (
+                                        pre: ({ children }) => <>{children}</>,
+                                        strong: (props) => <strong className="font-semibold" {...props} />,
+                                        table: (props) => (
                                             <table className="w-full border-collapse my-4 text-sm" {...props} />
                                         ),
-                                        thead: ({ node, ...props }) => (
+                                        thead: (props) => (
                                             <thead className="bg-muted" {...props} />
                                         ),
-                                        tbody: ({ node, ...props }) => <tbody {...props} />,
-                                        tr: ({ node, ...props }) => (
+                                        tbody: (props) => <tbody {...props} />,
+                                        tr: (props) => (
                                             <tr className="border-b border-border" {...props} />
                                         ),
-                                        th: ({ node, ...props }) => (
+                                        th: (props) => (
                                             <th className="text-left px-3 py-2 font-semibold" {...props} />
                                         ),
-                                        td: ({ node, ...props }) => (
+                                        td: (props) => (
                                             <td className="px-3 py-2" {...props} />
                                         ),
                                     }}

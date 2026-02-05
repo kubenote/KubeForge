@@ -20,7 +20,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import Editor from "@monaco-editor/react";
+import dynamic from "next/dynamic";
+import "@/lib/monaco-config";
+const Editor = dynamic(() => import("@monaco-editor/react"), { ssr: false });
 import {
     ExportFormat,
     exportToYaml,
@@ -30,12 +32,14 @@ import {
     resolveNodeValues,
 } from "@/lib/export";
 import { useTheme } from "@/contexts/ThemeContext";
+import { yamlUrls } from '@/lib/apiUrls';
 
 interface ExportDialogProps {
     projectId?: string | null;
+    orgId?: string | null;
 }
 
-export default function ExportDialog({ projectId }: ExportDialogProps) {
+export default function ExportDialog({ projectId, orgId }: ExportDialogProps) {
     const [dialogOpen, setDialogOpen] = useState(false);
     const [exportFormat, setExportFormat] = useState<ExportFormat>("yaml");
     const [previewContent, setPreviewContent] = useState("");
@@ -128,12 +132,13 @@ ${data.map((r) => {
             const edges = getEdges();
             const yamlContent = exportToYaml(nodes, edges);
 
-            const res = await fetch("/api/yaml/upload", {
+            const res = await fetch(yamlUrls.upload(), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     yamlContent,
                     projectId: projectId || undefined,
+                    orgId: orgId || undefined,
                 }),
             });
 

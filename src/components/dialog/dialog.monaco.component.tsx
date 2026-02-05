@@ -1,6 +1,9 @@
 import React, { forwardRef, useImperativeHandle } from 'react';
 import yaml from 'js-yaml';
-import Editor from '@monaco-editor/react';
+import dynamic from 'next/dynamic';
+import '@/lib/monaco-config';
+import { yamlUrls } from '@/lib/apiUrls';
+const Editor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 export interface MonacoComponentRef {
   downloadYaml: () => void;
@@ -43,7 +46,7 @@ const MonacoComponent = forwardRef<MonacoComponentRef, MonacoComponentProps>(fun
       URL.revokeObjectURL(url);
     },
     uploadYamlToServer: async () => {
-      const res = await fetch('/api/yaml/upload', {
+      const res = await fetch(yamlUrls.upload(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ yamlContent: yamlText }),

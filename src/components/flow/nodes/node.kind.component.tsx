@@ -1,14 +1,16 @@
 "use client"
 
 import { useReactFlow, useStore } from "@xyflow/react"
-import { useState, useCallback, useEffect, memo } from "react"
+import { useState, useCallback, useEffect, memo, useMemo } from "react"
+import { Pencil, PencilOff } from "lucide-react"
 import { publish } from "@/lib/eventBus"
 import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
 import { useSchema } from "@/providers/SchemaProvider"
 import { ConfigField } from "./flow.configfield.component"
-import { KindNodeData, FlowEdge, Schema } from "@/types"
+import { KindNodeData, FlowEdge, Schema, PluginSlotEntry } from "@/types"
 import { useReadOnly } from "@/contexts/ReadOnlyContext"
+import { PluginSlots } from "./PluginSlots"
 
 interface KindNodeProps {
     id: string;
@@ -19,16 +21,8 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
     const { schemaData } = useSchema()
     const schema = schemaData[data.type.toLowerCase()];
     const [values, setValues] = useState<Record<string, unknown>>(data.values || {});
+    const [editing, setEditing] = useState(data.editing ?? false);
     const { isReadOnly } = useReadOnly();
-
-    // Debug logging (uncomment if needed for debugging)
-    // console.log('KindNode debug:', {
-    //     id,
-    //     dataType: data.type,
-    //     schemaKeys: Object.keys(schemaData),
-    //     hasSchema: !!schema,
-    //     schemaProperties: schema?.properties ? Object.keys(schema.properties) : 'no properties'
-    // });
 
     const { setNodes } = useReactFlow();
 
@@ -42,7 +36,7 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
         if (!isReadOnly) {
             setNodes((prevNodes) =>
                 prevNodes.map((node) => {
-                    if (node.id !== id) return node; // 👈 Keeps exact same reference
+                    if (node.id !== id) return node;
                     return {
                         ...node,
                         data: {
@@ -55,12 +49,37 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
         }
     }, [values, isReadOnly]);
 
-
-
     const edges = useStore(
         (s) => s.edges.filter((e: any) => e.target === id),
         shallow
     ) as FlowEdge[];
+
+    const pluginSlots: PluginSlotEntry[] = (data.pluginSlots as PluginSlotEntry[] | undefined) || [];
+
+    // Extract container names from values for the container picker
+    const containerNames = useMemo(() => {
+        const names: string[] = [];
+        const containers = values?.containers as Array<Record<string, unknown>> | undefined;
+        if (Array.isArray(containers)) {
+            for (const c of containers) {
+                if (c.name && typeof c.name === 'string') names.push(c.name);
+            }
+        }
+        return names;
+    }, [values]);
+
+    const handleContainerChange = useCallback((sourceNodeId: string, containerName: string) => {
+        setNodes((prevNodes) =>
+            prevNodes.map((node) => {
+                if (node.id !== id) return node;
+                const currentSlots: PluginSlotEntry[] = (node.data?.pluginSlots as PluginSlotEntry[] | undefined) || [];
+                const updatedSlots = currentSlots.map((slot) =>
+                    slot.sourceNodeId === sourceNodeId ? { ...slot, containerName } : slot
+                );
+                return { ...node, data: { ...node.data, pluginSlots: updatedSlots } };
+            })
+        );
+    }, [id, setNodes]);
 
     const handleValueChange = useCallback((path: string, newVal: unknown) => {
         setValues(prev => {
@@ -74,7 +93,6 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
             nested[last] = newVal;
 
             const pubId = `${id}.${path}`;
-            console.log(`🔊 Publishing: ${pubId} =`, newVal);
             publish(pubId, newVal);
 
             return updated;
@@ -84,7 +102,16 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
 
     return (
         <NodeContainer nodeId={id}>
-            <div className="text-sm font-semibold flex flex-row border-b-1 pb-2 mb-3">{data.kind}.yaml {"{"} </div>
+            <div className="text-sm font-semibold flex flex-row items-center border-b-1 pb-2 mb-3">
+                <span className="flex-grow">{data.kind}.yaml</span>
+                <button
+                    className="shrink-0 p-1 rounded hover:bg-muted cursor-pointer"
+                    onClick={() => setEditing(e => !e)}
+                    title={editing ? "Stop editing" : "Edit"}
+                >
+                    {editing ? <Pencil size={13} /> : <PencilOff size={13} className="text-muted-foreground" />}
+                </button>
+            </div>
 
             <div className="space-y-1 pl-2">
                 {Object.entries(schema?.properties ?? {}).map(([key, fieldSchema]) => (
@@ -99,11 +126,16 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
                         nodeId={id}
                         edges={edges}
                         mode="kind"
-                        readOnly={isReadOnly}
+                        readOnly={isReadOnly || !editing}
                     />
                 ))}
             </div>
-            <div className="mt-1 text-sm border-t-1 pt-2 mt-3">{"}"}</div>
+            <PluginSlots
+                nodeId={id}
+                pluginSlots={pluginSlots}
+                containerNames={containerNames}
+                onContainerChange={handleContainerChange}
+            />
         </NodeContainer>
     );
 }

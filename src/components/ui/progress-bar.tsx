@@ -27,7 +27,7 @@ export function TopProgressBar({ loading }: { loading: boolean }) {
 
   return (
     <div
-      className="fixed top-0 left-0 h-[5px] bg-blue-500 transition-all duration-200 z-50"
+      className="fixed top-0 left-0 h-[5px] bg-brand transition-all duration-200 z-50"
       style={{ width: `${progress}%`, opacity: progress === 0 ? 0 : 1 }}
     />
   )

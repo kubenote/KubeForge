@@ -102,13 +102,6 @@ export function useProjectDataManager(): UseProjectDataManagerReturn {
   const updateProject = useCallback(async (nodes: Node[], edges: Edge[], message?: string) => {
     const projectInfo = getCurrentProjectInfo();
     
-    console.log('🔄 updateProject: Project info check', {
-      currentProjectId: currentProject?.id,
-      contextProjectId,
-      projectInfoId: projectInfo.id,
-      hasProject: projectInfo.hasProject
-    });
-    
     if (!projectInfo.hasProject || !projectInfo.id) {
       throw new Error('No current project to update');
     }
@@ -201,13 +194,6 @@ export function useProjectDataManager(): UseProjectDataManagerReturn {
 
   // Set current data directly (for external updates)
   const setCurrentData = useCallback((nodes: Node[], edges: Edge[], versionId?: string | null, versionSlug?: string | null) => {
-    console.log('🔄 useProjectDataManager: Setting current data', {
-      nodeCount: nodes.length,
-      edgeCount: edges.length,
-      versionId,
-      versionSlug
-    });
-    
     setCurrentNodes(nodes);
     setCurrentEdges(edges);
     setCurrentVersionId(versionId || null);
