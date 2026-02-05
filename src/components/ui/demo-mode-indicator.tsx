@@ -1,6 +1,6 @@
 'use client';
 
-import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useDemoMode } from '@/contexts/demo-mode.context';
 
 export function DemoModeIndicator() {
   const { isDemoMode } = useDemoMode();

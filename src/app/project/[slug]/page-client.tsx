@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation';
 import Flow from "@/components/flow/flow.main.component";
 import MainSidebar from "@/components/sidebar/sidebar.main.component";
 import { Node, Edge, ReactFlowProvider } from '@xyflow/react';
-import { NodeProvider } from '@/providers/NodeProvider';
+import { NodeProvider } from '@/providers/node.provider';
 import { getVersionUrlId, findVersionByUrlId, isValidVersionId } from '@/lib/versionUtils';
 import { ProjectDataService } from '@/services/project.data.service';
-import { useAutoSave } from '@/hooks/useAutoSave';
+import { useAutoSave } from '@/hooks/use-auto-save.hook';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import ExportDialog from '@/components/dialog/dialog.export.component';
 

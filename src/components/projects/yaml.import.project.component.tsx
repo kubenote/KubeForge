@@ -9,7 +9,7 @@ import yaml from 'js-yaml';
 import { FolderArchive, Upload, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { validateProjectName, slugify } from '@/lib/slugify';
-import { useDemoMode } from '@/contexts/DemoModeContext';
+import { useDemoMode } from '@/contexts/demo-mode.context';
 import { removeNullFields } from '@/lib/objectUtils';
 import { importYamlToNodes } from '@/lib/import';
 import { projectUrls } from '@/lib/apiUrls';

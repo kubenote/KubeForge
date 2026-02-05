@@ -1,6 +1,6 @@
 "use client"
 
-import { BaseFieldProps } from "./types"
+import { BaseFieldProps } from "./field.types"
 import { Schema } from "@/types"
 
 // Forward declaration for recursive rendering
@@ -19,7 +19,7 @@ export const FieldRenderer = ({
     onChange
 }: FieldRendererProps) => {
     // Import the refactored component dynamically to avoid circular imports
-    const { ConfigFieldRefactored } = require('./ConfigFieldRefactored')
+    const { ConfigFieldRefactored } = require('./field.config-refactored.component')
     
     return (
         <ConfigFieldRefactored

@@ -1,6 +1,6 @@
 import { writeFile, readFile, unlink, mkdir, access } from 'fs/promises';
 import path from 'path';
-import type { IStorageProvider } from './IStorageProvider';
+import type { IStorageProvider } from './storage-provider.interface';
 
 export class FilesystemStorageProvider implements IStorageProvider {
   private readonly baseDir: string;

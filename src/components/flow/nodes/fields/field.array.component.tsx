@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { getTypeColor } from "../flow.node.types"
 import { publish } from "@/lib/eventBus"
-import { BaseFieldProps, ComplexFieldResult } from "./types"
+import { BaseFieldProps, ComplexFieldResult } from "./field.types"
 // Using prop-based FieldComponent to avoid circular imports
 import { Schema } from "@/types"
 

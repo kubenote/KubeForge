@@ -11,10 +11,10 @@ import { Save, FolderOpen, Plus, Trash2, History, ExternalLink } from 'lucide-re
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Node, Edge } from '@xyflow/react';
 import { validateProjectName, slugify } from '@/lib/slugify';
-import { useProject } from '@/contexts/ProjectContext';
-import { useProjectDataManager } from '@/hooks/useProjectDataManager';
-import { useDemoMode } from '@/contexts/DemoModeContext';
-import { useProjects } from '@/hooks/useProjects';
+import { useProject } from '@/contexts/project.context';
+import { useProjectDataManager } from '@/hooks/use-project-data-manager.hook';
+import { useDemoMode } from '@/contexts/demo-mode.context';
+import { useProjects } from '@/hooks/use-projects.hook';
 
 interface Project {
   id: string;

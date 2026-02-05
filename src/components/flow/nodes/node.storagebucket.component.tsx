@@ -4,7 +4,7 @@ import { Handle, Position, useReactFlow } from "@xyflow/react"
 import { useState, useCallback, useEffect, memo } from "react"
 import NodeContainer from "./flow.container.component"
 import { Database, Cloud, HardDrive } from "lucide-react"
-import { useReadOnly } from "@/contexts/ReadOnlyContext"
+import { useReadOnly } from "@/contexts/read-only.context"
 
 const PROVIDER_ICONS: Record<string, { icon: typeof Cloud; color: string }> = {
     'aws-s3': { icon: Cloud, color: 'text-orange-500' },

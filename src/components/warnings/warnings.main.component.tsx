@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useStore } from '@xyflow/react'
 import { NodeWarning, nodeWarningRules } from './warnings.rules.types'
 import { resetPreDeploymentIds } from './warnings.predeployment.rules'
-import { useWarning } from '../../providers/WarningsProvider'
-import { useVersion } from '../../providers/VersionProvider'
-import { useSchema } from '../../providers/SchemaProvider'
+import { useWarning } from '../../providers/warnings.provider'
+import { useVersion } from '../../providers/version.provider'
+import { useSchema } from '../../providers/schema.provider'
 import { TriangleAlert } from 'lucide-react'
 
 interface WarningsBadgeProps {

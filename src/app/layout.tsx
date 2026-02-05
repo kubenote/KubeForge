@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { KubeForgeProviders } from "@/providers/KubeForgeProviders";
+import { KubeForgeProviders } from "@/providers/kubeforge.providers";
 import { DemoModeIndicator } from "@/components/ui/demo-mode-indicator";
 import { isDemoModeEnabled } from "@/lib/demoMode";
 

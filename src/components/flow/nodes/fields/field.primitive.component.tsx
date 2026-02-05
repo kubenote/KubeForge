@@ -6,9 +6,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Handle, Position } from "@xyflow/react"
 import { publish } from "@/lib/eventBus"
 import { getTypeColor } from "../flow.node.types"
-import { useNodeProvider } from "@/providers/NodeProvider"
-import { BaseFieldProps } from "./types"
-import { useFieldConnection } from "./useFieldConnection"
+import { useNodeProvider } from "@/providers/node.provider"
+import { BaseFieldProps } from "./field.types"
+import { useFieldConnection } from "./field.use-connection.hook"
 import { validateField, ValidationError } from "@/lib/validation"
 
 interface PrimitiveFieldProps extends BaseFieldProps {

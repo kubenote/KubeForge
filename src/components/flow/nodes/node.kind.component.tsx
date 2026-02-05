@@ -6,11 +6,11 @@ import { Pencil, PencilOff } from "lucide-react"
 import { publish } from "@/lib/eventBus"
 import NodeContainer from "./flow.container.component"
 import { shallow } from 'zustand/shallow';
-import { useSchema } from "@/providers/SchemaProvider"
+import { useSchema } from "@/providers/schema.provider"
 import { ConfigField } from "./flow.configfield.component"
 import { KindNodeData, FlowEdge, Schema, PluginSlotEntry } from "@/types"
-import { useReadOnly } from "@/contexts/ReadOnlyContext"
-import { PluginSlots } from "./PluginSlots"
+import { useReadOnly } from "@/contexts/read-only.context"
+import { PluginSlots } from "./node.plugin-slots.component"
 
 interface KindNodeProps {
     id: string;

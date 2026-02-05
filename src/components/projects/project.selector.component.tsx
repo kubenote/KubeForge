@@ -51,7 +51,7 @@ import Link from 'next/link';
 import { YamlProjectImport } from './yaml.import.project.component';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { cn } from '@/lib/utils';
-import { useProjects } from '@/hooks/useProjects';
+import { useProjects } from '@/hooks/use-projects.hook';
 import { projectUrls, hostedYamlUrls, yamlUrls } from '@/lib/apiUrls';
 
 interface Project {

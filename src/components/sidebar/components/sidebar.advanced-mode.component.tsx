@@ -10,7 +10,7 @@ import {
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { BoxIcon, InfoIcon } from "lucide-react";
-import { useNodeProvider } from "@/providers/NodeProvider";
+import { useNodeProvider } from "@/providers/node.provider";
 import { GVK, SchemaData } from "@/types";
 
 interface AdvancedModeSidebarProps {

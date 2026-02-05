@@ -1,2 +1,2 @@
 // Legacy AppSidebarClient component - now using refactored version
-export { AppSidebarRefactored as AppSidebarClient } from './AppSidebarRefactored'
+export { AppSidebarRefactored as AppSidebarClient } from './sidebar.app-refactored.component'

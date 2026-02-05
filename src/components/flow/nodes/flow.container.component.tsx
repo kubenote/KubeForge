@@ -1,5 +1,5 @@
 import { NodeWarning } from "@/components/warnings/warnings.rules.types";
-import { useWarning } from "@/providers/WarningsProvider"
+import { useWarning } from "@/providers/warnings.provider"
 
 interface NodeContainerProps {
     nodeId: string;

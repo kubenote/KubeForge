@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight } from "lucide-react"
 import { getTypeColor } from "../flow.node.types"
-import { BaseFieldProps, ComplexFieldResult } from "./types"
+import { BaseFieldProps, ComplexFieldResult } from "./field.types"
 import { Schema } from "@/types"
 
 const TYPE_DEFAULTS: Record<string, unknown> = {

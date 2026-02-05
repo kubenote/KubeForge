@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Node } from '@xyflow/react'
-import { useSchema } from '@/providers/SchemaProvider'
-import { useNodeProvider } from '@/providers/NodeProvider'
+import { useSchema } from '@/providers/schema.provider'
+import { useNodeProvider } from '@/providers/node.provider'
 
 export const useSchemaLoader = (nodes: Node[], version: string | null) => {
     const [loading, setLoading] = useState(false)

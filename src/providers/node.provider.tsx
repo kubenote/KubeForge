@@ -3,8 +3,8 @@
 import { useReactFlow } from '@xyflow/react';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid';
-import { useSchema } from './SchemaProvider';
-import { useVersion } from './VersionProvider';
+import { useSchema } from './schema.provider';
+import { useVersion } from './version.provider';
 import { analytics } from '@/lib/analytics';
 import { fetchSchemas } from '@/lib/schema/schemaFetchService';
 import {

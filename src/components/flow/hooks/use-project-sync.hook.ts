@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { Node, Edge } from '@xyflow/react'
-import { useProject } from '@/contexts/ProjectContext'
+import { useProject } from '@/contexts/project.context'
 
 interface UseProjectSyncProps {
     initialProjectId?: string

@@ -4,7 +4,7 @@ import type {
   HostedYamlRecord,
   HostedYamlCreateInput,
   HostedYamlUpdateInput,
-} from '../interfaces/IHostedYamlRepository';
+} from '../interfaces/hosted-yaml.repository.interface';
 
 export class PrismaHostedYamlRepository implements IHostedYamlRepository {
   async findAll(projectId?: string | null): Promise<HostedYamlRecord[]> {

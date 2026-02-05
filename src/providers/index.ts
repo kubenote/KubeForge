@@ -1,6 +1,6 @@
-export { KubeForgeProviders } from './KubeForgeProviders';
-export { SWRProvider } from './SWRProvider';
-export { VersionProvider, useVersion } from './VersionProvider';
-export { SchemaProvider, useSchema } from './SchemaProvider';
-export { NodeProvider, useNodeProvider } from './NodeProvider';
-export { WarningProvider, useWarning } from './WarningsProvider';
+export { KubeForgeProviders } from './kubeforge.providers';
+export { SWRProvider } from './swr.provider';
+export { VersionProvider, useVersion } from './version.provider';
+export { SchemaProvider, useSchema } from './schema.provider';
+export { NodeProvider, useNodeProvider } from './node.provider';
+export { WarningProvider, useWarning } from './warnings.provider';
