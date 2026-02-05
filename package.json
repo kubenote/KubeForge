@@ -73,6 +73,7 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dagre": "^0.8.5",
     "js-yaml": "^4.1.0",
     "jszip": "^3.10.1",
     "lodash": "^4.17.21",
@@ -93,6 +94,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
     "@tailwindcss/postcss": "^4",
+    "@types/dagre": "^0.7.53",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.20",
     "@types/node": "^20",
