@@ -10,17 +10,20 @@ interface IconSidebarProps {
     onViewChange: (view: SidebarView) => void;
     showIntegrations?: boolean;
     bottomSlot?: React.ReactNode;
+    logo?: React.ReactNode;
 }
 
-export function IconSidebar({ activeView, onViewChange, showIntegrations = true, bottomSlot }: IconSidebarProps) {
+export function IconSidebar({ activeView, onViewChange, showIntegrations = true, bottomSlot, logo }: IconSidebarProps) {
     return (
-        <div className="flex h-full w-12 flex-col items-center border-r bg-sidebar shrink-0">
-            <a href="/dashboard" className="flex items-center justify-center h-16 w-full border-b shrink-0 cursor-pointer" title="Dashboard">
-                <img
-                    src="/icon.png"
-                    alt="KubeForge"
-                    className="w-6 h-6"
-                />
+        <div className="flex h-full w-14 flex-col items-center border-r bg-background shrink-0">
+            <a href="/dashboard" className="flex items-center justify-center h-16 w-full shrink-0 cursor-pointer" title="Dashboard">
+                {logo ?? (
+                    <img
+                        src="/icon.png"
+                        alt="Hyperbridge"
+                        className="w-6 h-6"
+                    />
+                )}
             </a>
             <div className="flex flex-col items-center gap-2 pt-3 flex-1">
                 <button
