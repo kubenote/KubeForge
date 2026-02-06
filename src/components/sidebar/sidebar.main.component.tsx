@@ -45,6 +45,7 @@ interface MainSidebarProps {
     toolbarLeft?: React.ReactNode;
     toolbarCenter?: React.ReactNode;
     toolbarExtra?: React.ReactNode;
+    logo?: React.ReactNode;
 }
 
 export default function MainSidebar({
@@ -61,7 +62,8 @@ export default function MainSidebar({
     integrationsPanel,
     toolbarLeft,
     toolbarCenter,
-    toolbarExtra
+    toolbarExtra,
+    logo
 }: MainSidebarProps) {
     const { currentProjectName, currentProjectId, navigateToProject } = useProject();
     const router = useRouter();
@@ -98,7 +100,7 @@ export default function MainSidebar({
     };
     return (
         <SidebarProvider>
-            <AppSidebarClient versions={versions} isReadOnly={!!currentVersionSlug} integrationsPanel={integrationsPanel} helpTopics={sortedTopics} />
+            <AppSidebarClient versions={versions} isReadOnly={!!currentVersionSlug} integrationsPanel={integrationsPanel} helpTopics={sortedTopics} logo={logo} />
             <SidebarInset className="min-h-0 overflow-hidden">
                 <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4">
                     <SidebarTrigger />

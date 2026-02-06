@@ -28,12 +28,14 @@ export function AppSidebarRefactored({
     isReadOnly = false,
     integrationsPanel,
     helpTopics = [],
+    logo,
     ...props
 }: {
     versions: string[];
     isReadOnly?: boolean;
     integrationsPanel?: React.ReactNode;
     helpTopics?: string[];
+    logo?: React.ReactNode;
 } & React.ComponentProps<typeof Sidebar>) {
     // State
     const [searchQuery, setSearchQuery] = React.useState("");
@@ -71,6 +73,7 @@ export function AppSidebarRefactored({
                     onViewChange={setActiveView}
                     showIntegrations={!!integrationsPanel}
                     bottomSlot={<>{helpTopics.length > 0 && <HelperComponent topics={helpTopics} />}<ThemeToggle /></>}
+                    logo={logo}
                 />
                 <div className="flex flex-col flex-1 min-w-0">
                     <AppSidebarHeader

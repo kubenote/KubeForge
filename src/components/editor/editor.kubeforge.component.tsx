@@ -171,6 +171,7 @@ interface KubeForgeEditorProps {
   toolbarExtra?: React.ReactNode;
   agentPanel?: React.ReactNode;
   clusterVersion?: string;
+  logo?: React.ReactNode;
 }
 
 function VersionMismatchBanner({ clusterVersion, projectVersion, projectId }: { clusterVersion: string; projectVersion: string; projectId: string }) {
@@ -198,7 +199,7 @@ function VersionMismatchBanner({ clusterVersion, projectVersion, projectId }: { 
   );
 }
 
-function EditorInner({ project, initialNodes, initialEdges, k8sVersions, integrationsPanel, toolbarLeft, toolbarExtra, agentPanel, clusterVersion }: KubeForgeEditorProps) {
+function EditorInner({ project, initialNodes, initialEdges, k8sVersions, integrationsPanel, toolbarLeft, toolbarExtra, agentPanel, clusterVersion, logo }: KubeForgeEditorProps) {
   const [versionNodes, setVersionNodes] = React.useState<Node[] | null>(null);
   const [versionEdges, setVersionEdges] = React.useState<Edge[] | null>(null);
   const [loadingVersion, setLoadingVersion] = React.useState(false);
@@ -356,6 +357,7 @@ function EditorInner({ project, initialNodes, initialEdges, k8sVersions, integra
       toolbarLeft={toolbarLeft}
       toolbarCenter={<ViewToggle mode={viewMode} onChange={setViewMode} />}
       toolbarExtra={toolbarExtra}
+      logo={logo}
     >
       {clusterVersion && (
         <VersionMismatchBanner
