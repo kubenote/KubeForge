@@ -3,6 +3,7 @@
  */
 
 import yaml from 'js-yaml';
+import { coerceYamlValues } from './export';
 
 export interface YamlValidationResult {
   isValid: boolean;
@@ -120,7 +121,7 @@ export function validateYamlContent(content: string): YamlValidationResult {
   // Re-serialize to ensure clean output (removes any potential exploits)
   try {
     const sanitizedContent = parsedDocuments
-      .map(doc => yaml.dump(doc, {
+      .map(doc => yaml.dump(coerceYamlValues(doc), {
         noRefs: true,
         sortKeys: false,
         lineWidth: -1,
