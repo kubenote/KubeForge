@@ -11,6 +11,27 @@ import { PluginSlotEntry } from '@/types';
 
 export type ExportFormat = 'yaml' | 'json' | 'kustomize';
 
+/**
+ * Recursively coerce string values to their natural YAML types (number, boolean, null).
+ * Fixes numeric fields like replicas/port being serialized as quoted strings after round-trips.
+ */
+export function coerceYamlValues(value: unknown): unknown {
+    if (Array.isArray(value)) return value.map(coerceYamlValues);
+    if (typeof value === 'object' && value !== null) {
+        return Object.fromEntries(
+            Object.entries(value).map(([k, v]) => [k, coerceYamlValues(v)])
+        );
+    }
+    if (typeof value !== 'string') return value;
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    if (value === 'null' || value === '~') return null;
+    if (value !== '' && value.trim() === value && !isNaN(Number(value)) && isFinite(Number(value))) {
+        return Number(value);
+    }
+    return value;
+}
+
 const INTEGRATION_NODE_TYPES = new Set([
     'SecretRefNode', 'RegistryNode', 'ConfigMapNode', 'IngressNode',
     'DatabaseNode', 'MessageQueueNode', 'LoggingSidecarNode', 'MonitoringNode', 'ServiceAccountNode'
@@ -313,9 +334,9 @@ export function exportToYaml(nodes: Node[], edges: Edge[]): string {
 
     try {
         if (Array.isArray(data)) {
-            return data.map((doc) => yaml.dump(doc)).join('\n---\n');
+            return data.map((doc) => yaml.dump(coerceYamlValues(doc))).join('\n---\n');
         }
-        return yaml.dump(data);
+        return yaml.dump(coerceYamlValues(data));
     } catch (e) {
         return '# Error converting to YAML:\n' + (e instanceof Error ? e.message : String(e));
     }
@@ -367,7 +388,7 @@ export async function exportToKustomize(nodes: Node[], edges: Edge[]): Promise<B
         resourceFiles.push(filename);
 
         try {
-            const yamlContent = yaml.dump(resource);
+            const yamlContent = yaml.dump(coerceYamlValues(resource));
             baseDir.file(filename, yamlContent);
         } catch (e) {
             console.error(`Failed to export resource ${index}:`, e);
