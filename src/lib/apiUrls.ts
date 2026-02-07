@@ -85,6 +85,21 @@ export const hostedYamlUrls = {
   list: (orgId: string) => `/api/hosted-yamls?orgId=${orgId}`,
   listAll: () => '/api/hosted-yamls',
   get: (id: string) => `/api/hosted-yamls/${id}`,
+  accessRules: (id: string) => `/api/hosted-yamls/${id}/access-rules`,
+  accessPolicy: (id: string) => `/api/hosted-yamls/${id}/access-policy`,
+  accessLog: (id: string) => `/api/hosted-yamls/${id}/access-log`,
+} as const;
+
+// Hosted YAML Bearer Token URLs
+export const hostedYamlTokenUrls = {
+  list: (orgId: string) => `/api/hosted-yaml-tokens?orgId=${orgId}`,
+  create: () => '/api/hosted-yaml-tokens',
+  revoke: (tokenId: string) => `/api/hosted-yaml-tokens?tokenId=${tokenId}`,
+} as const;
+
+// Audit Log URLs
+export const auditLogUrls = {
+  list: (orgId: string) => `/api/audit-logs?orgId=${orgId}`,
 } as const;
 
 // YAML URLs
