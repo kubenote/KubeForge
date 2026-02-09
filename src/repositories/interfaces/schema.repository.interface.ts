@@ -36,5 +36,7 @@ export interface ISchemaRepository {
   getSchemas(version: string, keys: string[], resolved: boolean): Promise<KubernetesSchemaRecord[]>;
   upsertSchema(data: SchemaUpsertInput): Promise<void>;
   upsertGvk(data: GvkUpsertInput): Promise<void>;
+  bulkUpsertSchemas(version: string, data: SchemaUpsertInput[]): Promise<void>;
+  bulkUpsertGvks(version: string, data: GvkUpsertInput[]): Promise<void>;
   hasVersion(version: string): Promise<boolean>;
 }

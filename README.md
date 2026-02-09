@@ -33,9 +33,9 @@ docker run -p 3000:3000 ghcr.io/kubenote/kubeforge:latest
 
 ## ⚙️ How It Works
 
-KubeForge keeps Kubernetes definitions up to date by integrating with [kubenote/kubernetes-schema](https://github.com/kubenote/kubernetes-schema), a companion repository that runs a scheduled job daily. This job fetches the latest official Kubernetes JSON schemas for all supported versions.
+KubeForge keeps Kubernetes definitions up to date by fetching the official Kubernetes OpenAPI spec (`swagger.json`) directly from the Kubernetes GitHub repository. Schemas are ingested into the database on demand via `npm run db:ingest-schemas -- <version>`, supporting all versions from v1.19.0 onward.
 
-These schemas are then automatically pulled into the KubeForge app, ensuring the editor always uses the most current, version-specific spec definitions. This guarantees that users are building against accurate Kubernetes configurations, with proper field validation and metadata.
+This ensures the editor always uses the most current, version-specific spec definitions, with proper field validation and metadata. Use `--discover` to list all available versions or `--latest` to automatically fetch the newest stable release.
 
 Additionally, KubeForge enables **direct YAML hosting**, so you can reference built configurations from a stable URL when deploying nodes via automation or GitOps pipelines.
 

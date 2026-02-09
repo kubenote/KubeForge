@@ -1,3 +1,0 @@
-[submodule "schema-cache/v1.33.3"]
-	path = schema-cache/v1.33.3
-	url = https://github.com/kubenote/kubernetes-schema.git

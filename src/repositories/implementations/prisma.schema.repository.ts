@@ -66,6 +66,63 @@ export class PrismaSchemaRepository implements ISchemaRepository {
     });
   }
 
+  async bulkUpsertSchemas(version: string, data: SchemaUpsertInput[]): Promise<void> {
+    const BATCH = 100;
+    for (let i = 0; i < data.length; i += BATCH) {
+      const batch = data.slice(i, i + BATCH);
+      await prisma.$transaction(
+        batch.map((d) =>
+          prisma.kubernetesSchema.upsert({
+            where: {
+              version_schemaKey_isFullyResolved: {
+                version: d.version,
+                schemaKey: d.schemaKey,
+                isFullyResolved: d.isFullyResolved,
+              },
+            },
+            create: {
+              version: d.version,
+              schemaKey: d.schemaKey,
+              schemaData: d.schemaData,
+              isFullyResolved: d.isFullyResolved,
+            },
+            update: {
+              schemaData: d.schemaData,
+            },
+          })
+        )
+      );
+    }
+  }
+
+  async bulkUpsertGvks(version: string, data: GvkUpsertInput[]): Promise<void> {
+    const BATCH = 100;
+    for (let i = 0; i < data.length; i += BATCH) {
+      const batch = data.slice(i, i + BATCH);
+      await prisma.$transaction(
+        batch.map((d) =>
+          prisma.schemaGvk.upsert({
+            where: {
+              version_group_gvkVersion_kind: {
+                version: d.version,
+                group: d.group,
+                gvkVersion: d.gvkVersion,
+                kind: d.kind,
+              },
+            },
+            create: {
+              version: d.version,
+              group: d.group,
+              gvkVersion: d.gvkVersion,
+              kind: d.kind,
+            },
+            update: {},
+          })
+        )
+      );
+    }
+  }
+
   async hasVersion(version: string): Promise<boolean> {
     const count = await prisma.schemaGvk.count({ where: { version } });
     return count > 0;

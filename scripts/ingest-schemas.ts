@@ -1,202 +1,109 @@
-import fs from 'fs/promises';
-import path from 'path';
 import { PrismaClient } from '@prisma/client';
+import { ingestFromSwagger } from '../src/lib/schema/swaggerIngestion';
+import { discoverVersions, getLatestVersion } from '../src/lib/schema/versionDiscovery';
 
 const prisma = new PrismaClient();
-const CACHE_DIR = path.join(process.cwd(), 'schema-cache');
-
-function resolveRefs(obj: unknown, definitions: Record<string, unknown>, seen = new Set<string>()): unknown {
-  if (Array.isArray(obj)) {
-    return obj.map((item) => resolveRefs(item, definitions, seen));
-  }
-  if (obj && typeof obj === 'object') {
-    const record = obj as Record<string, unknown>;
-    if (record.$ref && typeof record.$ref === 'string') {
-      const match = record.$ref.match(/#\/definitions\/(.+)/);
-      if (match) {
-        const key = match[1];
-        if (seen.has(key)) return {};
-        seen.add(key);
-        const ref = definitions[key];
-        if (!ref) return {};
-        return resolveRefs(ref, definitions, seen);
-      }
-    }
-    const resolved: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(record)) {
-      resolved[k] = resolveRefs(v, definitions, seen);
-    }
-    return resolved;
-  }
-  return obj;
-}
-
-type GVK = { group: string; version: string; kind: string };
-
-async function downloadSchemas(version: string): Promise<void> {
-  const targetPath = path.join(CACHE_DIR, version, 'raw');
-
-  // Check if already downloaded
-  try {
-    const stat = await fs.stat(path.join(targetPath, '_definitions.json'));
-    if (stat.isFile()) {
-      console.log(`  Schema files already cached for ${version}`);
-      return;
-    }
-  } catch {
-    // Not cached, download
-  }
-
-  const zipUrl = `https://github.com/kubenote/kubernetes-schema/archive/refs/heads/${version}.zip`;
-  console.log(`  Downloading ${zipUrl}...`);
-
-  const res = await fetch(zipUrl);
-  if (!res.ok) {
-    throw new Error(`Failed to download schemas: HTTP ${res.status} ${res.statusText}`);
-  }
-
-  const buf = await res.arrayBuffer();
-  console.log(`  Downloaded ${(buf.byteLength / 1024 / 1024).toFixed(1)}MB, extracting...`);
-
-  // Dynamic import for JSZip (it's a project dependency)
-  const JSZip = (await import('jszip')).default;
-  const zip = await JSZip.loadAsync(buf);
-
-  await fs.mkdir(targetPath, { recursive: true });
-
-  const entries = Object.entries(zip.files);
-  let extracted = 0;
-
-  for (const [relativePath, file] of entries) {
-    if (!file.dir) {
-      const content = await file.async('nodebuffer');
-      const parts = relativePath.split('/');
-      const relativeWithinSchema = parts.slice(1).join('/');
-      const fullPath = path.join(targetPath, relativeWithinSchema);
-
-      await fs.mkdir(path.dirname(fullPath), { recursive: true });
-      await fs.writeFile(fullPath, content);
-      extracted++;
-    }
-  }
-
-  console.log(`  Extracted ${extracted} files`);
-}
 
 async function ingest(version: string) {
-  const basePath = path.join(CACHE_DIR, version, 'raw');
-  const definitionsPath = path.join(basePath, '_definitions.json');
+  console.log(`\nIngesting schemas for ${version}...`);
 
-  console.log(`Ingesting schemas for ${version} from ${basePath}...`);
+  const result = await ingestFromSwagger(version);
+  console.log(
+    `  Parsed ${result.definitionCount} definitions → ${result.schemas.length} schema rows, ${result.gvks.length} GVKs`
+  );
 
-  const defsRaw = await fs.readFile(definitionsPath, 'utf-8');
-  const definitionsJson = JSON.parse(defsRaw) as { definitions?: Record<string, unknown> };
-  const definitions = definitionsJson.definitions || {};
-
-  // 1. Ingest GVKs
-  let gvkCount = 0;
-  for (const schema of Object.values(definitions)) {
-    const schemaObj = schema as Record<string, unknown>;
-    if (Array.isArray(schemaObj['x-kubernetes-group-version-kind'])) {
-      for (const gvk of schemaObj['x-kubernetes-group-version-kind'] as GVK[]) {
-        await prisma.schemaGvk.upsert({
+  // Batch upsert GVKs
+  const GVK_BATCH = 100;
+  for (let i = 0; i < result.gvks.length; i += GVK_BATCH) {
+    const batch = result.gvks.slice(i, i + GVK_BATCH);
+    await prisma.$transaction(
+      batch.map((gvk) =>
+        prisma.schemaGvk.upsert({
           where: {
             version_group_gvkVersion_kind: {
               version,
               group: gvk.group,
-              gvkVersion: gvk.version,
+              gvkVersion: gvk.gvkVersion,
               kind: gvk.kind,
             },
           },
           create: {
             version,
             group: gvk.group,
-            gvkVersion: gvk.version,
+            gvkVersion: gvk.gvkVersion,
             kind: gvk.kind,
           },
           update: {},
-        });
-        gvkCount++;
-      }
-    }
+        })
+      )
+    );
   }
-  console.log(`  Ingested ${gvkCount} GVKs`);
+  console.log(`  Ingested ${result.gvks.length} GVKs`);
 
-  // 2. Ingest individual schema files (both resolved and unresolved)
-  let schemaCount = 0;
-  const walk = async (dir: string) => {
-    const files = await fs.readdir(dir, { withFileTypes: true });
-    for (const file of files) {
-      const fullPath = path.join(dir, file.name);
-      if (file.isDirectory()) {
-        await walk(fullPath);
-      } else if (file.name.endsWith('.json') && file.name !== '_definitions.json') {
-        const raw = await fs.readFile(fullPath, 'utf-8');
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        const name = path.basename(file.name, '.json');
-
-        // Store unresolved
-        await prisma.kubernetesSchema.upsert({
+  // Batch upsert schemas
+  const SCHEMA_BATCH = 100;
+  for (let i = 0; i < result.schemas.length; i += SCHEMA_BATCH) {
+    const batch = result.schemas.slice(i, i + SCHEMA_BATCH);
+    await prisma.$transaction(
+      batch.map((s) =>
+        prisma.kubernetesSchema.upsert({
           where: {
             version_schemaKey_isFullyResolved: {
               version,
-              schemaKey: name.toLowerCase(),
-              isFullyResolved: false,
+              schemaKey: s.schemaKey,
+              isFullyResolved: s.isFullyResolved,
             },
           },
           create: {
             version,
-            schemaKey: name.toLowerCase(),
-            schemaData: JSON.stringify(parsed),
-            isFullyResolved: false,
+            schemaKey: s.schemaKey,
+            schemaData: s.schemaData,
+            isFullyResolved: s.isFullyResolved,
           },
           update: {
-            schemaData: JSON.stringify(parsed),
+            schemaData: s.schemaData,
           },
-        });
-
-        // Store resolved
-        const resolved = resolveRefs(parsed, definitions);
-        await prisma.kubernetesSchema.upsert({
-          where: {
-            version_schemaKey_isFullyResolved: {
-              version,
-              schemaKey: name.toLowerCase(),
-              isFullyResolved: true,
-            },
-          },
-          create: {
-            version,
-            schemaKey: name.toLowerCase(),
-            schemaData: JSON.stringify(resolved),
-            isFullyResolved: true,
-          },
-          update: {
-            schemaData: JSON.stringify(resolved),
-          },
-        });
-
-        schemaCount++;
-      }
-    }
-  };
-
-  await walk(basePath);
-  console.log(`  Ingested ${schemaCount} schemas (resolved + unresolved)`);
+        })
+      )
+    );
+  }
+  console.log(`  Ingested ${result.schemas.length} schema rows`);
   console.log(`Done ingesting ${version}.`);
 }
 
 async function main() {
-  const version = process.argv[2];
-  if (!version) {
-    console.error('Usage: npm run db:ingest-schemas -- <version>');
+  const args = process.argv.slice(2);
+
+  if (args.includes('--discover')) {
+    console.log('Discovering available Kubernetes versions...');
+    const versions = await discoverVersions();
+    console.log(`Found ${versions.length} versions:`);
+    for (const v of versions) {
+      console.log(`  ${v}`);
+    }
+    return;
+  }
+
+  let versions: string[];
+
+  if (args.includes('--latest')) {
+    const latest = await getLatestVersion();
+    console.log(`Latest stable version: ${latest}`);
+    versions = [latest];
+  } else if (args.length === 0 || args[0].startsWith('-')) {
+    console.error('Usage: npm run db:ingest-schemas -- <version> [version2 ...]');
+    console.error('       npm run db:ingest-schemas -- --latest');
+    console.error('       npm run db:ingest-schemas -- --discover');
     console.error('Example: npm run db:ingest-schemas -- v1.33.3');
     process.exit(1);
+  } else {
+    versions = args.filter((a) => !a.startsWith('-'));
   }
 
   try {
-    await downloadSchemas(version);
-    await ingest(version);
+    for (const version of versions) {
+      await ingest(version);
+    }
   } catch (err) {
     console.error('Ingestion failed:', err);
     process.exit(1);
