@@ -11,6 +11,8 @@ import { ProjectDataService } from '@/services/project.data.service';
 import { useAutoSave } from '@/hooks/use-auto-save.hook';
 import { AutoSaveIndicator } from '@/components/ui/auto-save-indicator';
 import ExportDialog from '@/components/dialog/dialog.export.component';
+import WarningsBadge from '@/components/warnings/warnings.main.component';
+import WarningsSidebar from '@/components/warnings/warnings.sidebar.component';
 
 interface Project {
   id: string;
@@ -45,6 +47,7 @@ export function ProjectPageClient({
   const [currentVersionId, setCurrentVersionId] = useState<string | null>(null);
   const [currentVersionSlug, setCurrentVersionSlug] = useState<string | null>(null);
   const [getCurrentFlowState, setGetCurrentFlowState] = useState<(() => { nodes: Node[]; edges: Edge[] }) | null>(null);
+  const [warningsOpen, setWarningsOpen] = useState(false);
   const router = useRouter();
 
   // Check for version hash on component mount
@@ -180,14 +183,20 @@ export function ProjectPageClient({
               currentVersionSlug={currentVersionSlug}
               onGetCurrentState={handleGetFlowState}
             />
-            {/* Auto-save indicator - only shown when not viewing a version */}
+            {/* Auto-save indicator and warnings - only shown when not viewing a version */}
             {!currentVersionSlug && (
-              <div className="absolute top-4 right-4 z-40">
+              <div className="absolute top-4 right-4 z-40 flex items-center gap-2">
+                <WarningsBadge onClick={() => setWarningsOpen(o => !o)} />
                 <AutoSaveIndicator
                   status={autoSave.status}
                   lastSaved={autoSave.lastSaved}
                   error={autoSave.error}
                 />
+              </div>
+            )}
+            {warningsOpen && (
+              <div className="shrink-0 h-full">
+                <WarningsSidebar onClose={() => setWarningsOpen(false)} />
               </div>
             )}
           </div>
