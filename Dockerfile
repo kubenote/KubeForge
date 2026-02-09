@@ -20,10 +20,15 @@ RUN NEXT_IGNORE_TYPE_ERRORS=true npm run build
 
 FROM node:20-alpine
 
+# Install PostgreSQL for embedded mode (when no DATABASE_URL is provided)
+RUN apk add --no-cache postgresql16 postgresql16-contrib su-exec
+
 WORKDIR /app
 COPY --from=builder /app ./
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
 
 ENV NODE_ENV=production
 
 EXPOSE 3000
-CMD sh -c "npx prisma migrate deploy && node scripts/ensure-schemas.js && npm start"
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
