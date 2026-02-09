@@ -63,7 +63,6 @@ export const NodeProvider = ({ children }: { children: React.ReactNode }) => {
         setIsLoading(true)
 
         const schemaKey = 'objectRef' in data ? `${data.kind.toLowerCase()}.${data.objectRef}` : data.kind.toLowerCase();
-        
         if (schemaData[schemaKey]) {
             const generatedId = nanoid()
 

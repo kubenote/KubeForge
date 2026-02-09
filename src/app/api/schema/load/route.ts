@@ -1,4 +1,4 @@
-import { loadSchemas, loadGvks, loadSpecificSchemas } from '@/lib/schema/loadSchemas';
+import { loadGvks, loadSpecificSchemas } from '@/lib/schema/loadSchemas';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (schemasParam) {
     // Use loadSpecificSchemas if `schemas` are provided
     schemas = await loadSpecificSchemas(version, schemasParam.toLowerCase().split(","), fullSchema);
-    const schemasRes = NextResponse.json(JSON.stringify(schemas));
+    const schemasRes = NextResponse.json(schemas);
     schemasRes.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
     return schemasRes;
   } else {

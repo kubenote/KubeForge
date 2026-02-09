@@ -2,13 +2,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install git (Alpine doesn't include it by default)
-RUN apk add --no-cache git
-
 COPY . .
-
-# Clone the submodule
-RUN git submodule update --init --recursive
 
 # Install Node deps
 RUN npm ci
@@ -32,4 +26,4 @@ COPY --from=builder /app ./
 ENV NODE_ENV=production
 
 EXPOSE 3000
-CMD sh -c "npx prisma migrate deploy && npm start"
+CMD sh -c "npx prisma migrate deploy && node scripts/ensure-schemas.js && npm start"

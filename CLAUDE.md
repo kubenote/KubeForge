@@ -37,7 +37,6 @@ src/
 
 prisma/               # Database schema & migrations
 scripts/              # CLI scripts (schema ingestion, setup)
-schema-cache/         # Kubernetes JSON schemas (git submodule)
 
 ## Related Repositories
 
