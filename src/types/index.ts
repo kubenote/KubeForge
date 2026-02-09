@@ -6,6 +6,7 @@ export interface Schema {
   items?: Schema;
   additionalProperties?: boolean | Schema;
   description?: string;
+  required?: string[];
 }
 
 // Plugin slot entry — tracks a plugin connected to a target node
@@ -23,6 +24,7 @@ export interface BaseNodeData extends Record<string, unknown> {
   pluginSlots?: PluginSlotEntry[];
   editing?: boolean;
   sourceFile?: string;
+  showReadOnlyFields?: boolean;
 }
 
 export interface KindNodeData extends BaseNodeData {

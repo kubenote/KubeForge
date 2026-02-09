@@ -1,4 +1,5 @@
 import { Schema, FlowEdge } from "@/types"
+import type { FieldClassification } from "@/lib/schema/fieldClassification"
 
 export interface BaseFieldProps {
     label: string
@@ -10,6 +11,8 @@ export interface BaseFieldProps {
     mode?: 'kind' | 'objectRef'
     readOnly?: boolean
     kind?: string
+    classification?: FieldClassification
+    parentPath?: string
     onChange: (path: string, val: unknown) => void
     onRemove?: () => void
     depth?: number

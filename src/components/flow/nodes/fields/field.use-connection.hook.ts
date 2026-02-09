@@ -40,6 +40,11 @@ export const useFieldConnection = ({
 
             const selfId = `${nodeId}.${label}`
             publish(selfId, `#ref-${refValue}`)
+
+            return () => {
+                onChange(path, undefined)
+                publish(selfId, undefined)
+            }
         }
     }, [isConnected, edge?.source, edge?.sourceHandle, nodeId, label, path, onChange, valueType])
 

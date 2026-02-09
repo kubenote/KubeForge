@@ -66,6 +66,22 @@ export default function ContextMenu({
                         View Issues
                     </button>
                     <button
+                        onClick={() => {
+                            const node = getNode(id);
+                            const current = !!(node?.data?.showReadOnlyFields);
+                            setNodes((nodes) =>
+                                nodes.map((n) =>
+                                    n.id === id
+                                        ? { ...n, data: { ...n.data, showReadOnlyFields: !current } }
+                                        : n
+                                )
+                            );
+                        }}
+                        className="w-full text-left px-3 py-1.5 text-xs hover:bg-brand-muted hover:text-brand transition-colors cursor-pointer"
+                    >
+                        {getNode(id)?.data?.showReadOnlyFields ? 'Hide Read-Only Fields' : 'Show Read-Only Fields'}
+                    </button>
+                    <button
                         onClick={deleteNode}
                         className="w-full text-left px-3 py-1.5 text-xs hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
                     >

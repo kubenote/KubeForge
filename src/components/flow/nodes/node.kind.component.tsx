@@ -11,6 +11,8 @@ import { ConfigField } from "./flow.configfield.component"
 import { KindNodeData, FlowEdge, Schema, PluginSlotEntry } from "@/types"
 import { useReadOnly } from "@/contexts/read-only.context"
 import { PluginSlots } from "./node.plugin-slots.component"
+import { classifyFields, groupFieldsByClassification, CLASSIFICATION_META, type FieldClassification } from "@/lib/schema/fieldClassification"
+import { FieldSectionHeader } from "./fields/field.section-header.component"
 
 interface KindNodeProps {
     id: string;
@@ -23,6 +25,8 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
     const [values, setValues] = useState<Record<string, unknown>>(data.values || {});
     const [editing, setEditing] = useState(data.editing ?? false);
     const { isReadOnly } = useReadOnly();
+    const [showReadOnlyFields, setShowReadOnlyFields] = useState(data.showReadOnlyFields ?? false);
+    const [collapsedSections, setCollapsedSections] = useState<Set<FieldClassification>>(() => new Set(['optional']));
 
     const { setNodes } = useReactFlow();
 
@@ -30,6 +34,11 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
     useEffect(() => {
         setValues(data.values || {});
     }, [data.values]);
+
+    // Sync showReadOnlyFields from data (context menu toggle)
+    useEffect(() => {
+        setShowReadOnlyFields(data.showReadOnlyFields ?? false);
+    }, [data.showReadOnlyFields]);
 
     // Sync internal state back to the global node data (only when not read-only)
     useEffect(() => {
@@ -42,12 +51,13 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
                         data: {
                             ...node.data,
                             values,
+                            showReadOnlyFields,
                         },
                     };
                 })
             );
         }
-    }, [values, isReadOnly]);
+    }, [values, showReadOnlyFields, isReadOnly]);
 
     const edges = useStore(
         (s) => s.edges.filter((e: any) => e.target === id),
@@ -67,6 +77,18 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
         }
         return names;
     }, [values]);
+
+    // Compute field classifications and groupings
+    const { fieldGroups, classifications } = useMemo(() => {
+        const requiredFields = schema?.required ?? []
+        const allEntries = Object.entries(schema?.properties ?? {}) as [string, Schema][]
+        const cls = classifyFields(schema?.properties ?? {}, data.kind, requiredFields)
+        const filtered = showReadOnlyFields
+            ? allEntries
+            : allEntries.filter(([k]) => cls.get(k) !== 'readOnly')
+        const groups = groupFieldsByClassification(filtered, cls)
+        return { fieldGroups: groups, classifications: cls }
+    }, [schema, data.kind, showReadOnlyFields])
 
     const handleContainerChange = useCallback((sourceNodeId: string, containerName: string) => {
         setNodes((prevNodes) =>
@@ -90,7 +112,11 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
                 if (!acc[key]) acc[key] = {};
                 return acc[key] as Record<string, unknown>;
             }, updated);
-            nested[last] = newVal;
+            if (newVal === undefined) {
+                delete nested[last];
+            } else {
+                nested[last] = newVal;
+            }
 
             const pubId = `${id}.${path}`;
             publish(pubId, newVal);
@@ -99,6 +125,17 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
         });
     }, [id]);
 
+    const toggleSection = useCallback((cls: FieldClassification) => {
+        setCollapsedSections(prev => {
+            const next = new Set(prev)
+            if (next.has(cls)) {
+                next.delete(cls)
+            } else {
+                next.add(cls)
+            }
+            return next
+        })
+    }, [])
 
     return (
         <NodeContainer nodeId={id}>
@@ -114,21 +151,36 @@ function KindNodeComponent({ id, data }: KindNodeProps) {
             </div>
 
             <div className="space-y-1 pl-2">
-                {Object.entries(schema?.properties ?? {}).map(([key, fieldSchema]) => (
-                    <ConfigField
-                        key={key}
-                        label={key}
-                        value={values?.[key]}
-                        schema={fieldSchema as Schema}
-                        path={key}
-                        kind={data.kind}
-                        onChange={handleValueChange}
-                        nodeId={id}
-                        edges={edges}
-                        mode="kind"
-                        readOnly={isReadOnly || !editing}
-                    />
-                ))}
+                {fieldGroups.map((group, groupIndex) => {
+                    const expanded = !collapsedSections.has(group.classification)
+                    return (
+                        <div key={group.classification}>
+                            <FieldSectionHeader
+                                classification={group.classification}
+                                fieldCount={group.fields.length}
+                                expanded={expanded}
+                                onToggle={() => toggleSection(group.classification)}
+                                isFirst={groupIndex === 0}
+                            />
+                            {expanded && group.fields.map(([key, fieldSchema]) => (
+                                <ConfigField
+                                    key={key}
+                                    label={key}
+                                    value={values?.[key]}
+                                    schema={fieldSchema as Schema}
+                                    path={key}
+                                    kind={data.kind}
+                                    onChange={handleValueChange}
+                                    nodeId={id}
+                                    edges={edges}
+                                    mode="kind"
+                                    readOnly={isReadOnly || !editing}
+                                    classification={classifications.get(key)}
+                                />
+                            ))}
+                        </div>
+                    )
+                })}
             </div>
             <PluginSlots
                 nodeId={id}

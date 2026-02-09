@@ -1,5 +1,6 @@
 import { NodeWarning } from './warnings.rules.types'
 import deprecations from '../../data/k8s-deprecations.json'
+import { FIELD_RECOMMENDATIONS } from '../../data/field-recommendations'
 
 type RuleFunction = (node: any, index: number, context?: any) => NodeWarning | null
 
@@ -522,6 +523,40 @@ const resourceNotInVersion: RuleFunction = (node, _index, context) => {
     return null
 }
 
+const missingRecommendedFields: RuleFunction = (node, _index, context) => {
+    if (node.type !== 'KindNode') return null
+    const kind = node.data?.kind
+    if (!kind) return null
+    const kindKey = kind.toLowerCase()
+    const recs = FIELD_RECOMMENDATIONS[kindKey]
+    if (!recs) return null
+
+    const resolved = resolveKindNodeValues(node, context.allNodes)
+    const allNodes = context.allNodes || []
+
+    // Check each recommended field
+    const missing: string[] = []
+    for (const fieldName of Object.keys(recs.recommended)) {
+        const value = resolved?.[fieldName]
+        if (value !== undefined && value !== null) continue
+        // Check if there's a #ref- connection for this field
+        const rawValue = node.data?.values?.[fieldName]
+        if (typeof rawValue === 'string' && rawValue.startsWith('#ref-')) continue
+        missing.push(fieldName)
+    }
+
+    if (missing.length === 0) return null
+
+    return {
+        id: nextId(),
+        ruleId: 'missing-recommended-field',
+        nodes: [node.id],
+        title: 'Missing recommended fields',
+        message: `${kind} is missing recommended fields: ${missing.join(', ')}. Configure these for production readiness.`,
+        level: 'info',
+    }
+}
+
 export const preDeploymentRules: RuleFunction[] = [
     // Danger (1000–1999)
     missingResourceRequests,
@@ -540,4 +575,6 @@ export const preDeploymentRules: RuleFunction[] = [
     // Version-aware rules
     deprecatedApiVersion,
     resourceNotInVersion,
+    // Info rules
+    missingRecommendedFields,
 ]

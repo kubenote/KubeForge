@@ -9,12 +9,15 @@ import { shallow } from 'zustand/shallow';
 import { getTypeColor } from "./flow.node.types"
 import { useSchema } from "@/providers/schema.provider"
 import { ConfigField } from "./flow.configfield.component"
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup, SelectLabel } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ObjectRefNodeData, FlowEdge, Schema, PluginSlotEntry } from "@/types"
 import { PluginSlots } from "./node.plugin-slots.component"
+import { classifyFields, groupFieldsByClassification, type FieldClassification } from "@/lib/schema/fieldClassification"
+import { ClassificationIndicator } from "./fields/field.classification-indicator.component"
+import { FieldSectionHeader } from "./fields/field.section-header.component"
 
 function inferSchemaFromValue(value: unknown): Schema {
     if (typeof value === 'string') return { type: 'string' };
@@ -47,6 +50,8 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
     const [visibleFields, setVisibleFields] = useState<string[]>([]);
     const { setNodes } = useReactFlow();
     const [isMinimized, setIsMinimized] = useState(false);
+    const [showReadOnlyFields, setShowReadOnlyFields] = useState(data.showReadOnlyFields ?? false);
+    const [collapsedSections, setCollapsedSections] = useState<Set<FieldClassification>>(() => new Set(['optional']));
 
     // Update local values when data.values changes (from version loading)
     useEffect(() => {
@@ -54,6 +59,11 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
         const keysWithValues = Object.keys(data.values || {});
         setVisibleFields(prev => Array.from(new Set([...prev, ...keysWithValues])));
     }, [data.values]);
+
+    // Sync showReadOnlyFields from data (context menu toggle)
+    useEffect(() => {
+        setShowReadOnlyFields(data.showReadOnlyFields ?? false);
+    }, [data.showReadOnlyFields]);
 
     // Sync internal state back to the global node data
     useEffect(() => {
@@ -68,18 +78,35 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
                     data: {
                         ...node.data,
                         values,
+                        showReadOnlyFields,
                     },
                 };
             })
         );
-    }, [values]);
-    
+    }, [values, showReadOnlyFields]);
+
     const edges = useStore(
         (s) => s.edges.filter((e: any) => e.target === id),
         shallow
     ) as FlowEdge[];
 
     const allFields = useMemo(() => Object.keys(schema?.properties || {}), [schema]);
+
+    // Compute field classifications using the objectRef as parentPath
+    const fieldClassifications = useMemo(() => {
+        const requiredFields = schema?.required ?? []
+        return classifyFields(schema?.properties ?? {}, data.kind, requiredFields, data.objectRef)
+    }, [schema, data.kind, data.objectRef]);
+
+    // Compute visible field groups for section rendering
+    const visibleFieldGroups = useMemo(() => {
+        const filtered = showReadOnlyFields
+            ? visibleFields
+            : visibleFields.filter((k) => fieldClassifications.get(k) !== 'readOnly')
+        const entries = filtered.map((f) => [f, schema?.properties?.[f] ?? {}] as [string, Schema])
+        return groupFieldsByClassification(entries, fieldClassifications)
+    }, [visibleFields, fieldClassifications, showReadOnlyFields, schema]);
+
     const [addFieldOpen, setAddFieldOpen] = useState(false);
     const [newFieldName, setNewFieldName] = useState('');
     const [newFieldType, setNewFieldType] = useState('string');
@@ -132,6 +159,18 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
         }
     };
 
+    const toggleSection = useCallback((cls: FieldClassification) => {
+        setCollapsedSections(prev => {
+            const next = new Set(prev)
+            if (next.has(cls)) {
+                next.delete(cls)
+            } else {
+                next.add(cls)
+            }
+            return next
+        })
+    }, [])
+
     return (
         <NodeContainer nodeId={id}>
             <div className="border-b-1 pb-2 mb-2">
@@ -172,29 +211,46 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
             <div
                 className={`space-y-1 ${isMinimized ? 'max-h-0 overflow-hidden' : ''} transition-all duration-300 ease-in-out`}
             >
-                {visibleFields.map((key) => (
-                    <ConfigField
-                        key={key}
-                        label={key}
-                        value={values[key]}
-                        schema={schema?.properties?.[key] || inferSchemaFromValue(values[key])}
-                        path={key}
-                        onChange={handleValueChange}
-                        nodeId={id}
-                        edges={edges}
-                        mode="objectRef"
-                        readOnly={!editing}
-                        onRemove={!editing ? undefined : () => {
-                            setVisibleFields((prev) => prev.filter((f) => f !== key));
-                            setValues(prev => {
-                                const updated = { ...prev };
-                                delete updated[key];
-                                publish(`${id}.${key}`, undefined);
-                                return updated;
-                            });
-                        }}
-                    />
-                ))}
+                {visibleFieldGroups.map((group, groupIndex) => {
+                    const expanded = !collapsedSections.has(group.classification)
+                    return (
+                        <div key={group.classification}>
+                            <FieldSectionHeader
+                                classification={group.classification}
+                                fieldCount={group.fields.length}
+                                expanded={expanded}
+                                onToggle={() => toggleSection(group.classification)}
+                                isFirst={groupIndex === 0}
+                            />
+                            {expanded && group.fields.map(([key]) => (
+                                <ConfigField
+                                    key={key}
+                                    label={key}
+                                    value={values[key]}
+                                    schema={schema?.properties?.[key] || inferSchemaFromValue(values[key])}
+                                    path={key}
+                                    kind={data.kind}
+                                    onChange={handleValueChange}
+                                    nodeId={id}
+                                    edges={edges}
+                                    mode="objectRef"
+                                    readOnly={!editing}
+                                    classification={fieldClassifications.get(key)}
+                                    parentPath={data.objectRef}
+                                    onRemove={!editing ? undefined : () => {
+                                        setVisibleFields((prev) => prev.filter((f) => f !== key));
+                                        setValues(prev => {
+                                            const updated = { ...prev };
+                                            delete updated[key];
+                                            publish(`${id}.${key}`, undefined);
+                                            return updated;
+                                        });
+                                    }}
+                                />
+                            ))}
+                        </div>
+                    )
+                })}
                 {editing && (
                     <div className="pt-3 mt-2 border-t space-y-2">
                         <Select value="" onValueChange={(field) => {
@@ -210,13 +266,27 @@ export function ObjectRefNodeComponent({ id, data }: ObjectRefNodeProps) {
                                 <SelectValue placeholder="Select field to add" />
                             </SelectTrigger>
                             <SelectContent>
-                                {allFields
-                                    .filter((f) => !visibleFields.includes(f))
-                                    .map((field) => (
-                                        <SelectItem key={field} value={field}>
-                                            {field}
-                                        </SelectItem>
-                                    ))}
+                                {(() => {
+                                    const available = allFields.filter((f) => !visibleFields.includes(f))
+                                    const availableEntries = available.map((f) => [f, schema?.properties?.[f] ?? {}] as [string, Schema])
+                                    const groups = groupFieldsByClassification(availableEntries, fieldClassifications)
+                                    return groups.map((group) => (
+                                        <SelectGroup key={group.classification}>
+                                            <SelectLabel className="flex items-center gap-1.5">
+                                                <ClassificationIndicator classification={group.classification} />
+                                                {group.label}
+                                            </SelectLabel>
+                                            {group.fields.map(([field]) => (
+                                                <SelectItem key={field} value={field}>
+                                                    <span className="inline-flex items-center gap-1.5">
+                                                        <ClassificationIndicator classification={fieldClassifications.get(field) ?? 'optional'} />
+                                                        {field}
+                                                    </span>
+                                                </SelectItem>
+                                            ))}
+                                        </SelectGroup>
+                                    ))
+                                })()}
                                 <SelectItem value="__custom__" className="text-muted-foreground italic border-t mt-1 pt-1">
                                     + Custom field...
                                 </SelectItem>

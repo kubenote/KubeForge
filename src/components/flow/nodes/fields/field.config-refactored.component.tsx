@@ -18,6 +18,8 @@ export const ConfigFieldRefactored = ({
     edges,
     mode = 'kind',
     readOnly = false,
+    classification,
+    parentPath,
     onRemove,
     depth = 0
 }: BaseFieldProps) => {
@@ -106,15 +108,20 @@ export const ConfigFieldRefactored = ({
     const depthBorder = depth > 0 ? 'border border-border' : ''
     const branchTick = depth > 0 ? 'relative before:absolute before:left-[-13px] before:top-1/2 before:w-[12px] before:h-px before:bg-border' : ''
 
+    const readOnlyOpacity = classification === 'readOnly' ? 'opacity-60' : ''
+
     if (isComplex && isComplexFieldResult(fieldResult)) {
         // For complex types with separate inline/expanded content
         return (
-            <div data-field-path={path} className={`${depthBg} ${depthBorder} ${branchTick} rounded ${depth > 0 ? 'p-2' : 'px-1'}`}>
+            <div data-field-path={path} className={`${depthBg} ${depthBorder} ${branchTick} ${readOnlyOpacity} rounded ${depth > 0 ? 'p-2' : 'px-1'}`}>
                 <div className="group/field relative flex items-center gap-1.5 min-h-8 pl-1">
                     <FieldLabel
                         label={label}
                         schema={schema}
                         isComplex={isComplex}
+                        classification={classification}
+                        kind={kind}
+                        parentPath={parentPath}
                     />
                     {fieldResult.inlineContent}
                     {removeButton}
@@ -125,12 +132,15 @@ export const ConfigFieldRefactored = ({
     } else {
         // For simple types, use the flex row layout
         return (
-            <div data-field-path={path} className={`space-y-1 ${depth > 0 ? `${depthBg} ${depthBorder} ${branchTick} rounded p-2` : ''}`}>
+            <div data-field-path={path} className={`space-y-1 ${readOnlyOpacity} ${depth > 0 ? `${depthBg} ${depthBorder} ${branchTick} rounded p-2` : ''}`}>
                 <div className="group/field relative flex items-center gap-2 min-h-8 pl-1">
                     <FieldLabel
                         label={label}
                         schema={schema}
                         isComplex={isComplex}
+                        classification={classification}
+                        kind={kind}
+                        parentPath={parentPath}
                     />
                     {fieldResult as React.ReactNode}
                     {removeButton}
